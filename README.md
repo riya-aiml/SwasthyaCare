@@ -1,1 +1,0 @@
-# Medical_Diagnosis_and_Patient_Risk_Assessment_System
