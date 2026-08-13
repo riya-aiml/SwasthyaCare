@@ -1,60 +1,207 @@
 export const mockPatient = {
-  id: "P-88402",
-  name: "Priya Malhotra",
-  age: 48,
+  id: "MRN-84920",
+  name: "Sarah Jenkins",
+  age: 58,
   gender: "Female",
-  bloodGroup: "O+",
-  height: "165 cm",
-  weight: "68 kg",
-  avatar: "/images/patient.png",
-  primaryDoctor: "Dr. Ananya Sharma",
-  emergencyContact: "+91 98765 43210",
-  currentToken: "OPD-A42",
-  queuePosition: 3,
-  estimatedWaitMins: 14,
-  opdRoom: "Room 104 (Cardiology Block)",
-  allergies: ["Penicillin", "Dust Mites"],
-  medicalHistory: ["Hypertension (Diagnosed 2023)", "Mild Asthma"]
+  bloodGroup: "A+",
+  height: "162 cm",
+  weight: "74 kg",
+  avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200",
+  primaryDoctor: "Dr. Amanda Vance",
+  emergencyContact: "+1 (555) 234-5678",
+  currentToken: "A-047",
+  queuePosition: 12,
+  totalInQueue: 32,
+  estimatedWaitMins: 18,
+  opdDepartment: "Cardiology OPD",
+  opdRoom: "Room 302 - West Wing",
+  allergies: ["Penicillin", "Sulfa Drugs"],
+  medicalHistory: ["Type 2 Diabetes (Diagnosed 2021)", "Hypertension", "Hyperlipidemia"],
+  nextAppointment: {
+    id: "APT-2026-089",
+    date: "Tomorrow, Aug 14, 2026",
+    time: "10:30 AM",
+    doctor: "Dr. Amanda Vance",
+    department: "Cardiology",
+    hospital: "St. Jude Metropolitan Hospital",
+    status: "Confirmed",
+    prepInstructions: "Fast for 8 hours prior for blood work. Arrive 15 minutes early at Gate 3 with valid ID."
+  }
+};
+
+export const mockClinicianPriorityPatients = [
+  {
+    mrn: "MRN-91204",
+    name: "Robert Chen",
+    age: 67,
+    diseaseRiskScore: 92,
+    diseaseRiskLevel: "High",
+    readmissionRiskScore: 84,
+    readmissionRiskLevel: "High",
+    primaryCondition: "Acute Chest Pain & Severe BP",
+    department: "Cardiology",
+    vitals: { bp: "168/102 mmHg", bloodSugar: "215 mg/dL", hr: "104 bpm", spo2: "93%" },
+    mainReasons: [
+      { title: "Critical Systolic Blood Pressure", detail: "Systolic BP of 168 mmHg exceeds high risk threshold of 140 mmHg by +28 mmHg." },
+      { title: "Elevated Fasting Blood Glucose", detail: "Glucose level of 215 mg/dL indicates uncontrolled metabolic state." },
+      { title: "Age & Cardiac Pre-conditions", detail: "Age 67 with previous myocardial ischemia history." }
+    ],
+    triageUrgency: "Emergency",
+    slotReserved: "09:00 AM (Priority Slot)"
+  },
+  {
+    mrn: "MRN-84920",
+    name: "Sarah Jenkins",
+    age: 58,
+    diseaseRiskScore: 78,
+    diseaseRiskLevel: "High",
+    readmissionRiskScore: 68,
+    readmissionRiskLevel: "Medium",
+    primaryCondition: "Type 2 Diabetes & Shortness of Breath",
+    department: "Cardiology",
+    vitals: { bp: "148/92 mmHg", bloodSugar: "186 mg/dL", hr: "88 bpm", spo2: "96%" },
+    mainReasons: [
+      { title: "Elevated Blood Glucose", detail: "Blood sugar level at 186 mg/dL elevates chronic diabetes complication risk." },
+      { title: "Elevated Systolic Blood Pressure", detail: "Systolic BP 148 mmHg indicates Stage 2 hypertension." },
+      { title: "Exertional Shortness of Breath", detail: "Recent onset of dyspnea during routine walking." }
+    ],
+    triageUrgency: "Urgent",
+    slotReserved: "10:30 AM (Priority Slot)"
+  },
+  {
+    mrn: "MRN-73419",
+    name: "Marcus Vance",
+    age: 62,
+    diseaseRiskScore: 65,
+    diseaseRiskLevel: "Medium",
+    readmissionRiskScore: 72,
+    readmissionRiskLevel: "High",
+    primaryCondition: "Post-CHF Discharge Follow-up",
+    department: "Cardiology",
+    vitals: { bp: "135/85 mmHg", bloodSugar: "142 mg/dL", hr: "76 bpm", spo2: "97%" },
+    mainReasons: [
+      { title: "30-Day Post-Discharge Window", detail: "Discharged 12 days ago following CHF exacerbation." },
+      { title: "Sub-optimal Medication Adherence", detail: "Self-reported missing 2 diuretics doses last week." }
+    ],
+    triageUrgency: "Urgent",
+    slotReserved: "11:15 AM (Priority Slot)"
+  },
+  {
+    mrn: "MRN-65821",
+    name: "Elena Rostova",
+    age: 44,
+    diseaseRiskScore: 54,
+    diseaseRiskLevel: "Medium",
+    readmissionRiskScore: 32,
+    readmissionRiskLevel: "Low",
+    primaryCondition: "Frequent Dizziness & Fatigue",
+    department: "Endocrinology",
+    vitals: { bp: "124/80 mmHg", bloodSugar: "158 mg/dL", hr: "72 bpm", spo2: "98%" },
+    mainReasons: [
+      { title: "Postprandial Blood Glucose Elevation", detail: "158 mg/dL post-meal glucose." },
+      { title: "Reported Chronic Fatigue", detail: "Fatigue persistent for > 2 weeks." }
+    ],
+    triageUrgency: "Standard",
+    slotReserved: "01:30 PM"
+  },
+  {
+    mrn: "MRN-52109",
+    name: "David Miller",
+    age: 35,
+    diseaseRiskScore: 22,
+    diseaseRiskLevel: "Low",
+    readmissionRiskScore: 12,
+    readmissionRiskLevel: "Low",
+    primaryCondition: "Routine Annual Checkup",
+    department: "General OPD",
+    vitals: { bp: "118/76 mmHg", bloodSugar: "94 mg/dL", hr: "68 bpm", spo2: "99%" },
+    mainReasons: [
+      { title: "Optimal Vital Signs", detail: "All physiological vitals strictly within healthy baseline ranges." }
+    ],
+    triageUrgency: "Routine",
+    slotReserved: "03:00 PM"
+  }
+];
+
+export const mockMLRiskResults = {
+  diseaseRisk: {
+    level: "High Risk",
+    score: 78,
+    badgeClass: "badge-emergency",
+    summary: "Moderate-to-high likelihood of cardiovascular exacerbation based on elevated blood sugar (186 mg/dL) and hypertension (148/92 mmHg)."
+  },
+  readmissionRisk: {
+    level: "Medium Risk",
+    score: 68,
+    badgeClass: "badge-urgent",
+    summary: "Estimated 68% probability of 30-day readmission without proactive medication adjustment and follow-up consultation."
+  },
+  mainReasons: [
+    {
+      id: "reason-1",
+      title: "Elevated Blood Glucose Level (186 mg/dL)",
+      impact: "+34% Risk",
+      detail: "Fasting blood sugar of 186 mg/dL significantly exceeds normal threshold (70-99 mg/dL). High blood glucose causes vascular inflammation and accelerates arterial stiffening."
+    },
+    {
+      id: "reason-2",
+      title: "Stage 2 Systolic Blood Pressure (148 mmHg)",
+      impact: "+26% Risk",
+      detail: "Systolic blood pressure of 148 mmHg increases cardiac workload and raises 30-day risk of cardiovascular events."
+    },
+    {
+      id: "reason-3",
+      title: "Patient Age (58 years) & Co-morbidities",
+      impact: "+18% Risk",
+      detail: "Age 58 combined with existing Type 2 Diabetes and Hyperlipidemia diagnosis elevates baseline risk vector."
+    },
+    {
+      id: "reason-4",
+      title: "Reported Symptom: Exertional Shortness of Breath",
+      impact: "+12% Risk",
+      detail: "Tappable intake indicated shortness of breath during routine activity, warranting early clinical evaluation."
+    }
+  ]
 };
 
 export const mockDoctors = [
   {
     id: "doc-1",
-    name: "Dr. Ananya Sharma",
-    specialty: "Cardiologist",
-    experience: "12+ Years Exp",
-    hospital: "Apex Heart & Medical Center",
+    name: "Dr. Amanda Vance",
+    specialty: "Senior Cardiologist",
+    experience: "16+ Years Exp",
+    hospital: "St. Jude Metropolitan Hospital",
     rating: 4.9,
-    reviews: 320,
-    fee: "₹800",
-    avatar: "/images/doctor-female.png",
-    availableSlots: ["09:30 AM", "11:00 AM", "03:00 PM", "05:30 PM"],
+    reviews: 480,
+    fee: "$120",
+    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200",
+    availableSlots: ["09:00 AM (Priority)", "10:30 AM (Priority)", "02:00 PM", "04:15 PM"],
     onlineConsult: true
   },
   {
     id: "doc-2",
-    name: "Dr. Rajesh Verma",
-    specialty: "Neurologist & Internal Medicine",
-    experience: "15+ Years Exp",
-    hospital: "City Care Super Specialty Hospital",
+    name: "Dr. James Aris",
+    specialty: "Endocrinologist & Diabetologist",
+    experience: "14+ Years Exp",
+    hospital: "City Heart & Metabolic Center",
     rating: 4.8,
-    reviews: 410,
-    fee: "₹1,000",
-    avatar: "/images/doctor-male.png",
-    availableSlots: ["10:00 AM", "02:15 PM", "04:00 PM"],
+    reviews: 360,
+    fee: "$110",
+    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200",
+    availableSlots: ["09:30 AM (Priority)", "11:15 AM", "03:30 PM"],
     onlineConsult: true
   },
   {
     id: "doc-3",
-    name: "Dr. Meera Patel",
-    specialty: "Dermatologist",
-    experience: "9+ Years Exp",
-    hospital: "Skin & Aesthetics Clinic",
+    name: "Dr. Maya Lin",
+    specialty: "Internal Medicine Specialist",
+    experience: "10+ Years Exp",
+    hospital: "St. Jude Metropolitan Hospital",
     rating: 4.9,
-    reviews: 285,
-    fee: "₹700",
-    avatar: "/images/doctor-female.png",
-    availableSlots: ["11:30 AM", "04:30 PM"],
+    reviews: 290,
+    fee: "$95",
+    avatar: "https://images.unsplash.com/photo-1594824813570-889f81643c7b?auto=format&fit=crop&q=80&w=200",
+    availableSlots: ["10:00 AM", "01:15 PM (Priority)", "04:45 PM"],
     onlineConsult: true
   }
 ];
@@ -62,160 +209,138 @@ export const mockDoctors = [
 export const mockAppointments = [
   {
     id: "apt-101",
-    doctorName: "Dr. Ananya Sharma",
+    doctorName: "Dr. Amanda Vance",
     specialty: "Cardiologist",
-    date: "Tomorrow, Aug 12",
-    time: "11:00 AM",
-    type: "Tele-Consultation",
+    date: "Tomorrow, Aug 14",
+    time: "10:30 AM",
+    type: "In-Person Priority Visit",
     status: "Confirmed",
-    avatar: "/images/doctor-female.png"
+    isPriority: true,
+    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200"
   },
   {
     id: "apt-102",
-    doctorName: "Dr. Rajesh Verma",
-    specialty: "Neurologist",
-    date: "Friday, Aug 15",
+    doctorName: "Dr. James Aris",
+    specialty: "Endocrinologist",
+    date: "Next Week, Aug 21",
     time: "02:15 PM",
-    type: "In-Person Clinic Visit",
+    type: "Tele-Consultation",
     status: "Scheduled",
-    avatar: "/images/doctor-male.png"
+    isPriority: false,
+    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200"
   }
 ];
 
-export const mockTriageRules = [
-  {
-    id: "TR-01",
-    ruleName: "Severe Cardiovascular Distress Rule",
-    conditions: "Chest tightness OR Systolic BP > 160 OR Heart Rate > 120",
-    urgency: "Emergency",
-    badgeClass: "badge-emergency",
-    action: "Immediate Resuscitation / Priority ER Admission"
-  },
-  {
-    id: "TR-02",
-    ruleName: "Acute Cardiac Warning & Elevated BP Rule",
-    conditions: "SpO2 < 92% OR Temp > 102°F with Shortness of Breath",
-    urgency: "Urgent",
-    badgeClass: "badge-urgent",
-    action: "Priority OPD Token (Fast-Tracked within 15 mins)"
-  },
-  {
-    id: "TR-03",
-    ruleName: "Standard Symptom Presentation Rule",
-    conditions: "Moderate Fever (99-101°F) OR Joint Pain > 3 Days",
-    urgency: "Standard",
-    badgeClass: "badge-standard",
-    action: "Standard OPD Queue Allocation"
-  },
-  {
-    id: "TR-04",
-    ruleName: "Routine Checkup & Prescription Refill Rule",
-    conditions: "No acute distress, routine follow-up or lab consultation",
-    urgency: "Routine",
-    badgeClass: "badge-routine",
-    action: "Scheduled Appointment Slot"
-  }
-];
-
-export const mockMLRiskScores = {
-  heartDiseaseRisk: {
-    score: 84,
-    level: "High Risk",
-    confidence: "92.4%",
-    keyFactors: [
-      { factor: "Systolic Blood Pressure (138 mmHg)", impact: "+32%" },
-      { factor: "Fasting Blood Sugar (134 mg/dL)", impact: "+26%" },
-      { factor: "Family Cardiac History", impact: "+18%" }
-    ],
-    recommendedAction: "Reserve 15-20% Priority Slot for Specialist Cardiologist Evaluation within 48 Hours."
-  },
-  diabetesRisk: {
-    score: 72,
-    level: "Moderate-High Risk",
-    confidence: "88.1%",
-    keyFactors: [
-      { factor: "BMI Index (25.0)", impact: "+24%" },
-      { factor: "HbA1c Equivalent (6.4%)", impact: "+38%" }
-    ],
-    recommendedAction: "Schedule Endocrinology Fasting Glucose Test."
-  },
-  readmissionRisk: {
-    score: 28,
-    level: "Low-Moderate Risk",
-    confidence: "91.0%",
-    keyFactors: [
-      { factor: "Post-Discharge Medication Adherence", impact: "-15%" },
-      { factor: "Vital Signs Stability Index", impact: "-12%" }
-    ],
-    recommendedAction: "Automated 7-Day Push Reminder & Self-Intake Monitoring."
-  }
+export const mockLiveQueueData = {
+  token: "A-047",
+  estimatedWaitMins: 18,
+  queuePosition: 12,
+  totalInQueue: 32,
+  department: "Cardiology OPD - Room 302",
+  doctor: "Dr. Amanda Vance",
+  peopleAhead: 11,
+  recentProgression: [
+    { token: "A-044", status: "In Doctor Consultation (Room 302)", time: "Now" },
+    { token: "A-045", status: "Called to Vitals Room B", time: "~4 mins" },
+    { token: "A-046", status: "Waiting in Corridor", time: "~10 mins" },
+    { token: "A-047", status: "YOU (Sarah Jenkins)", time: "~18 mins", isUser: true },
+    { token: "A-048", status: "Checked In at Kiosk", time: "~25 mins" }
+  ]
 };
 
-export const mockFairnessAudit = {
-  overallParityRatio: "0.98 (Balanced)",
-  demographicDisparity: [
-    { group: "Age 18 - 35", predictedRiskRate: "42.1%", baselineRate: "41.8%", disparityDelta: "+0.3%" },
-    { group: "Age 36 - 60", predictedRiskRate: "44.5%", baselineRate: "44.2%", disparityDelta: "+0.3%" },
-    { group: "Age 60+", predictedRiskRate: "45.8%", baselineRate: "45.6%", disparityDelta: "+0.2%" },
-    { group: "Female Patients", predictedRiskRate: "43.8%", baselineRate: "43.6%", disparityDelta: "+0.2%" },
-    { group: "Male Patients", predictedRiskRate: "44.2%", baselineRate: "44.0%", disparityDelta: "+0.2%" }
+export const mockOCRReports = [
+  {
+    id: "ocr-101",
+    fileName: "Lab_Result_Metabolic_Panel_Aug2026.png",
+    uploadDate: "Aug 10, 2026",
+    docType: "Blood Lab Report",
+    extractedData: {
+      patientName: "Sarah Jenkins",
+      dateOfTest: "2026-08-09",
+      labName: "Quest Diagnostics Lab #402",
+      metrics: [
+        { key: "Fasting Glucose", value: "186 mg/dL", range: "70-99 mg/dL", status: "High" },
+        { key: "HbA1c", value: "7.8 %", range: "4.0-5.6 %", status: "High" },
+        { key: "Systolic BP", value: "148 mmHg", range: "< 120 mmHg", status: "Elevated" },
+        { key: "Diastolic BP", value: "92 mmHg", range: "< 80 mmHg", status: "Elevated" },
+        { key: "Total Cholesterol", value: "215 mg/dL", range: "< 200 mg/dL", status: "High" },
+        { key: "Serum Creatinine", value: "0.9 mg/dL", range: "0.6-1.1 mg/dL", status: "Normal" }
+      ],
+      diagnosesExtracted: ["Type 2 Diabetes Mellitus", "Essential Hypertension"]
+    }
+  },
+  {
+    id: "ocr-102",
+    fileName: "Discharge_Summary_StJude_Jul2026.pdf",
+    uploadDate: "Jul 15, 2026",
+    docType: "Hospital Discharge Summary",
+    extractedData: {
+      patientName: "Sarah Jenkins",
+      dateOfDischarge: "2026-07-14",
+      attendingPhysician: "Dr. Amanda Vance",
+      metrics: [
+        { key: "Discharge BP", value: "132/84 mmHg", range: "Normal", status: "Normal" },
+        { key: "Discharge HR", value: "72 bpm", range: "60-100 bpm", status: "Normal" }
+      ],
+      diagnosesExtracted: ["Congestive Heart Failure Exacerbation", "Fluid Retention"],
+      dischargeMedications: ["Lisinopril 10mg Daily", "Furosemide 20mg Daily", "Metformin 500mg BID"]
+    }
+  }
+];
+
+export const mockDischargeData = {
+  patientName: "Sarah Jenkins",
+  mrn: "MRN-84920",
+  dischargeDate: "Today (Aug 13, 2026)",
+  dischargeDiagnosis: "Acute Decompensated Heart Failure (Stabilized)",
+  readmissionRiskScore: 68,
+  readmissionRiskLevel: "Medium-High Risk",
+  recommendedFollowUpDate: "Aug 20, 2026 (7 Days Post-Discharge)",
+  suggestedDepartment: "Cardiology Post-Discharge Clinic",
+  suggestedDoctor: "Dr. Amanda Vance",
+  remindersConfigured: [
+    { type: "SMS Notification", target: "+1 (555) 234-5678", schedule: "3 Days & 1 Day Prior" },
+    { type: "Patient Portal Push", target: "App Notification", schedule: "Daily Medication Log Prompt" }
   ],
-  mitigationStatus: "Fairness Layer Active — Equalized Odds Constraint Enforced"
+  lowRiskPath: false
 };
 
-export const mockPrioritySlots = [
-  { time: "09:30 AM", doctor: "Dr. Ananya Sharma", status: "Reserved for ML High-Risk Patient (P-88402)", isPriority: true },
-  { time: "10:15 AM", doctor: "Dr. Ananya Sharma", status: "Standard OPD Booking", isPriority: false },
-  { time: "11:00 AM", doctor: "Dr. Rajesh Verma", status: "Reserved for ML High-Risk Readmission", isPriority: true },
-  { time: "02:30 PM", doctor: "Dr. Meera Patel", status: "Standard OPD Booking", isPriority: false }
-];
+export const mockFairnessMetrics = {
+  overallFairnessScore: "96.4% (Passed Bias Audit)",
+  lastAuditDate: "Aug 12, 2026",
+  demographicDisparity: [
+    { category: "Age Group", subgroup: "18-40", sampleSize: 1240, predictedPositiveRate: "14.2%", actualRate: "14.0%", disparityRatio: "1.01", status: "PASS" },
+    { category: "Age Group", subgroup: "41-65", sampleSize: 2850, predictedPositiveRate: "38.5%", actualRate: "38.1%", disparityRatio: "1.01", status: "PASS" },
+    { category: "Age Group", subgroup: "65+", sampleSize: 1910, predictedPositiveRate: "58.2%", actualRate: "57.9%", disparityRatio: "1.00", status: "PASS" },
+    { category: "Gender", subgroup: "Female", sampleSize: 3100, predictedPositiveRate: "34.1%", actualRate: "34.0%", disparityRatio: "1.00", status: "PASS" },
+    { category: "Gender", subgroup: "Male", sampleSize: 2900, predictedPositiveRate: "35.8%", actualRate: "35.5%", disparityRatio: "1.01", status: "PASS" }
+  ],
+  equalizedOddsMetrics: {
+    tprDifference: "0.012 (Threshold < 0.05)",
+    fprDifference: "0.008 (Threshold < 0.05)"
+  },
+  mitigationTechnique: "Equalized Odds Post-Processing & Adversarial Debias Constraint Active"
+};
 
-export const mockLiveQueue = [
-  { token: "OPD-A39", status: "In Consultation (Room 104)", doctor: "Dr. Ananya Sharma", timeRemaining: "2 mins" },
-  { token: "OPD-A40", status: "Vitals Counter Checked", doctor: "Dr. Ananya Sharma", timeRemaining: "6 mins" },
-  { token: "OPD-A41", status: "Waiting in Lobby", doctor: "Dr. Ananya Sharma", timeRemaining: "10 mins" },
-  { token: "OPD-A42", status: "YOU (Priya Malhotra)", doctor: "Dr. Ananya Sharma", timeRemaining: "14 mins", isUser: true },
-  { token: "OPD-A43", status: "Checked In", doctor: "Dr. Ananya Sharma", timeRemaining: "22 mins" }
-];
-
-export const mockHospitalWayfinding = [
-  { step: 1, location: "Main Hospital Entrance", instruction: "Scan QR Code or Check-in at Kiosk 2", time: "1 min" },
-  { step: 2, location: "Triage & Vitals Counter B", instruction: "Get Blood Pressure & Temperature Recorded", time: "3 mins" },
-  { step: 3, location: "Cardiology OPD Waiting Lounge", instruction: "Proceed to 1st Floor, Room 104", time: "2 mins" },
-  { step: 4, location: "Doctor Consultation Room 104", instruction: "Meet Dr. Ananya Sharma when Token OPD-A42 is called", time: "Current" }
-];
-
-export const mockOCRDocuments = [
+export const mockRAGKnowledgeBase = [
   {
-    id: "doc-101",
-    title: "Prescription_Cardiology_Apex.pdf",
-    uploadDate: "Aug 02, 2026",
-    ocrExtracted: {
-      medications: ["Telmisartan 40mg (1-0-0)", "Metoprolol 25mg (1-0-1)"],
-      diagnosis: "Essential Hypertension with mild exertional dyspnea",
-      labRecommendation: "Repeat Lipid Profile & Serum Creatinine in 4 weeks"
-    }
+    topic: "Risk Score Explanation",
+    keywords: ["risk", "score", "why", "high", "reasons"],
+    response: "Your disease risk score of 78% is mainly driven by your elevated fasting blood glucose (186 mg/dL) and Stage 2 blood pressure (148/92 mmHg). The system recommends booking a priority consultation with Dr. Amanda Vance."
   },
   {
-    id: "doc-102",
-    title: "Lab_Report_Lipid_Panel_July2026.png",
-    uploadDate: "Jul 24, 2026",
-    ocrExtracted: {
-      totalCholesterol: "210 mg/dL (Elevated)",
-      hdl: "48 mg/dL (Normal)",
-      ldl: "135 mg/dL (Borderline High)",
-      triglycerides: "165 mg/dL"
-    }
+    topic: "Appointment Booking",
+    keywords: ["book", "appointment", "schedule", "doctor", "slot"],
+    response: "You can book an appointment directly from your Patient Home base or via the 'Book Appointment' button. High-risk scores automatically unlock reserved priority slots (15-20% of daily quota)."
+  },
+  {
+    topic: "Queue Status",
+    keywords: ["queue", "token", "wait", "time", "position"],
+    response: "Your current active OPD Token is A-047 for Cardiology OPD Room 302. You are position #12 in line with an estimated wait time of ~18 minutes."
+  },
+  {
+    topic: "Medical Advice Disclaimer",
+    keywords: ["diagnose", "treatment", "medicine", "pill", "cure"],
+    response: "Important: I am an AI assistant designed to support navigation and clarify your platform risk summaries. I do not provide diagnostic medical opinions. Please consult Dr. Amanda Vance for medical advice."
   }
-];
-
-export const mockRAGIndex = [
-  { query: "Has this patient had high blood pressure before?", answer: "Yes. Document 'Prescription_Cardiology_Apex.pdf' notes Essential Hypertension diagnosed in 2023 with Telmisartan 40mg prescription." },
-  { query: "What are the patient's drug allergies?", answer: "Patient Priya Malhotra has documented allergies to Penicillin and Dust Mites." },
-  { query: "What was the latest cholesterol reading?", answer: "On July 24, 2026, Total Cholesterol was 210 mg/dL (Elevated) and LDL was 135 mg/dL." }
-];
-
-export const mockNoShowPredictions = [
-  { appointmentId: "APT-901", patientName: "Rohan Gupta", slot: "Today, 03:00 PM", noShowProbability: "74% (High Risk No-Show)", actionSuggested: "Send SMS Confirmation & Offer Slot to Priority High-Risk Queue" },
-  { appointmentId: "APT-902", patientName: "Priya Malhotra", slot: "Tomorrow, 11:00 AM", noShowProbability: "8% (Low Risk)", actionSuggested: "Confirmed Slot" }
 ];

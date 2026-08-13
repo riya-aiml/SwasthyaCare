@@ -1,173 +1,298 @@
 import React, { useState } from 'react';
-import { Heart, ShieldAlert, Sparkles, ArrowRight, RotateCcw, Stethoscope } from 'lucide-react';
+import { Activity, ShieldCheck, Plus, Check, AlertTriangle, ArrowRight, HeartPulse } from 'lucide-react';
+import { mockPatient } from '../data/mockData';
 
-export default function SymptomChecker({ onBookDoctor }) {
-  const [step, setStep] = useState(1);
-  const [primarySymptom, setPrimarySymptom] = useState('');
-  const [severity, setSeverity] = useState('Mild');
-  const [duration, setDuration] = useState('1-2 Days');
-  const [associated, setAssociated] = useState([]);
+export default function SymptomChecker({ onNavigateToML }) {
+  const [age, setAge] = useState(mockPatient.age);
+  const [systolicBP, setSystolicBP] = useState(148);
+  const [diastolicBP, setDiastolicBP] = useState(92);
+  const [bloodSugar, setBloodSugar] = useState(186);
 
-  const commonSymptoms = [
-    'Chest Tightness / Fluttering',
-    'Mild Headache & Fatigue',
-    'Shortness of Breath',
-    'Acidity / Indigestion',
-    'Dizziness or Lightheadedness',
-    'Joint Pain & Stiffness'
+  const defaultSymptoms = [
+    "Chest pain",
+    "Fatigue",
+    "Frequent urination",
+    "Shortness of breath",
+    "Dizziness",
+    "Headache",
+    "Nausea",
+    "Blurred vision",
+    "Swelling in legs"
   ];
 
-  const handleSymptomToggle = (sym) => {
-    if (associated.includes(sym)) {
-      setAssociated(associated.filter(s => s !== sym));
+  const [selectedSymptoms, setSelectedSymptoms] = useState(["Frequent urination", "Shortness of breath", "Fatigue"]);
+  const [customSymptomInput, setCustomSymptomInput] = useState('');
+
+  const defaultConditions = [
+    "Type 2 Diabetes",
+    "Essential Hypertension",
+    "Hyperlipidemia",
+    "Coronary Artery Disease",
+    "Asthma",
+    "Chronic Kidney Disease"
+  ];
+
+  const [selectedConditions, setSelectedConditions] = useState(["Type 2 Diabetes", "Essential Hypertension"]);
+  const [triageResult, setTriageResult] = useState(null);
+
+  const toggleSymptom = (symptom) => {
+    if (selectedSymptoms.includes(symptom)) {
+      setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
     } else {
-      setAssociated([...associated, sym]);
+      setSelectedSymptoms([...selectedSymptoms, symptom]);
     }
   };
 
-  const getTriageResult = () => {
-    if (primarySymptom.includes('Chest') || severity === 'Severe') {
-      return {
-        urgency: 'Moderate to High',
-        badgeClass: 'status-alert',
-        recommendation: 'Cardiology Assessment Recommended',
-        summary: 'Your reported symptoms indicate potential cardiovascular stress. We recommend a tele-consultation with Dr. Ananya Sharma or an ECG check.',
-        specialist: 'Cardiologist'
-      };
+  const addCustomSymptom = () => {
+    if (customSymptomInput.trim() && !selectedSymptoms.includes(customSymptomInput.trim())) {
+      setSelectedSymptoms([...selectedSymptoms, customSymptomInput.trim()]);
+      setCustomSymptomInput('');
     }
-    return {
-      urgency: 'Low Risk',
-      badgeClass: 'status-normal',
-      recommendation: 'General Wellness Care & Hydration',
-      summary: 'Symptoms appear mild and non-critical. Maintain adequate fluid intake and rest. Schedule a general physician checkup if symptoms persist past 3 days.',
-      specialist: 'General Physician'
-    };
   };
 
-  const resetForm = () => {
-    setStep(1);
-    setPrimarySymptom('');
-    setSeverity('Mild');
-    setAssociated([]);
+  const toggleCondition = (cond) => {
+    if (selectedConditions.includes(cond)) {
+      setSelectedConditions(selectedConditions.filter(c => c !== cond));
+    } else {
+      setSelectedConditions([...selectedConditions, cond]);
+    }
+  };
+
+  const handleCalculateRisk = (e) => {
+    e.preventDefault();
+
+    // Rule-Based Triage Engine Logic
+    let level = "Routine";
+    let badgeClass = "badge-routine";
+    let reasons = [];
+
+    const hasChestPain = selectedSymptoms.includes("Chest pain");
+    const hasDyspnea = selectedSymptoms.includes("Shortness of breath");
+    const highBP = systolicBP >= 160 || diastolicBP >= 100;
+    const elevatedBP = systolicBP >= 140 || diastolicBP >= 90;
+    const highGlucose = bloodSugar >= 180;
+
+    if (hasChestPain || systolicBP >= 170) {
+      level = "Emergency";
+      badgeClass = "badge-emergency";
+      reasons.push("Severe symptom 'Chest pain' or Systolic BP > 170 mmHg detected.");
+    } else if (hasDyspnea || highBP || highGlucose) {
+      level = "Urgent";
+      badgeClass = "badge-urgent";
+      if (hasDyspnea) reasons.push("Reported exertion-related Shortness of Breath.");
+      if (elevatedBP) reasons.push(`Blood Pressure (${systolicBP}/${diastolicBP} mmHg) exceeds 140/90 Stage 2 threshold.`);
+      if (highGlucose) reasons.push(`Fasting Blood Sugar (${bloodSugar} mg/dL) exceeds 180 mg/dL hyper-glycemic boundary.`);
+    } else if (selectedSymptoms.length > 0 || elevatedBP) {
+      level = "Standard";
+      badgeClass = "badge-standard";
+      reasons.push("Multiple mild symptoms presented; requires standard clinical consultation.");
+    } else {
+      level = "Routine";
+      badgeClass = "badge-routine";
+      reasons.push("Normal physiological profile; routine checkup recommended.");
+    }
+
+    setTriageResult({ level, badgeClass, reasons });
   };
 
   return (
-    <div className="card" style={{ gridColumn: 'span 12' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-        <div style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '0.6rem', borderRadius: '12px' }}>
-          <Sparkles size={24} />
-        </div>
-        <div>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>AI Patient Intake & Symptom Triage</h2>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Guided symptom evaluation aligned with clinical triage guidelines</p>
+    <div className="grid-12" style={{ gap: '1.75rem' }}>
+      {/* Title Header */}
+      <div className="col-12">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ background: 'var(--primary-50)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary-100)' }}>
+            <HeartPulse size={28} color="var(--primary-600)" />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.65rem', fontWeight: 800 }}>Symptom & Vitals Assessment</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Step-based preliminary health intake for rule-based triage and ML disease risk prediction.
+            </p>
+          </div>
         </div>
       </div>
 
-      {step === 1 && (
-        <div>
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>Step 1: Select your main health complaint</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-            {commonSymptoms.map(sym => (
-              <button
-                key={sym}
-                className={`btn ${primarySymptom === sym ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ textAlign: 'left', justifyContent: 'flex-start', padding: '0.75rem 1rem' }}
-                onClick={() => setPrimarySymptom(sym)}
-              >
-                {sym}
-              </button>
-            ))}
+      {/* Main Intake Form */}
+      <div className="col-8 card">
+        <form onSubmit={handleCalculateRisk}>
+          {/* Section 1: Basic Vitals */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--primary-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ background: 'var(--primary-500)', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyCenter: 'center', fontSize: '0.8rem', fontWeight: 800 }}>1</span>
+              Basic Vitals Information
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Patient Age (Years)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={age} 
+                  onChange={(e) => setAge(Number(e.target.value))}
+                  min="1" max="120" required 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Systolic BP (mmHg)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={systolicBP} 
+                  onChange={(e) => setSystolicBP(Number(e.target.value))}
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Diastolic BP (mmHg)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={diastolicBP} 
+                  onChange={(e) => setDiastolicBP(Number(e.target.value))}
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Blood Sugar (mg/dL)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  value={bloodSugar} 
+                  onChange={(e) => setBloodSugar(Number(e.target.value))}
+                  required 
+                />
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {/* Section 2: Symptoms Multi-select */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--primary-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ background: 'var(--primary-500)', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyCenter: 'center', fontSize: '0.8rem', fontWeight: 800 }}>2</span>
+              Symptoms (Tap to Select)
+            </h3>
+            
+            <div className="chip-group" style={{ marginBottom: '1rem' }}>
+              {defaultSymptoms.map((symptom) => {
+                const isSelected = selectedSymptoms.includes(symptom);
+                return (
+                  <button
+                    type="button"
+                    key={symptom}
+                    className={`chip ${isSelected ? 'selected' : ''}`}
+                    onClick={() => toggleSymptom(symptom)}
+                  >
+                    {isSelected && <Check size={14} style={{ display: 'inline', marginRight: '4px' }} />}
+                    {symptom}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Symptom Input */}
+            <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px' }}>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Add other symptom (free text)..." 
+                value={customSymptomInput}
+                onChange={(e) => setCustomSymptomInput(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <button type="button" className="btn btn-secondary" onClick={addCustomSymptom}>
+                <Plus size={16} /> Add
+              </button>
+            </div>
+          </div>
+
+          {/* Section 3: Past Medical History */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--primary-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ background: 'var(--primary-500)', color: 'white', borderRadius: '50%', width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyCenter: 'center', fontSize: '0.8rem', fontWeight: 800 }}>3</span>
+              Past Medical History (Pre-diagnosed Conditions)
+            </h3>
+
+            <div className="chip-group">
+              {defaultConditions.map((cond) => {
+                const isSelected = selectedConditions.includes(cond);
+                return (
+                  <button
+                    type="button"
+                    key={cond}
+                    className={`chip ${isSelected ? 'selected' : ''}`}
+                    onClick={() => toggleCondition(cond)}
+                  >
+                    {isSelected && <Check size={14} style={{ display: 'inline', marginRight: '4px' }} />}
+                    {cond}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Action Button & Reassurance */}
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.85rem 2.5rem', fontSize: '1.05rem', width: '100%', maxWidth: '360px' }}>
+              Calculate Risk Score
+            </button>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              <ShieldCheck size={16} color="var(--emerald-600)" />
+              <span>Your information is secure, private, and encrypted under HIPAA guidelines.</span>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Rule-Based Triage Output Panel */}
+      <div className="col-4">
+        <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
+              Rule-Based Triage Result
+            </h3>
+
+            {!triageResult ? (
+              <div style={{ background: 'var(--bg-primary)', padding: '2rem 1.5rem', textAlign: 'center', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
+                <Activity size={36} color="var(--primary-500)" style={{ margin: '0 auto 0.75rem auto', display: 'block' }} />
+                <p style={{ fontSize: '0.88rem' }}>Enter vitals and select symptoms on the left, then click <strong>"Calculate Risk Score"</strong> to view urgency classification.</p>
+              </div>
+            ) : (
+              <div>
+                <div style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-100)', padding: '1.25rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.78rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.25rem' }}>Assigned Urgency Level</div>
+                  <span className={`badge ${triageResult.badgeClass}`} style={{ fontSize: '1.1rem', padding: '0.4rem 1.25rem' }}>
+                    {triageResult.level} Urgency
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
+                    Rule-Based Explanation:
+                  </div>
+                  <ul style={{ paddingLeft: '1.2rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {triageResult.reasons.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
             <button 
-              className="btn btn-primary"
-              disabled={!primarySymptom}
-              onClick={() => setStep(2)}
+              className="btn btn-primary" 
+              style={{ width: '100%' }}
+              onClick={onNavigateToML}
             >
-              <span>Next: Symptom Details</span>
+              <span>View Dual ML Risk & Reasons</span>
               <ArrowRight size={16} />
             </button>
           </div>
         </div>
-      )}
-
-      {step === 2 && (
-        <div>
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '1rem' }}>Step 2: How severe is the discomfort?</h4>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-            <div className="form-group">
-              <label className="form-label">Severity Level</label>
-              <select 
-                className="form-select"
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value)}
-              >
-                <option value="Mild">Mild (Noticeable but does not affect daily work)</option>
-                <option value="Moderate">Moderate (Interferes with routine activity)</option>
-                <option value="Severe">Severe (Intense discomfort / Requires urgent care)</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Duration</label>
-              <select 
-                className="form-select"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-              >
-                <option value="Just today">Just started today</option>
-                <option value="1-2 Days">1-2 Days</option>
-                <option value="Past 1 Week">Past 1 Week</option>
-                <option value="More than a month">More than a month</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button className="btn btn-secondary" onClick={() => setStep(1)}>Back</button>
-            <button className="btn btn-primary" onClick={() => setStep(3)}>
-              <span>Generate Clinical Assessment</span>
-              <Sparkles size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-glow)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '1.5rem'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <ShieldAlert size={22} color={getTriageResult().urgency.includes('High') ? '#f43f5e' : '#10b981'} />
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{getTriageResult().recommendation}</h3>
-            </div>
-            <span className={`status-badge ${getTriageResult().badgeClass}`}>
-              Urgency Level: {getTriageResult().urgency}
-            </span>
-          </div>
-
-          <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-            {getTriageResult().summary}
-          </p>
-
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => onBookDoctor(getTriageResult().specialist)}>
-              <Stethoscope size={16} />
-              <span>Book Consultation with {getTriageResult().specialist}</span>
-            </button>
-            <button className="btn btn-secondary" onClick={resetForm}>
-              <RotateCcw size={16} />
-              <span>Start New Checkup</span>
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

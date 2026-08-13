@@ -1,83 +1,116 @@
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import OPDPortal from './components/OPDPortal';
-import TriageEngine from './components/TriageEngine';
+import PatientHome from './components/PatientHome';
+import SymptomChecker from './components/SymptomChecker';
 import MLRiskScoring from './components/MLRiskScoring';
+import ClinicianDashboard from './components/ClinicianDashboard';
 import QueueTracker from './components/QueueTracker';
 import DischargeFollowUp from './components/DischargeFollowUp';
 import DocumentIntakeRAG from './components/DocumentIntakeRAG';
-import NoShowPredictor from './components/NoShowPredictor';
+import FairnessMonitoring from './components/FairnessMonitoring';
 import AppointmentBooking from './components/AppointmentBooking';
-import { mockAppointments } from './data/mockData';
+import AIHealthAssistant from './components/AIHealthAssistant';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('opd-portal');
-  const [role, setRole] = useState('patient'); // 'patient' | 'clinician'
+  const [activeTab, setActiveTab] = useState('patient-home');
+  const [role, setRole] = useState('patient'); // 'patient' | 'clinician' | 'admin'
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [appointments, setAppointments] = useState(mockAppointments);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
-  const handleAddAppointment = (newApt) => {
-    setAppointments([newApt, ...appointments]);
+  // When switching roles, adjust default view
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    if (newRole === 'patient') {
+      setActiveTab('patient-home');
+    } else if (newRole === 'clinician') {
+      setActiveTab('clinician-dashboard');
+    } else if (newRole === 'admin') {
+      setActiveTab('fairness');
+    }
   };
 
   return (
     <div className="app-container">
+      {/* Left Sidebar */}
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         role={role}
       />
 
+      {/* Main Container */}
       <div className="main-content">
         <Header 
           role={role}
-          setRole={setRole}
+          setRole={handleRoleChange}
           onBookClick={() => setShowBookingModal(true)}
         />
 
         <main className="page-body">
-          {activeTab === 'opd-portal' && (
-            <OPDPortal 
+          {/* Patient Views */}
+          {activeTab === 'patient-home' && (
+            <PatientHome 
               onTabSwitch={setActiveTab}
               onBookClick={() => setShowBookingModal(true)}
             />
           )}
 
           {activeTab === 'triage' && (
-            <TriageEngine 
+            <SymptomChecker 
               onNavigateToML={() => setActiveTab('ml-risk')}
             />
           )}
 
           {activeTab === 'ml-risk' && (
-            <MLRiskScoring />
+            <MLRiskScoring 
+              onBookClick={() => setShowBookingModal(true)}
+            />
           )}
 
           {activeTab === 'queue' && (
-            <QueueTracker />
+            <QueueTracker 
+              onTabSwitch={setActiveTab}
+            />
           )}
 
+          {/* Clinician View */}
+          {activeTab === 'clinician-dashboard' && (
+            <ClinicianDashboard />
+          )}
+
+          {/* Feature Views */}
           {activeTab === 'discharge' && (
-            <DischargeFollowUp />
+            <DischargeFollowUp 
+              onBookClick={() => setShowBookingModal(true)}
+            />
           )}
 
           {activeTab === 'ocr-rag' && (
             <DocumentIntakeRAG />
           )}
 
-          {activeTab === 'no-show' && (
-            <NoShowPredictor />
+          {activeTab === 'fairness' && (
+            <FairnessMonitoring />
           )}
         </main>
       </div>
 
+      {/* Booking Modal */}
       {showBookingModal && (
         <AppointmentBooking 
           onClose={() => setShowBookingModal(false)}
-          onConfirm={handleAddAppointment}
+          onConfirm={(newApt) => {
+            console.log('Appointment booked:', newApt);
+          }}
         />
       )}
+
+      {/* Floating AI Assistant Chat Widget (Available in Patient & Clinician views) */}
+      <AIHealthAssistant 
+        isOpen={isAiAssistantOpen}
+        setIsOpen={setIsAiAssistantOpen}
+      />
     </div>
   );
 }
