@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Heart, Activity, ShieldCheck, Clock, ArrowRight, UserCheck, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { Calendar, Heart, Activity, ShieldCheck, Clock, ArrowRight, UserCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 import { mockPatient, mockMLRiskResults } from '../data/mockData';
 
 export default function PatientHome({ onTabSwitch, onBookClick }) {
@@ -8,9 +8,9 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
 
   return (
     <div className="grid-12" style={{ gap: '1.75rem' }}>
-      {/* Privacy & Security Reassurance Banner */}
+      {/* Security Banner */}
       <div className="col-12 disclaimer-banner">
-        <ShieldCheck size={20} color="var(--primary-600)" />
+        <ShieldCheck size={20} color="var(--primary-teal)" />
         <div style={{ flex: 1 }}>
           <strong>Your Health Information is Secure & Encrypted:</strong> Data processed under HIPAA/GDPR standards. AI risk predictions support clinician decisions and never replace professional medical diagnosis.
         </div>
@@ -20,11 +20,11 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
       <div className="col-12" style={{ marginBottom: '-0.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.2rem' }}>
+            <h1 className="font-patient-heading" style={{ fontSize: '1.95rem', fontWeight: 700, marginBottom: '0.2rem' }}>
               Good day, {mockPatient.name} 👋
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              {todayStr} • Medical Record Number: <strong>{mockPatient.id}</strong>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+              {todayStr} • Medical Record Number: <strong className="font-mono-num">{mockPatient.id}</strong>
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -40,25 +40,36 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
         </div>
       </div>
 
+      {/* Signature Element: The Care Thread Journey Bar */}
+      <div className="col-12 card" style={{ padding: '1rem 1.25rem', background: 'var(--bg-surface)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+          <span style={{ fontWeight: 700, color: 'var(--primary-teal)' }}>The Care Thread — Patient Journey Progress</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Step 3 of 4: Outpatient Consultation Pending</span>
+        </div>
+        <div className="care-thread-container">
+          <div className="care-thread-bar" style={{ width: '72%' }} />
+        </div>
+      </div>
+
       {/* Three Primary Action Cards */}
       <div className="col-4">
         <div className="card" style={{
-          background: 'linear-gradient(135deg, var(--primary-600), var(--primary-700))',
+          background: 'linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark))',
           color: 'white',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           justify: 'space-between',
           border: 'none',
-          boxShadow: 'var(--shadow-lg)',
+          boxShadow: '0 8px 24px rgba(46, 111, 114, 0.25)',
           position: 'relative',
           overflow: 'hidden'
         }}>
           <div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.2)', width: '48px', height: '48px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', width: '48px', height: '48px', borderRadius: 'var(--radius-patient)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
               <Calendar size={26} color="white" />
             </div>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'white', marginBottom: '0.5rem' }}>
+            <h3 className="font-patient-heading" style={{ fontSize: '1.4rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>
               Book Appointment
             </h3>
             <p style={{ fontSize: '0.88rem', opacity: 0.9, lineHeight: 1.5, marginBottom: '1.5rem' }}>
@@ -66,11 +77,11 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
             </p>
           </div>
           <button 
-            className="btn" 
+            className="btn btn-coral" 
             onClick={onBookClick}
-            style={{ background: 'white', color: 'var(--primary-700)', fontWeight: 700, width: '100%' }}
+            style={{ width: '100%' }}
           >
-            <span>Book Now</span>
+            <span>Book Priority Slot</span>
             <ArrowRight size={16} />
           </button>
         </div>
@@ -79,17 +90,17 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
       <div className="col-4">
         <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ background: 'var(--primary-50)', width: '48px', height: '48px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', border: '1px solid var(--primary-100)' }}>
-              <UserCheck size={26} color="var(--primary-600)" />
+            <div style={{ background: 'var(--primary-teal-light)', width: '48px', height: '48px', borderRadius: 'var(--radius-patient)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <UserCheck size={26} color="var(--primary-teal)" />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+            <h3 className="font-patient-heading" style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
               My Appointments
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
               View upcoming clinic visits, manage video tele-consultations, and track past medical history.
             </p>
-            <div style={{ background: 'var(--bg-primary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.85rem' }}>
-              <strong>1 Active Booking:</strong> {nextApt.date} at {nextApt.time}
+            <div style={{ background: 'var(--bg-patient)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-patient)', fontSize: '0.85rem' }}>
+              <strong>1 Active Booking:</strong> {nextApt.date} at <span className="font-mono-num">{nextApt.time}</span>
             </div>
           </div>
           <button 
@@ -106,18 +117,18 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
       <div className="col-4">
         <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ background: 'var(--teal-50)', width: '48px', height: '48px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', border: '1px solid var(--teal-100)' }}>
-              <Heart size={26} color="var(--teal-600)" />
+            <div style={{ background: 'var(--accent-coral-light)', width: '48px', height: '48px', borderRadius: 'var(--radius-patient)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <Heart size={26} color="#E89274" />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+            <h3 className="font-patient-heading" style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
               View My Risk Score
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Check your personalized disease risk (78%) & 30-day readmission risk breakdown with plain-language explanations.
+              Check your personalized disease risk (<span className="font-mono-num">78%</span>) & 30-day readmission risk breakdown with plain-language explanations.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span className="badge badge-emergency">Disease: High Risk ({mockMLRiskResults.diseaseRisk.score}%)</span>
-              <span className="badge badge-urgent">Readmission: Medium ({mockMLRiskResults.readmissionRisk.score}%)</span>
+              <span className="badge badge-high">Disease: High (<span className="font-mono-num">{mockMLRiskResults.diseaseRisk.score}%</span>)</span>
+              <span className="badge badge-medium">Readmission: Medium (<span className="font-mono-num">{mockMLRiskResults.readmissionRisk.score}%</span>)</span>
             </div>
           </div>
           <button 
@@ -135,42 +146,42 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
       <div className="col-8 card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary-600)', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary-teal)', letterSpacing: '0.05em' }}>
               Upcoming Visit Summary
             </div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Next Scheduled Appointment</h3>
+            <h3 className="font-patient-heading" style={{ fontSize: '1.45rem', fontWeight: 700 }}>Next Scheduled Appointment</h3>
           </div>
-          <span className="badge badge-routine" style={{ fontSize: '0.85rem', padding: '0.4rem 0.9rem' }}>
+          <span className="badge badge-low" style={{ fontSize: '0.85rem', padding: '0.4rem 0.9rem' }}>
             <CheckCircle2 size={15} /> {nextApt.status}
           </span>
         </div>
 
-        <div style={{ background: 'var(--bg-primary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
+        <div style={{ background: 'var(--bg-patient)', padding: '1.25rem', borderRadius: 'var(--radius-patient)', border: '1px solid #E2E8E8', marginBottom: '1.25rem' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
             <div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Date & Time</div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{nextApt.date}</div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--primary-600)', fontWeight: 700 }}>{nextApt.time}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Date & Time</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '2px' }}>{nextApt.date}</div>
+              <div className="font-mono-num" style={{ fontSize: '0.9rem', color: 'var(--primary-teal)', fontWeight: 700 }}>{nextApt.time}</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Doctor & Department</div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{nextApt.doctor}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Doctor & Department</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '2px' }}>{nextApt.doctor}</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{nextApt.department} Department</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Hospital Facility</div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{nextApt.hospital}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Hospital Facility</div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '2px' }}>{nextApt.hospital}</div>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Main Campus • Outpatient Wing</div>
             </div>
           </div>
         </div>
 
         {/* Prep Instructions */}
-        <div style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-100)', borderRadius: 'var(--radius-md)', padding: '1rem', display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
-          <AlertCircle size={22} color="var(--primary-600)" />
+        <div style={{ background: 'var(--primary-teal-light)', border: '1px solid rgba(46, 111, 114, 0.2)', borderRadius: 'var(--radius-patient)', padding: '1rem', display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
+          <AlertCircle size={22} color="var(--primary-teal)" />
           <div>
-            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--primary-800)' }}>Patient Prep Instructions:</div>
-            <div style={{ fontSize: '0.84rem', color: 'var(--primary-700)' }}>{nextApt.prepInstructions}</div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--primary-teal-dark)' }}>Patient Prep Instructions:</div>
+            <div style={{ fontSize: '0.84rem', color: 'var(--primary-teal)' }}>{nextApt.prepInstructions}</div>
           </div>
         </div>
       </div>
@@ -178,21 +189,21 @@ export default function PatientHome({ onTabSwitch, onBookClick }) {
       {/* Live OPD Token Mini View */}
       <div className="col-4 card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
             Hospital OPD Queue Status
           </div>
           <div className="token-box" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
             <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', opacity: 0.9 }}>Active Token</div>
-            <div className="token-number" style={{ fontSize: '2.5rem', margin: '0.2rem 0' }}>{mockPatient.currentToken}</div>
+            <div className="token-number" style={{ fontSize: '2.6rem', margin: '0.2rem 0' }}>{mockPatient.currentToken}</div>
             <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{mockPatient.opdDepartment}</div>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
             <span>Position in queue:</span>
-            <strong>{mockPatient.queuePosition} of {mockPatient.totalInQueue}</strong>
+            <strong className="font-mono-num">{mockPatient.queuePosition} of {mockPatient.totalInQueue}</strong>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
             <span>Est. Wait Time:</span>
-            <strong style={{ color: 'var(--primary-600)' }}>~{mockPatient.estimatedWaitMins} minutes</strong>
+            <strong className="font-mono-num" style={{ color: 'var(--primary-teal)' }}>~{mockPatient.estimatedWaitMins} minutes</strong>
           </div>
         </div>
 

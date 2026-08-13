@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, X, Send, Bot, User, ShieldAlert, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, ShieldAlert } from 'lucide-react';
 import { mockRAGKnowledgeBase, mockPatient } from '../data/mockData';
 
 export default function AIHealthAssistant({ isOpen, setIsOpen }) {
@@ -40,7 +40,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
     return (
       <div className="chat-widget-container">
         <button className="chat-trigger-btn" onClick={() => setIsOpen(true)} title="AI Health Assistant">
-          <MessageSquare size={26} />
+          <MessageSquare size={26} color="white" />
         </button>
       </div>
     );
@@ -56,7 +56,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
               <Bot size={20} color="white" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>AI Health Assistant</div>
+              <div className="font-patient-heading" style={{ fontWeight: 700, fontSize: '0.95rem' }}>AI Health Assistant</div>
               <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>Grounded RAG Pipeline</div>
             </div>
           </div>
@@ -66,8 +66,8 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         </div>
 
         {/* Safety Disclaimer Banner */}
-        <div style={{ background: '#fffbe6', borderBottom: '1px solid #fef3c7', padding: '0.4rem 0.85rem', fontSize: '0.75rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <ShieldAlert size={14} />
+        <div style={{ background: 'var(--accent-coral-light)', borderBottom: '1px solid rgba(242, 164, 136, 0.3)', padding: '0.4rem 0.85rem', fontSize: '0.75rem', color: '#8A4832', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <ShieldAlert size={14} color="#8A4832" />
           <span>Decision Support Only — Not a Substitute for Medical Advice</span>
         </div>
 
@@ -90,7 +90,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             onChange={(e) => setInputMessage(e.target.value)}
             style={{ flex: 1, fontSize: '0.85rem', padding: '0.55rem 0.85rem' }}
           />
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.55rem 0.85rem' }}>
+          <button type="submit" className="btn btn-coral" style={{ padding: '0.55rem 0.85rem' }}>
             <Send size={16} />
           </button>
         </form>

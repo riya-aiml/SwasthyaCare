@@ -18,7 +18,7 @@ export default function App() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
-  // When switching roles, adjust default view
+  // When switching roles, adjust default view & surface styling
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     if (newRole === 'patient') {
@@ -30,8 +30,10 @@ export default function App() {
     }
   };
 
+  const containerClass = role === 'clinician' ? 'app-container clinician-view' : 'app-container patient-view';
+
   return (
-    <div className="app-container">
+    <div className={containerClass}>
       {/* Left Sidebar */}
       <Sidebar 
         activeTab={activeTab} 
@@ -106,7 +108,7 @@ export default function App() {
         />
       )}
 
-      {/* Floating AI Assistant Chat Widget (Available in Patient & Clinician views) */}
+      {/* Floating AI Assistant Chat Widget */}
       <AIHealthAssistant 
         isOpen={isAiAssistantOpen}
         setIsOpen={setIsAiAssistantOpen}
