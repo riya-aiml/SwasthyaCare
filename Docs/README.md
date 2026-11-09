@@ -1,5 +1,5 @@
 # SwasthyaCare
-
+/Users/riyasharma/Desktop/Blockchain/SwasthyaCare/index.html
 **Project:** AI-assisted healthcare management platform  
 **Documentation version:** 0.1 (working baseline)  
 **Status:** Planning and requirements draft  
