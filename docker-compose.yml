@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: swasthyacare-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - swasthya-network
+
+  # 2. Python FastAPI Clinical Decision Support Microservice
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai-service
+    container_name: swasthyacare-ai-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+    networks:
+      - swasthya-network
+
+  # 3. Express REST API Backend
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: swasthyacare-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/swasthyacare
+      - JWT_SECRET=production-secret-replace-with-managed-secret
+      - AI_SERVICE_URL=http://ai-service:8000
+    depends_on:
+      - mongodb
+      - ai-service
+    networks:
+      - swasthya-network
+
+  # 4. React Frontend (Nginx static delivery)
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: swasthyacare-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - swasthya-network
+
+networks:
+  swasthya-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

@@ -25,38 +25,51 @@ export const requestAppointment = async (req, res) => {
       });
     }
 
-    // 1. Find the slot
-    const slot = await AvailabilitySlot.findById(slotId);
+    // 1. Atomically lock and reserve the slot (Compare-And-Swap)
+    // Only succeeds if status is currently 'available' and isBooked is false
+    const slot = await AvailabilitySlot.findOneAndUpdate(
+      {
+        _id: slotId,
+        status: 'available',
+        isBooked: false,
+      },
+      {
+        $set: { status: 'reserved' },
+      },
+      { new: true }
+    );
 
     if (!slot) {
-      return res.status(404).json({
-        success: false,
-        error: { message: 'Availability slot not found' },
-      });
-    }
-
-    // 2. Check if slot is still available
-    if (slot.isBooked || slot.status !== 'available') {
+      // Slot either does not exist, or was already reserved/booked by a concurrent request
+      const slotExists = await AvailabilitySlot.exists({ _id: slotId });
+      if (!slotExists) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Availability slot not found' },
+        });
+      }
       return res.status(409).json({
         success: false,
         error: { message: 'This slot is no longer available' },
       });
     }
 
-    // 3. Check if there's already a pending/approved appointment for this slot
+    // 2. Check if there's already an active appointment for this slot
     const existingAppointment = await Appointment.findOne({
       availabilitySlot: slotId,
       status: { $in: ['PENDING', 'APPROVED'] },
     });
 
     if (existingAppointment) {
+      // Rollback slot to available
+      await AvailabilitySlot.findByIdAndUpdate(slotId, { status: 'available' });
       return res.status(409).json({
         success: false,
         error: { message: 'This slot already has a pending or approved appointment' },
       });
     }
 
-    // 4. Create appointment
+    // 3. Create appointment
     const appointment = new Appointment({
       patient: req.user._id,
       doctor: slot.doctorUser,
@@ -70,11 +83,13 @@ export const requestAppointment = async (req, res) => {
       symptoms,
     });
 
-    await appointment.save();
-
-    // 5. Mark slot as reserved (not fully booked until approved)
-    slot.status = 'reserved';
-    await slot.save();
+    try {
+      await appointment.save();
+    } catch (saveErr) {
+      // Rollback slot reservation if appointment save failed
+      await AvailabilitySlot.findByIdAndUpdate(slotId, { status: 'available' });
+      throw saveErr;
+    }
 
     // Populate for response
     await appointment.populate([

@@ -1,173 +1,158 @@
-# SwasthyaCare - Healthcare Management Platform
+# 🏥 SwasthyaCare — Healthcare Management & Clinical Decision Platform
 
-**Version:** 1.0.0  
-**Status:** Sprint 1 - In Progress  
-**Last Updated:** 2026-11-09
-
-## 🏥 About
-
-SwasthyaCare is an AI-assisted healthcare management platform that supports:
-- Appointment management with doctor approval workflow
-- Post-discharge follow-up and recovery tracking
-- Preliminary heart disease and diabetes risk assessment
-- Medicine packaging identification via OCR
-
-**⚠️ Important Safety Notice:**
-This is a demonstration project. Risk assessments are decision support tools, not medical diagnoses. Any real-world clinical use requires appropriate validation, security review, and regulatory assessment.
-
-## 🏗️ Project Structure
-
-```
-SwasthyaCare/
-├── client/              # React + Vite frontend
-├── server/              # Node.js + Express backend
-├── ai-service/          # Python + FastAPI ML/OCR service
-├── Docs/                # Complete project documentation
-│   ├── 01-Planning/
-│   ├── 02-Requirements/
-│   ├── 03-System-Design/
-│   ├── 04-Implementation/
-│   ├── 05-Testing/
-│   ├── 06-Deployment/
-│   ├── 07-Maintenance/
-│   └── Sprint/
-└── README.md
-```
-
-## 🚀 Tech Stack
-
-- **Frontend:** React 18 + Vite
-- **Backend:** Node.js + Express
-- **Database:** MongoDB
-- **ML Service:** Python + FastAPI
-- **API Style:** REST over HTTPS
-
-## 📋 Sprint Progress
-
-### Sprint 1: Project Foundation ✅ COMPLETE
-**Goal:** Create a reproducible development environment with React, Express, and MongoDB connected.
-**Completed:** 2026-11-09
-
-### Sprint 2: Authentication & User Profiles ✅ COMPLETE
-**Goal:** Allow users to register and log in securely, with server-side role enforcement.
-- [x] User schema with roles (Patient, Doctor, Admin)
-- [x] Password hashing with bcrypt (salt rounds: 10)
-- [x] JWT token authentication
-- [x] Protected routes middleware
-- [x] Role-based access control (RBAC)
-- [x] User profile management APIs
-- [x] React Login, Register, and Profile UI
-- [x] 15/15 automated tests passing
-**Completed:** 2026-11-10
-
-### Sprint 3: Doctor Discovery & Availability ⏳ NEXT
-**Goal:** Allow patients to discover doctors and view available appointment slots.
-
-## 🛠️ Getting Started
-
-### Prerequisites
-- Node.js v18+ and npm
-- MongoDB (local or MongoDB Atlas account)
-- Git
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd SwasthyaCare
-   ```
-
-2. **Setup Frontend**
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
-   Frontend will run on http://localhost:5173
-
-3. **Setup Backend**
-   ```bash
-   cd server
-   npm install
-   npm start
-   ```
-   Backend will run on http://localhost:3001
-
-4. **Start MongoDB**
-   ```bash
-   brew services start mongodb/brew/mongodb-community@8.0
-   ```
-
-5. **Environment Variables**
-   Backend `.env` is already configured for local MongoDB.
-   
-   Verify `server/.env` contains:
-   ```env
-   PORT=3001
-   NODE_ENV=development
-   MONGODB_URI=mongodb://localhost:27017/swasthyacare
-   ```
-
-### Quick Test
-After setup, visit:
-- Frontend: http://localhost:5173
-- Backend Health Check: http://localhost:5000/api/health
-
-## 📖 Documentation
-
-Full documentation is available in the `/Docs` folder:
-- **Sprint Planner:** `Docs/Sprint/SwasthyaCare_Agile_Sprint_Planner_v1.0.md`
-- **System Design:** `Docs/03-System-Design/`
-- **Requirements:** `Docs/02-Requirements/`
-
-## 🔐 Security Notes
-
-- Never commit `.env` files
-- Use synthetic/de-identified data during development
-- All patient data access requires proper authorization
-- Risk assessments are advisory only, not diagnostic
-
-## 👥 User Roles
-
-- **Patient:** Book appointments, view health records, submit recovery updates
-- **Doctor:** Manage availability, approve appointments, create follow-up plans
-- **Admin:** Platform management and user administration
-- **Hospital Management:** Aggregate reporting and analytics
-
-## 📅 Development Roadmap
-
-- **Sprint 1 (Weeks 1-2):** Foundation - React, Express, MongoDB connection
-- **Sprint 2 (Weeks 3-4):** Authentication and user profiles
-- **Sprint 3 (Weeks 5-6):** Doctor discovery and availability
-- **Sprint 4 (Weeks 7-8):** Appointment lifecycle with approval workflow
-- **Sprint 5 (Weeks 9-10):** Post-discharge follow-up system
-- **Sprint 6 (Weeks 11-12):** Risk assessment and OCR prototypes
-- **Sprint 7 (Weeks 13-14):** Dashboards and integration
-- **Sprint 8 (Weeks 15-16):** Testing, security, and deployment
-
-## 🧪 Testing
-
-```bash
-# Run backend tests
-cd server
-npm test
-
-# Run frontend tests
-cd client
-npm test
-```
-
-## 📝 License
-
-This is an educational/demonstration project.
-
-## 🤝 Contributing
-
-This project follows Agile Scrum methodology with 2-week sprints.
+**Version:** 1.0.0 (Release Demonstration)  
+**Status:** ✅ Sprints 1–8 Completed (100% Passed)  
+**Last Updated:** November 2026
 
 ---
 
-**Current Sprint:** Sprint 1  
-**Sprint Goal:** Foundation and developer setup  
-**Sprint End Date:** Week 2
+## 🌟 Overview
+
+**SwasthyaCare** is an end-to-end, privacy-compliant, multi-service digital health platform built according to the 8-sprint agile plan. It connects patients, clinicians, administrators, and hospital leadership through automated scheduling, clinical recovery monitoring, post-discharge triage, and artificial intelligence-assisted clinical decision support.
+
+> **⚠️ Regulatory & Demonstration Notice:**  
+> SwasthyaCare is an academic demonstration and software prototype. The included cardiovascular and diabetes risk calculators, as well as the OCR packaging scanner, are statistical decision-support instruments. **They do not constitute certified medical devices (SaMD) and must not be used for autonomous clinical diagnosis or unmonitored prescription alterations.**
+
+---
+
+## 🏛️ System Architecture
+
+```
+SwasthyaCare Monorepo
+├── client/              # React 18 + Vite + Tailwind CSS Frontend (SPA)
+│   ├── src/components/  # Role dashboards, appointment queues, AI risk calculators, OCR
+│   └── src/services/    # Axios/Fetch API clients for auth, appointments, follow-ups, AI
+├── server/              # Node.js + Express REST API Gateway & Business Logic
+│   ├── src/modules/     # Auth, Users, Doctors, Appointments, Follow-ups, Dashboards, AI
+│   └── tests/           # Automated test suites for Sprints 2, 3, 4, 5, 6, 7, 8
+├── ai-service/          # Python 3.11+ FastAPI Microservice (Port 8000)
+│   ├── app/models/      # Framingham 10-Year ASCVD & FINDRISC Diabetes ML models
+│   ├── app/services/    # Packaging OCR tokenizer & formulary candidate matcher
+│   └── tests/           # Pytest test suite for ML models & Pydantic boundary validation
+├── Docs/                # Complete SRS, Architecture, Sprint Planner & Runbooks
+├── docker-compose.yml   # Multi-container orchestration (Mongo, Server, AI-Service, Client)
+└── Dockerfile.*         # Container specifications for each microservice
+```
+
+---
+
+## 🚀 Key Modules & Completed Sprints
+
+| Sprint | Focus | Deliverables & Status | Tests |
+|---|---|---|---|
+| **Sprint 1** | Foundation & Environment | Vite React client, Express API, MongoDB connection, centralized error handling | ✅ Complete |
+| **Sprint 2** | Auth & Identity | JWT Auth, bcrypt password hashing, 4 user roles, profile APIs | 15/15 Passed |
+| **Sprint 3** | Discovery & Slots | Doctor directory, specialty filters, doctor profile management, bookable availability slots | 17/17 Passed |
+| **Sprint 4** | Appointment Lifecycle | PENDING ➔ APPROVED / REJECTED state machine, double-booking prevention, cancellation workflows | 24/24 Passed |
+| **Sprint 5** | Post-Discharge Follow-Up | Care plans with medications, recovery check-in logs, symptom triage alerts, background notification queue | 17/17 Passed |
+| **Sprint 6** | AI Decision Support | Python FastAPI microservice, Framingham ASCVD model, FINDRISC model, OCR packaging matcher, safety notices | 9/9 Passed (Node) + 6 Pytest |
+| **Sprint 7** | Dashboards & Integration | Role-specific dashboards (Patient, Doctor, Admin, Management), HIPAA aggregate privacy filter, notification triggers | 20/20 Passed |
+| **Sprint 8** | QA, Concurrency & Release | Atomic CAS concurrency locking, authorization boundary matrix, secrets review, Docker orchestration, runbook | 12/12 Passed |
+| **TOTAL** | **Full System Regression** | **All 8 Sprints verified with zero regressions** | **114/114 Passed (100%)** |
+
+---
+
+## 🛠️ Quick Start (Local Development)
+
+### 1. Prerequisites
+- **Node.js:** v18+ and `npm`
+- **Python:** v3.11+ and `pip`
+- **MongoDB:** v7.0+ (running locally on port 27017 or MongoDB Atlas connection)
+
+### 2. Clone Repository
+```bash
+git clone https://github.com/riya-aiml/SwasthyaCare.git
+cd SwasthyaCare
+```
+
+### 3. Start Database
+```bash
+# macOS (Homebrew)
+brew services start mongodb/brew/mongodb-community@8.0
+
+# Linux (systemd)
+sudo systemctl start mongod
+```
+
+### 4. Start Python AI Microservice (Port 8000)
+```bash
+cd ai-service
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --port 8000 --reload
+```
+
+### 5. Start Backend API Server (Port 3001)
+```bash
+cd ../server
+npm install
+npm run dev
+```
+
+### 6. Start React Frontend (Port 5173)
+```bash
+cd ../client
+npm install
+npm run dev
+```
+
+Access the application in your browser: **http://localhost:5173**
+
+---
+
+## 🐳 Docker One-Click Deployment
+
+To launch the complete multi-service stack (Database, AI Service, Backend Server, and Nginx Client) with a single command:
+```bash
+docker compose up --build
+```
+
+---
+
+## 🧪 Automated Testing Suite
+
+The repository includes comprehensive automated tests covering authentication, database locking, appointment state transitions, clinical triage, ML inference boundaries, and role authorization matrices:
+
+```bash
+# Run the entire full-system regression suite (Sprints 2 - 8)
+cd server
+npm run test:all
+
+# Run specific sprint test suite
+node tests/sprint7.test.js
+node tests/sprint8.test.js
+
+# Run Python FastAPI microservice pytest suite
+cd ../ai-service
+pytest tests/
+```
+
+---
+
+## 👥 Role-Based Access Control (RBAC)
+
+SwasthyaCare implements strict server-side authorization boundaries across 4 distinct roles:
+
+| Role | Permitted Capabilities & Views |
+|---|---|
+| **Patient (`patient`)** | Book doctor slots, view appointment history, submit post-discharge recovery updates, calculate heart & diabetes risks, scan medicine strips |
+| **Doctor (`doctor`)** | Configure availability slots, approve/decline appointment requests, create follow-up care plans, monitor patient recovery check-ins, clinical triage alerts |
+| **Hospital Management (`hospital_management`)** | Executive analytics, department specialty breakdown, patient adherence averages, notification reliability telemetry (**Strict HIPAA Privacy Barrier: NO patient PII exposed**) |
+| **Platform Administrator (`admin`)** | User accounts breakdown, doctor credential verification queue, system operational workload monitoring |
+
+---
+
+## 🔒 Security & Privacy Implementation
+
+- **Idempotent Notifications:** Notification queue utilizes unique compound deduplication keys (`deduplicationKey: plan_id_day_channel` and `appt_id_status_recipient`) to prevent spamming or duplicated reminder dispatches.
+- **Atomic Concurrency (CAS):** Slot reservation employs atomic `findOneAndUpdate` queries ensuring high-concurrency double-booking attempts return `409 Conflict`.
+- **HIPAA Compliance:** Management dashboards only query population aggregations (`$group`, `$avg`); individual names, medical notes, and identifiers are strictly redacted.
+- **Mandatory Disclaimers:** All AI and OCR endpoints return structured clinical limitation disclaimers prohibiting autonomous treatment adjustments.
+
+---
+
+## 📄 License & Attribution
+
+Built for academic and healthcare software engineering demonstration.  
+**SwasthyaCare Agile Development Team**
