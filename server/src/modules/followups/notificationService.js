@@ -138,3 +138,61 @@ export const processDueNotifications = async () => {
 
   return results;
 };
+
+/**
+ * Queue an automated appointment lifecycle notification (Sprint 7: S7-05)
+ * Deduplicated by appointmentId + statusChange + recipientId
+ */
+export const queueAppointmentNotification = async ({
+  appointment,
+  recipient,
+  statusChange,
+}) => {
+  if (!recipient || !recipient.email) return null;
+
+  const deduplicationKey = `appt_${appointment._id}_${statusChange}_${recipient._id}`;
+  let subject = 'SwasthyaCare: Appointment Notification';
+  let message = `Your appointment for ${appointment.appointmentDate} at ${appointment.appointmentTime} has been updated to ${statusChange}.`;
+
+  if (statusChange === 'REQUESTED') {
+    subject = 'SwasthyaCare: New Appointment Request Received';
+    message = `Hello ${recipient.firstName}, a new appointment request has been submitted for ${appointment.appointmentDate} at ${appointment.appointmentTime}. Please review the request in your queue.`;
+  } else if (statusChange === 'APPROVED') {
+    subject = 'SwasthyaCare: Your Appointment is Confirmed';
+    message = `Hello ${recipient.firstName}, your appointment for ${appointment.appointmentDate} at ${appointment.appointmentTime} has been approved by your clinician.`;
+  } else if (statusChange === 'REJECTED') {
+    subject = 'SwasthyaCare: Appointment Request Update';
+    message = `Hello ${recipient.firstName}, your appointment request for ${appointment.appointmentDate} could not be confirmed. Reason: ${appointment.rejectionReason || 'Slot unavailable'}.`;
+  } else if (statusChange === 'CANCELLED') {
+    subject = 'SwasthyaCare: Appointment Cancelled';
+    message = `Hello ${recipient.firstName}, the appointment scheduled for ${appointment.appointmentDate} at ${appointment.appointmentTime} has been cancelled.`;
+  }
+
+  try {
+    const job = await NotificationJob.findOneAndUpdate(
+      { deduplicationKey },
+      {
+        $setOnInsert: {
+          deduplicationKey,
+          recipient: recipient._id,
+          channel: 'email',
+          recipientAddress: recipient.email,
+          type: 'APPOINTMENT_REMINDER',
+          subject,
+          message,
+          metadata: { appointmentId: appointment._id, statusChange },
+          scheduledFor: new Date(),
+          status: 'PENDING',
+          attempts: 0,
+          maxRetries: 3,
+        },
+      },
+      { upsert: true, new: true }
+    );
+    return job;
+  } catch (err) {
+    console.warn(`Duplicate or failed appointment notification for key ${deduplicationKey}:`, err.message);
+    return null;
+  }
+};
+

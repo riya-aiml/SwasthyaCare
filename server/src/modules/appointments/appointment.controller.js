@@ -2,6 +2,7 @@ import Appointment from './appointment.model.js';
 import AvailabilitySlot from '../doctors/availabilitySlot.model.js';
 import DoctorProfile from '../doctors/doctorProfile.model.js';
 import mongoose from 'mongoose';
+import { queueAppointmentNotification } from '../followups/notificationService.js';
 
 /**
  * Appointment Controller
@@ -81,6 +82,13 @@ export const requestAppointment = async (req, res) => {
       { path: 'doctor', select: 'firstName lastName email' },
       { path: 'doctorProfile', select: 'fullName specialty hospital consultationFee' },
     ]);
+
+    // Asynchronously queue notification to doctor (Sprint 7: S7-05)
+    queueAppointmentNotification({
+      appointment,
+      recipient: appointment.doctor,
+      statusChange: 'REQUESTED',
+    }).catch(err => console.warn('Notification queue error:', err.message));
 
     res.status(201).json({
       success: true,
@@ -282,6 +290,13 @@ export const approveAppointment = async (req, res) => {
       { path: 'doctorProfile', select: 'fullName specialty hospital' },
     ]);
 
+    // Asynchronously queue notification to patient (Sprint 7: S7-05)
+    queueAppointmentNotification({
+      appointment,
+      recipient: appointment.patient,
+      statusChange: 'APPROVED',
+    }).catch(err => console.warn('Notification queue error:', err.message));
+
     res.status(200).json({
       success: true,
       message: 'Appointment approved successfully',
@@ -348,6 +363,13 @@ export const rejectAppointment = async (req, res) => {
       { path: 'patient', select: 'firstName lastName email phoneNumber' },
       { path: 'doctor', select: 'firstName lastName email' },
     ]);
+
+    // Asynchronously queue notification to patient (Sprint 7: S7-05)
+    queueAppointmentNotification({
+      appointment,
+      recipient: appointment.patient,
+      statusChange: 'REJECTED',
+    }).catch(err => console.warn('Notification queue error:', err.message));
 
     res.status(200).json({
       success: true,
@@ -416,6 +438,22 @@ export const cancelAppointment = async (req, res) => {
       slot.bookedByPatient = null;
       await slot.save();
     }
+
+    await appointment.populate([
+      { path: 'patient', select: 'firstName lastName email phoneNumber' },
+      { path: 'doctor', select: 'firstName lastName email' },
+    ]);
+
+    // Asynchronously queue notification to the other party (Sprint 7: S7-05)
+    const notifyRecipient = req.user._id.toString() === appointment.patient._id.toString()
+      ? appointment.doctor
+      : appointment.patient;
+
+    queueAppointmentNotification({
+      appointment,
+      recipient: notifyRecipient,
+      statusChange: 'CANCELLED',
+    }).catch(err => console.warn('Notification queue error:', err.message));
 
     res.status(200).json({
       success: true,

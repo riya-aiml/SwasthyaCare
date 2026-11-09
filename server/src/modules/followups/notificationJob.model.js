@@ -51,6 +51,7 @@ const notificationJobSchema = new mongoose.Schema(
       planId: { type: mongoose.Schema.Types.ObjectId, ref: 'FollowUpPlan' },
       appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
       dayNumber: { type: Number },
+      statusChange: { type: String },
     },
     scheduledFor: {
       type: Date,
