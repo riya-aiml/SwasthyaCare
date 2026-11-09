@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
 import { aiService } from '../services/aiService';
+import {
+  HeartPulse,
+  Activity,
+  Brain,
+  ShieldAlert,
+  ShieldCheck,
+  AlertCircle,
+  Sparkles,
+  SlidersHorizontal,
+  Scale,
+  FileText,
+  ChevronRight,
+  TrendingUp,
+  Info,
+} from 'lucide-react';
 
 export default function RiskAssessmentView() {
   const [activeModel, setActiveModel] = useState('heart'); // 'heart' | 'diabetes'
@@ -46,7 +61,7 @@ export default function RiskAssessmentView() {
       });
       setResult({ type: 'heart', data: res.data });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Heart risk calculation failed.');
     } finally {
       setLoading(false);
     }
@@ -69,7 +84,7 @@ export default function RiskAssessmentView() {
       });
       setResult({ type: 'diabetes', data: res.data });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Diabetes risk calculation failed.');
     } finally {
       setLoading(false);
     }
@@ -78,94 +93,112 @@ export default function RiskAssessmentView() {
   const getRiskBadgeColor = (category) => {
     switch (category) {
       case 'LOW':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'BORDERLINE':
       case 'SLIGHTLY_ELEVATED':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-teal-50 text-teal-800 border-teal-200';
       case 'INTERMEDIATE':
       case 'MODERATE':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
+        return 'bg-amber-50 text-amber-800 border-amber-200';
       case 'HIGH':
       case 'VERY_HIGH':
-        return 'bg-rose-100 text-rose-800 border-rose-200';
+        return 'bg-rose-50 text-rose-800 border-rose-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">🧠 Clinical Risk Inference Models (Sprint 6 Prototype)</h2>
-        <p className="text-xs text-gray-500">
-          Validated statistical risk calculators (Framingham ASCVD & FINDRISC Diabetes models)
-        </p>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-teal-700 tracking-wider uppercase mb-1">
+            <Brain className="w-4 h-4 text-teal-600" />
+            <span>Clinical Intelligence Engines</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Predictive Clinical Risk Calculators
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Statistical decision support based on Framingham 10-Year ASCVD and FINDRISC Diabetes epidemiology frameworks.
+          </p>
+        </div>
 
-      {/* Model Selection Tabs */}
-      <div className="flex space-x-2 border-b border-gray-200 pb-2">
-        <button
-          onClick={() => {
-            setActiveModel('heart');
-            setResult(null);
-          }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center space-x-2 ${
-            activeModel === 'heart'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <span>❤️</span>
-          <span>Cardiovascular Risk (10-Year ASCVD)</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveModel('diabetes');
-            setResult(null);
-          }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center space-x-2 ${
-            activeModel === 'diabetes'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <span>🩸</span>
-          <span>Type 2 Diabetes Risk (FINDRISC)</span>
-        </button>
+        {/* Model Switcher Segmented Control */}
+        <div className="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner self-start md:self-auto">
+          <button
+            onClick={() => {
+              setActiveModel('heart');
+              setResult(null);
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeModel === 'heart'
+                ? 'bg-white text-rose-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <HeartPulse className="w-4 h-4 text-rose-600" />
+            <span>Cardiovascular ASCVD (10-Yr)</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveModel('diabetes');
+              setResult(null);
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeModel === 'diabetes'
+                ? 'bg-white text-teal-800 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-teal-600" />
+            <span>Type 2 Diabetes (FINDRISC)</span>
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          ⚠️ {error}
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Input Form */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+      {/* Main Grid: Form Inputs (Left) and Results (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Model Form */}
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
           {activeModel === 'heart' ? (
-            <form onSubmit={handleCalculateHeartRisk} className="space-y-4">
-              <h3 className="font-bold text-gray-900 text-sm border-b pb-2">Patient Cardiovascular Parameters</h3>
+            /* HEART ASCVD FORM */
+            <form onSubmit={handleCalculateHeartRisk} className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                  Patient Hemodynamic Parameters
+                </span>
+                <span className="text-[11px] font-semibold text-slate-400">
+                  Framingham Epidemiological Equation
+                </span>
+              </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Age (years): {age}</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Age (Years)</label>
                   <input
-                    type="range"
+                    type="number"
                     min="20"
-                    max="90"
+                    max="79"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    className="w-full accent-rose-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Biological Sex</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Biological Sex</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -173,272 +206,300 @@ export default function RiskAssessmentView() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Systolic BP: {systolic} mmHg</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Systolic Blood Pressure (mmHg)
+                  </label>
                   <input
-                    type="range"
+                    type="number"
                     min="90"
-                    max="220"
+                    max="200"
                     value={systolic}
                     onChange={(e) => setSystolic(e.target.value)}
-                    className="w-full accent-rose-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Diastolic BP: {diastolic} mmHg</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Diastolic Blood Pressure (mmHg)
+                  </label>
                   <input
-                    type="range"
+                    type="number"
                     min="60"
                     max="130"
                     value={diastolic}
                     onChange={(e) => setDiastolic(e.target.value)}
-                    className="w-full accent-rose-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Total Cholesterol: {cholesterol} mg/dL</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Total Serum Cholesterol (mg/dL)
+                  </label>
                   <input
-                    type="range"
-                    min="120"
-                    max="380"
+                    type="number"
+                    min="130"
+                    max="320"
                     value={cholesterol}
                     onChange={(e) => setCholesterol(e.target.value)}
-                    className="w-full accent-rose-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">HDL Cholesterol: {hdl} mg/dL</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    HDL "Good" Cholesterol (mg/dL)
+                  </label>
                   <input
-                    type="range"
+                    type="number"
                     min="20"
                     max="100"
                     value={hdl}
                     onChange={(e) => setHdl(e.target.value)}
-                    className="w-full accent-rose-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2 border-t text-xs">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={smoker}
-                    onChange={(e) => setSmoker(e.target.checked)}
-                    className="rounded text-rose-600"
-                  />
-                  <span>Current Tobacco Smoker</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={diabetic}
-                    onChange={(e) => setDiabetic(e.target.checked)}
-                    className="rounded text-rose-600"
-                  />
-                  <span>Diagnosed with Diabetes Mellitus</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={onBpMed}
-                    onChange={(e) => setOnBpMed(e.target.checked)}
-                    className="rounded text-rose-600"
-                  />
-                  <span>Currently Taking Anti-Hypertensive Medication</span>
-                </label>
+              {/* Lifestyle & Clinical Flags */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-700 block mb-2">Comorbidities & Risk Drivers</span>
+                <div className="grid grid-cols-3 gap-3">
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={smoker}
+                      onChange={(e) => setSmoker(e.target.checked)}
+                      className="rounded text-teal-600 focus:ring-teal-500"
+                    />
+                    <span>Active Smoker</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={diabetic}
+                      onChange={(e) => setDiabetic(e.target.checked)}
+                      className="rounded text-teal-600 focus:ring-teal-500"
+                    />
+                    <span>Diabetic</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={onBpMed}
+                      onChange={(e) => setOnBpMed(e.target.checked)}
+                      className="rounded text-teal-600 focus:ring-teal-500"
+                    />
+                    <span>On BP Meds</span>
+                  </label>
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-bold shadow-sm transition disabled:opacity-50"
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? 'Evaluating ASCVD Model...' : 'Calculate 10-Year Heart Risk'}
+                <HeartPulse className="w-4 h-4" />
+                <span>{loading ? 'Evaluating ASCVD Risk...' : 'Calculate 10-Year Cardiovascular Risk'}</span>
               </button>
             </form>
           ) : (
-            <form onSubmit={handleCalculateDiabetesRisk} className="space-y-4">
-              <h3 className="font-bold text-gray-900 text-sm border-b pb-2">Patient Metabolic Parameters</h3>
+            /* FINDRISC DIABETES FORM */
+            <form onSubmit={handleCalculateDiabetesRisk} className="space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                  Metabolic & Lifestyle Biomarkers
+                </span>
+                <span className="text-[11px] font-semibold text-slate-400">
+                  FINDRISC Scoring Rubric (0 - 26 Pts)
+                </span>
+              </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Age: {diabetesAge} yrs</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Age</label>
                   <input
-                    type="range"
-                    min="20"
-                    max="90"
+                    type="number"
                     value={diabetesAge}
                     onChange={(e) => setDiabetesAge(e.target.value)}
-                    className="w-full accent-blue-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">BMI: {bmi} kg/m²</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">BMI (kg/m²)</label>
                   <input
-                    type="range"
-                    min="18"
-                    max="50"
-                    step="0.5"
+                    type="number"
+                    step="0.1"
                     value={bmi}
                     onChange={(e) => setBmi(e.target.value)}
-                    className="w-full accent-blue-600"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Waist (cm)</label>
+                  <input
+                    type="number"
+                    value={waist}
+                    onChange={(e) => setWaist(e.target.value)}
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Waist Circumference: {waist} cm</label>
-                <input
-                  type="range"
-                  min="60"
-                  max="140"
-                  value={waist}
-                  onChange={(e) => setWaist(e.target.value)}
-                  className="w-full accent-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Family History of Diabetes</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Family History of Diabetes</label>
                 <select
                   value={familyDiabetes}
                   onChange={(e) => setFamilyDiabetes(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs"
+                  className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900"
                 >
-                  <option value="none">No known history</option>
-                  <option value="second_degree">Grandparent, Aunt, Uncle, Cousin</option>
-                  <option value="first_degree">Parent, Sibling, Child</option>
+                  <option value="none">No known family history (0 pts)</option>
+                  <option value="second_degree">Grandparent, Aunt, Uncle, First Cousin (3 pts)</option>
+                  <option value="first_degree">Parent, Sibling, Child (5 pts)</option>
                 </select>
               </div>
 
-              <div className="space-y-2 pt-2 border-t text-xs">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={activity}
-                    onChange={(e) => setActivity(e.target.checked)}
-                    className="rounded text-blue-600"
-                  />
-                  <span>At least 30 mins daily physical activity</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={diet}
-                    onChange={(e) => setDiet(e.target.checked)}
-                    className="rounded text-blue-600"
-                  />
-                  <span>Eat vegetables and fruits daily</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={historyBp}
-                    onChange={(e) => setHistoryBp(e.target.checked)}
-                    className="rounded text-blue-600"
-                  />
-                  <span>Treated or monitored for high blood pressure</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={historyGlucose}
-                    onChange={(e) => setHistoryGlucose(e.target.checked)}
-                    className="rounded text-blue-600"
-                  />
-                  <span>Ever diagnosed with high blood glucose / prediabetes</span>
-                </label>
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-700 block mb-2">Lifestyle & Metabolic History</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={activity}
+                      onChange={(e) => setActivity(e.target.checked)}
+                      className="rounded text-teal-600"
+                    />
+                    <span>Daily 30+ Mins Physical Activity</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={diet}
+                      onChange={(e) => setDiet(e.target.checked)}
+                      className="rounded text-teal-600"
+                    />
+                    <span>Daily Vegetables / Fruit Diet</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={historyBp}
+                      onChange={(e) => setHistoryBp(e.target.checked)}
+                      className="rounded text-teal-600"
+                    />
+                    <span>History of High BP Meds</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={historyGlucose}
+                      onChange={(e) => setHistoryGlucose(e.target.checked)}
+                      className="rounded text-teal-600"
+                    />
+                    <span>Past Elevated Blood Glucose</span>
+                  </label>
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition disabled:opacity-50"
+                className="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? 'Evaluating FINDRISC Model...' : 'Calculate 10-Year Diabetes Risk'}
+                <Activity className="w-4 h-4" />
+                <span>{loading ? 'Evaluating FINDRISC...' : 'Calculate 10-Year Diabetes Risk'}</span>
               </button>
             </form>
           )}
         </div>
 
-        {/* Right Column: Model Output & Clinical Findings */}
-        <div className="space-y-4">
+        {/* Right Column: Statistical Risk Output Card */}
+        <div className="lg:col-span-5 space-y-4">
           {result ? (
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <div>
-                  <span className="text-xs text-gray-400 block">{result.data.model_id}</span>
-                  <span className="text-xs font-mono text-gray-500">{result.data.model_version}</span>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getRiskBadgeColor(result.data.risk_category)}`}>
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5 animate-fadeIn">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                  Inference Output
+                </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-black border ${getRiskBadgeColor(result.data.risk_category)}`}>
                   {result.data.risk_category} RISK
                 </span>
               </div>
 
-              {/* Big Score Tile */}
-              <div className="text-center py-4 bg-gray-50 rounded-xl">
-                <div className="text-4xl font-extrabold text-gray-900">
-                  {result.data.ten_year_risk_percentage}%
-                </div>
-                <div className="text-xs text-gray-500 mt-1">10-Year Estimated Event Probability</div>
-                {result.data.risk_score !== undefined && (
-                  <div className="text-xs font-semibold text-teal-800 mt-1">
-                    FINDRISC Score: {result.data.risk_score} / 26
+              {/* Heart Specific Display */}
+              {result.type === 'heart' && (
+                <div className="text-center py-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="text-4xl font-black text-rose-700 tracking-tight">
+                    {result.data.ten_year_risk_percentage}%
                   </div>
-                )}
-              </div>
+                  <div className="text-xs font-bold text-slate-600 mt-1">
+                    10-Year Estimated ASCVD Event Probability
+                  </div>
+                </div>
+              )}
+
+              {/* Diabetes Specific Display */}
+              {result.type === 'diabetes' && (
+                <div className="text-center py-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="text-4xl font-black text-teal-800 tracking-tight">
+                    {result.data.risk_score} <span className="text-lg text-slate-400 font-semibold">/ 26 Pts</span>
+                  </div>
+                  <div className="text-xs font-bold text-slate-600 mt-1">
+                    Estimated 10-Yr Diabetes Conversion: {result.data.ten_year_probability_percentage || 'Elevated'}
+                  </div>
+                </div>
+              )}
 
               {/* Contributing Drivers */}
-              {(result.data.contributing_factors || result.data.key_drivers) && (
+              {result.data.contributing_factors && result.data.contributing_factors.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">
-                    Primary Risk Modifiers
-                  </h4>
-                  <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
-                    {(result.data.contributing_factors || result.data.key_drivers).map((factor, idx) => (
-                      <li key={idx}>{factor}</li>
+                  <span className="text-xs font-bold text-slate-700 block mb-2">Key Clinical Drivers:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.data.contributing_factors.map((f, i) => (
+                      <span key={i} className="px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg">
+                        {f}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
 
-              {/* Clinical Guidelines */}
-              {(result.data.recommendations || result.data.preventive_guidelines) && (
-                <div className="bg-teal-50/40 border border-teal-100 rounded-xl p-3.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-teal-900 mb-2">
-                    Guideline Recommendations
-                  </h4>
-                  <ul className="list-disc list-inside text-xs text-teal-800 space-y-1">
-                    {(result.data.recommendations || result.data.preventive_guidelines).map((rec, idx) => (
-                      <li key={idx}>{rec}</li>
-                    ))}
-                  </ul>
+              {/* SaMD Disclaimer */}
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed">
+                <div className="font-bold flex items-center gap-1.5 mb-1">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>Clinical Software Limitation Advisory</span>
                 </div>
-              )}
-
-              {/* Regulatory Clinical Disclaimer */}
-              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-                <div className="font-bold flex items-center space-x-1 mb-1">
-                  <span>ℹ️</span>
-                  <span>Clinical Limitation Notice</span>
-                </div>
-                <p>{result.data.disclaimer}</p>
+                {result.data.disclaimer}
               </div>
             </div>
           ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-12 text-center text-gray-400">
-              <div className="text-5xl mb-3">📊</div>
-              <h4 className="font-semibold text-gray-700 mb-1">Model Ready for Inference</h4>
-              <p className="text-xs text-gray-500">
-                Adjust clinical parameters on the left and click calculate to view the real-time AI risk evaluation and contributing factors.
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center text-slate-400 shadow-sm space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                <Brain className="w-7 h-7" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800">No Assessment Computed Yet</h3>
+              <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                Fill out the physiological parameters on the left and submit to generate statistical predictions.
               </p>
             </div>
           )}
+
+          {/* Model Specification Card */}
+          <div className="p-5 bg-slate-900 text-slate-300 rounded-2xl text-xs space-y-2">
+            <div className="font-bold text-white flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-teal-400" />
+              <span>Microservice Architecture Note</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Calculations are proxied through an Express timeout barrier (8,000ms AbortController) to
+              the Python 3.11 FastAPI microservice (`ai-service/app/models`), returning strictly typed Pydantic v2 schemas.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { getDoctors, getDoctorSlots } from '../services/doctorService';
-import { Star, MapPin, Calendar, Video, Clock } from 'lucide-react';
+import {
+  Star,
+  MapPin,
+  Calendar,
+  Video,
+  Clock,
+  Search,
+  Filter,
+  Stethoscope,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowLeft,
+  ChevronRight,
+  User,
+  Building2,
+  AlertCircle,
+} from 'lucide-react';
 import AppointmentBookingModal from './AppointmentBookingModal';
 
-/**
- * Doctor Directory Component
- * Allows patients to browse, search, and view available doctors
- */
-export default function DoctorDirectory({ onDoctorSelect }) {
+export default function DoctorDirectory({ onDoctorSelect, onBookingSuccess }) {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,8 +27,17 @@ export default function DoctorDirectory({ onDoctorSelect }) {
   const [specialty, setSpecialty] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingSlot, setBookingSlot] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  const specialtiesList = [
+    { label: 'All Specialties', value: '' },
+    { label: 'Cardiology', value: 'Cardiology' },
+    { label: 'Endocrinology', value: 'Endocrinology' },
+    { label: 'Neurology', value: 'Neurology' },
+    { label: 'Internal Medicine', value: 'Internal Medicine' },
+  ];
 
   useEffect(() => {
     fetchDoctors();
@@ -32,9 +53,9 @@ export default function DoctorDirectory({ onDoctorSelect }) {
       params.limit = 20;
 
       const response = await getDoctors(params);
-      setDoctors(response.data.doctors);
+      setDoctors(response.data?.doctors || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to load clinicians.');
     } finally {
       setLoading(false);
     }
@@ -48,10 +69,13 @@ export default function DoctorDirectory({ onDoctorSelect }) {
   const handleViewSlots = async (doctor) => {
     try {
       setSelectedDoctor(doctor);
+      setSlotsLoading(true);
       const response = await getDoctorSlots(doctor._id);
-      setSlots(response.data.slots);
+      setSlots(response.data?.slots || []);
     } catch (err) {
       console.error('Failed to load slots:', err);
+    } finally {
+      setSlotsLoading(false);
     }
   };
 
@@ -63,57 +87,117 @@ export default function DoctorDirectory({ onDoctorSelect }) {
 
     if (date.toDateString() === today.toDateString()) return 'Today';
     if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
-  if (selectedDoctor && slots.length > 0) {
+  // View: Doctor Slot Scheduling / Availability Drawer
+  if (selectedDoctor) {
     return (
-      <div style={styles.container}>
-        <button onClick={() => setSelectedDoctor(null)} style={styles.backButton}>
-          ← Back to Directory
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <button
+          onClick={() => setSelectedDoctor(null)}
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-teal-700 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Specialist Directory
         </button>
 
-        <div style={styles.doctorHeader}>
-          <img src={selectedDoctor.avatar} alt={selectedDoctor.fullName} style={styles.avatarLarge} />
-          <div>
-            <h2 style={styles.doctorName}>{selectedDoctor.fullName}</h2>
-            <p style={styles.specialty}>{selectedDoctor.specialty}</p>
-            <p style={styles.hospital}>
-              <MapPin size={16} /> {selectedDoctor.hospital}
-            </p>
-            <div style={styles.rating}>
-              <Star size={16} fill="#f59e0b" color="#f59e0b" />
-              <span>{selectedDoctor.rating} ({selectedDoctor.reviewsCount} reviews)</span>
+        {/* Doctor Summary Banner */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center text-white text-xl font-black shadow-sm shrink-0">
+              {selectedDoctor.fullName.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-extrabold text-slate-900">{selectedDoctor.fullName}</h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                  {selectedDoctor.specialty}
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  {selectedDoctor.rating || 4.9}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
+                <span className="inline-flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  {selectedDoctor.hospital}
+                </span>
+                <span>•</span>
+                <span>{selectedDoctor.experienceYears}+ Yrs Experience</span>
+                <span>•</span>
+                <span className="font-bold text-slate-800">Fee: ₹{selectedDoctor.consultationFee}</span>
+              </div>
             </div>
           </div>
         </div>
 
         {bookingSuccess && (
-          <div style={{ backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>✅ Appointment requested successfully! You can track its status in "My Appointments".</span>
-            <button onClick={() => setBookingSuccess(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-6 flex items-center justify-between text-xs font-medium">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Appointment requested successfully! You can track this in "My Appointments".</span>
+            </div>
+            <button onClick={() => setBookingSuccess(false)} className="text-emerald-700 hover:text-emerald-900 text-lg leading-none">
+              ×
+            </button>
           </div>
         )}
 
-        <h3 style={styles.slotsTitle}>Available Appointment Slots</h3>
-        <div style={styles.slotsGrid}>
-          {slots.map((slot) => (
-            <div key={slot._id} style={styles.slotCard}>
-              <div style={styles.slotDate}>{formatDate(slot.date)}</div>
-              <div style={styles.slotTime}>
-                <Clock size={14} /> {slot.startTime} - {slot.endTime}
-              </div>
-              {slot.isPriority && <span style={styles.priorityBadge}>Priority</span>}
-              {slot.consultationType === 'video' && <Video size={14} color="#3b82f6" />}
-              <button
-                onClick={() => setBookingSlot(slot)}
-                style={styles.bookButton}
-              >
-                Book Slot
-              </button>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-teal-600" />
+            Bookable Availability Slots
+          </h3>
+          <span className="text-xs text-slate-500">{slots.length} available slots found</span>
         </div>
+
+        {slotsLoading ? (
+          <div className="p-12 text-center bg-white border border-slate-200 rounded-2xl">
+            <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto mb-2"></div>
+            <p className="text-xs text-slate-500">Checking clinician calendar...</p>
+          </div>
+        ) : slots.length === 0 ? (
+          <div className="p-12 text-center bg-white border border-slate-200 rounded-2xl text-slate-400 text-xs">
+            No open slots found for this specialist. Please check back shortly.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {slots.map((slot) => (
+              <div
+                key={slot._id}
+                className="bg-white border border-slate-200 hover:border-teal-500 rounded-xl p-4 transition-all shadow-sm flex flex-col justify-between gap-3"
+              >
+                <div>
+                  <div className="text-xs font-extrabold text-slate-800 flex items-center justify-between">
+                    <span>{formatDate(slot.date)}</span>
+                    {slot.consultationType === 'video' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
+                        <Video className="w-3 h-3" /> Video
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+                        In-Clinic
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm font-black text-teal-800 mt-1 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-teal-600" />
+                    {slot.startTime} - {slot.endTime}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setBookingSlot(slot)}
+                  className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
+                >
+                  Book Slot
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {bookingSlot && (
           <AppointmentBookingModal
@@ -124,6 +208,7 @@ export default function DoctorDirectory({ onDoctorSelect }) {
               setBookingSlot(null);
               setBookingSuccess(true);
               handleViewSlots(selectedDoctor);
+              if (onBookingSuccess) onBookingSuccess();
             }}
           />
         )}
@@ -132,366 +217,155 @@ export default function DoctorDirectory({ onDoctorSelect }) {
   }
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>🩺 Find a Doctor</h1>
-      <p style={styles.subtitle}>Browse our network of experienced healthcare professionals</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      {/* Page Title & Search Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-6">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-teal-700 tracking-wider uppercase mb-1">
+            <Stethoscope className="w-4 h-4 text-teal-600" />
+            <span>Specialist Roster</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Verified Healthcare Specialists
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Browse verified clinicians, evaluate credentials, and schedule in-person or video consultations.
+          </p>
+        </div>
 
-      <form onSubmit={handleSearch} style={styles.searchForm}>
-        <input
-          type="text"
-          placeholder="Search by name, specialty, or hospital..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.searchInput}
-        />
-        <button type="submit" style={styles.searchButton}>Search</button>
-      </form>
-
-      <div style={styles.filterRow}>
-        <select
-          value={specialty}
-          onChange={(e) => setSpecialty(e.target.value)}
-          style={styles.select}
-        >
-          <option value="">All Specialties</option>
-          <option value="Senior Cardiologist">Cardiology</option>
-          <option value="Endocrinologist">Endocrinology</option>
-          <option value="Internal Medicine">Internal Medicine</option>
-        </select>
+        {/* Search input */}
+        <form onSubmit={handleSearch} className="flex items-center gap-2 w-full md:w-80">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search name or hospital..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium text-slate-900"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors shrink-0"
+          >
+            Search
+          </button>
+        </form>
       </div>
 
-      {error && <div style={styles.error}>{error}</div>}
+      {/* Specialty Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4">
+        {specialtiesList.map((sp) => {
+          const isActive = specialty === sp.value;
+          return (
+            <button
+              key={sp.value}
+              onClick={() => setSpecialty(sp.value)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                isActive
+                  ? 'bg-teal-700 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              {sp.label}
+            </button>
+          );
+        })}
+      </div>
 
-      {loading ? (
-        <div style={styles.loading}>Loading doctors...</div>
-      ) : (
-        <div style={styles.doctorsGrid}>
-          {doctors.map((doctor) => (
-            <div key={doctor._id} style={styles.doctorCard}>
-              <div style={styles.cardHeader}>
-                <img src={doctor.avatar} alt={doctor.fullName} style={styles.avatar} />
-                <div style={styles.doctorInfo}>
-                  <h3 style={styles.doctorNameCard}>{doctor.fullName}</h3>
-                  <p style={styles.specialtyCard}>{doctor.specialty}</p>
-                  <p style={styles.experience}>{doctor.experienceYears}+ Years Experience</p>
-                </div>
-              </div>
-
-              <div style={styles.hospitalRow}>
-                <MapPin size={14} color="#718096" />
-                <span style={styles.hospitalText}>{doctor.hospital}</span>
-              </div>
-
-              <div style={styles.statsRow}>
-                <div style={styles.ratingBox}>
-                  <Star size={14} fill="#f59e0b" color="#f59e0b" />
-                  <span>{doctor.rating}</span>
-                  <span style={styles.reviews}>({doctor.reviewsCount})</span>
-                </div>
-                <div style={styles.fee}>₹{doctor.consultationFee}</div>
-              </div>
-
-              <div style={styles.cardActions}>
-                <button onClick={() => handleViewSlots(doctor)} style={styles.viewSlotsButton}>
-                  <Calendar size={16} /> View Available Slots
-                </button>
-                {doctor.isAvailableForOnlineConsult && (
-                  <div style={styles.videoBadge}>
-                    <Video size={14} /> Video
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+      {error && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs mb-6 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-600" />
+          <span>{error}</span>
         </div>
       )}
 
-      {!loading && doctors.length === 0 && (
-        <div style={styles.noResults}>
-          No doctors found. Try adjusting your search or filters.
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="p-6 bg-white border border-slate-200 rounded-2xl animate-pulse space-y-4">
+              <div className="flex gap-4">
+                <div className="w-14 h-14 bg-slate-200 rounded-2xl"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                </div>
+              </div>
+              <div className="h-10 bg-slate-200 rounded-xl"></div>
+            </div>
+          ))}
+        </div>
+      ) : doctors.length === 0 ? (
+        <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl p-8">
+          <Stethoscope className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+          <h3 className="text-base font-bold text-slate-800">No specialists found</h3>
+          <p className="text-xs text-slate-500 mt-1">Try clearing your filters or search keywords.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {doctors.map((doctor) => {
+            const initials = doctor.fullName
+              ? doctor.fullName.split(' ').map((n) => n[0]).slice(0, 2).join('')
+              : 'DR';
+
+            return (
+              <div
+                key={doctor._id}
+                className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 sm:p-6 transition-all shadow-sm hover:shadow-md flex flex-col justify-between"
+              >
+                <div>
+                  {/* Doctor Card Top */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center text-white text-lg font-black shadow-sm shrink-0">
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-extrabold text-slate-900 truncate">
+                        {doctor.fullName}
+                      </h3>
+                      <div className="text-xs font-semibold text-teal-700 mt-0.5">
+                        {doctor.specialty}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {doctor.experienceYears}+ Years Clinical Practice
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hospital affiliation */}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{doctor.hospital}</span>
+                  </div>
+
+                  {/* Rating & Fee */}
+                  <div className="flex items-center justify-between text-xs mb-5">
+                    <div className="flex items-center gap-1 font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      <span>{doctor.rating || 4.9}</span>
+                      <span className="text-slate-400 font-normal">({doctor.reviewsCount || 42})</span>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-slate-400">Consultation Fee: </span>
+                      <span className="font-extrabold text-slate-900">₹{doctor.consultationFee || 1000}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <button
+                  onClick={() => handleViewSlots(doctor)}
+                  className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>View Available Slots</span>
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '24px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  },
-  title: {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#1a202c',
-    marginBottom: '8px',
-  },
-  subtitle: {
-    fontSize: '16px',
-    color: '#718096',
-    marginBottom: '24px',
-  },
-  searchForm: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '16px',
-  },
-  searchInput: {
-    flex: 1,
-    padding: '12px 16px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '14px',
-  },
-  searchButton: {
-    padding: '12px 24px',
-    background: '#667eea',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  filterRow: {
-    marginBottom: '24px',
-  },
-  select: {
-    padding: '10px 16px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    fontSize: '14px',
-    background: 'white',
-  },
-  error: {
-    background: '#fee',
-    color: '#c53030',
-    padding: '12px',
-    borderRadius: '8px',
-    marginBottom: '16px',
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#718096',
-  },
-  doctorsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '20px',
-  },
-  doctorCard: {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '20px',
-    transition: 'box-shadow 0.2s',
-    cursor: 'pointer',
-  },
-  cardHeader: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '16px',
-  },
-  avatar: {
-    width: '60px',
-    height: '60px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-  },
-  doctorInfo: {
-    flex: 1,
-  },
-  doctorNameCard: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#1a202c',
-    margin: '0 0 4px 0',
-  },
-  specialtyCard: {
-    fontSize: '14px',
-    color: '#667eea',
-    fontWeight: '500',
-    margin: '0 0 4px 0',
-  },
-  experience: {
-    fontSize: '12px',
-    color: '#718096',
-    margin: 0,
-  },
-  hospitalRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    marginBottom: '12px',
-  },
-  hospitalText: {
-    fontSize: '13px',
-    color: '#718096',
-  },
-  statsRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px',
-    background: '#f7fafc',
-    borderRadius: '8px',
-    marginBottom: '16px',
-  },
-  ratingBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    fontSize: '14px',
-    fontWeight: '600',
-  },
-  reviews: {
-    fontSize: '12px',
-    color: '#718096',
-    fontWeight: '400',
-  },
-  fee: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#48bb78',
-  },
-  cardActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  viewSlotsButton: {
-    flex: 1,
-    padding: '10px',
-    background: '#667eea',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-  },
-  videoBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '8px',
-    background: '#eff6ff',
-    color: '#3b82f6',
-    borderRadius: '6px',
-    fontSize: '12px',
-  },
-  noResults: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#718096',
-  },
-  backButton: {
-    padding: '8px 16px',
-    background: '#f7fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    marginBottom: '20px',
-  },
-  doctorHeader: {
-    display: 'flex',
-    gap: '20px',
-    marginBottom: '32px',
-    padding: '20px',
-    background: 'white',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-  },
-  avatarLarge: {
-    width: '100px',
-    height: '100px',
-    borderRadius: '50%',
-    objectFit: 'cover',
-  },
-  doctorName: {
-    fontSize: '28px',
-    fontWeight: '700',
-    margin: '0 0 8px 0',
-  },
-  specialty: {
-    fontSize: '16px',
-    color: '#667eea',
-    fontWeight: '500',
-    margin: '0 0 8px 0',
-  },
-  hospital: {
-    fontSize: '14px',
-    color: '#718096',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    margin: '0 0 8px 0',
-  },
-  rating: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontSize: '14px',
-    fontWeight: '600',
-  },
-  slotsTitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '16px',
-  },
-  slotsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '16px',
-  },
-  slotCard: {
-    background: 'white',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '16px',
-    textAlign: 'center',
-  },
-  slotDate: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#1a202c',
-    marginBottom: '8px',
-  },
-  slotTime: {
-    fontSize: '14px',
-    color: '#667eea',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    marginBottom: '8px',
-  },
-  priorityBadge: {
-    display: 'inline-block',
-    padding: '4px 8px',
-    background: '#fef3c7',
-    color: '#92400e',
-    borderRadius: '4px',
-    fontSize: '11px',
-    fontWeight: '600',
-    marginBottom: '8px',
-  },
-  bookButton: {
-    width: '100%',
-    padding: '8px',
-    background: '#48bb78',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-};

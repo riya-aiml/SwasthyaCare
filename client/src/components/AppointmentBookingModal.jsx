@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import { appointmentService } from '../services/appointmentService';
+import {
+  Calendar,
+  Clock,
+  Building2,
+  Video,
+  MapPin,
+  AlertCircle,
+  X,
+  ShieldCheck,
+  Stethoscope,
+  ChevronRight,
+} from 'lucide-react';
 
 export default function AppointmentBookingModal({ slot, doctor, onClose, onSuccess }) {
   const [reason, setReason] = useState('');
@@ -28,145 +40,156 @@ export default function AppointmentBookingModal({ slot, doctor, onClose, onSucce
 
       onSuccess();
     } catch (err) {
-      setError(err.message || 'Failed to submit appointment request');
+      setError(err.message || 'Failed to submit appointment request.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-slate-100">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+          className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
         >
-          &times;
+          <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center space-x-3 mb-5">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 font-bold text-xl">
-            📅
+        {/* Modal Header */}
+        <div className="flex items-center gap-3.5 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Book Appointment</h2>
-            <p className="text-sm text-gray-500">Dr. {doctor.name || doctor.fullName} • {doctor.specialty}</p>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
+              Request Clinical Consultation
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {doctor.fullName || doctor.name} • {doctor.specialty}
+            </p>
           </div>
         </div>
 
         {/* Slot details card */}
-        <div className="bg-teal-50/60 border border-teal-100 rounded-xl p-4 mb-5">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-5">
+          <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-xs uppercase tracking-wider text-teal-700 font-semibold block">Date</span>
-              <span className="font-medium text-gray-900">{slot.date}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Appointment Date
+              </span>
+              <span className="font-extrabold text-slate-900">{slot.date}</span>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider text-teal-700 font-semibold block">Time</span>
-              <span className="font-medium text-gray-900">{slot.startTime} - {slot.endTime}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Time Window
+              </span>
+              <span className="font-extrabold text-teal-800">
+                {slot.startTime} - {slot.endTime}
+              </span>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider text-teal-700 font-semibold block">Consultation Fee</span>
-              <span className="font-semibold text-teal-700">₹{doctor.consultationFee || 500}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Consultation Fee
+              </span>
+              <span className="font-extrabold text-slate-900">
+                ₹{doctor.consultationFee || 1000}
+              </span>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-wider text-teal-700 font-semibold block">Type</span>
-              <span className="font-medium text-gray-900 capitalize">{slot.consultationType || 'In-person / Video'}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Concurrency Protection
+              </span>
+              <span className="font-bold text-emerald-700 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Atomic Lock (CAS)
+              </span>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-start space-x-2">
-            <span>⚠️</span>
+          <div className="p-3 mb-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
               Consultation Mode
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setConsultationType('in-person')}
-                className={`py-2 px-3 rounded-lg border text-sm font-medium transition ${
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   consultationType === 'in-person'
-                    ? 'border-teal-600 bg-teal-50 text-teal-700'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'border-teal-600 bg-teal-50 text-teal-800 shadow-xs'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                🏥 In-Person Visit
+                <MapPin className="w-3.5 h-3.5" />
+                <span>In-Person Hospital Visit</span>
               </button>
               <button
                 type="button"
                 onClick={() => setConsultationType('video')}
-                className={`py-2 px-3 rounded-lg border text-sm font-medium transition ${
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                   consultationType === 'video'
-                    ? 'border-teal-600 bg-teal-50 text-teal-700'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'border-teal-600 bg-teal-50 text-teal-800 shadow-xs'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                📹 Video Call
+                <Video className="w-3.5 h-3.5" />
+                <span>Telehealth Video Call</span>
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-gray-700 mb-1">
-              Primary Concern / Reason for Visit *
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Clinical Reason / Symptoms Summary *
             </label>
             <textarea
               required
-              rows="3"
+              rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g., Persistent cough for 4 days, mild fever, chest congestion"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+              placeholder="e.g., Follow-up for post-PCI medication titration and exertion dizziness assessment..."
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-gray-700 mb-1">
-              Symptoms (comma separated)
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Specific Symptoms (comma separated)
             </label>
             <input
               type="text"
               value={symptomsInput}
               onChange={(e) => setSymptomsInput(e.target.value)}
-              placeholder="e.g., Headache, Fever, Fatigue"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+              placeholder="e.g., Shortness of breath, Palpitations, Fatigue"
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
             />
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-            ℹ️ Your appointment request will be sent to Dr. {doctor.name || doctor.fullName} for review. Once approved, you will receive confirmation.
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-3">
+          <div className="pt-2 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              disabled={loading}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 font-medium"
+              className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium shadow-sm transition disabled:opacity-50 flex items-center space-x-2"
+              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm disabled:opacity-50 flex items-center gap-1.5"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <span>Confirm & Request</span>
-              )}
+              <span>{loading ? 'Reserving Slot...' : 'Confirm Appointment Request'}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>

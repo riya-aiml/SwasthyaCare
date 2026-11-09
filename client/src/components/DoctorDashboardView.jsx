@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardService } from '../services/dashboardService';
 import { appointmentService } from '../services/appointmentService';
+import {
+  Stethoscope,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  Users,
+  Activity,
+  FileText,
+  Check,
+  X,
+  ArrowUpRight,
+  ShieldAlert,
+  User,
+  Building2,
+  RefreshCw,
+  Video,
+  MapPin,
+} from 'lucide-react';
 
 export default function DoctorDashboardView({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [rejectModal, setRejectModal] = useState({ open: false, appointmentId: null });
+  const [rejectReason, setRejectReason] = useState('Schedule conflict');
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -15,7 +37,7 @@ export default function DoctorDashboardView({ onNavigate }) {
       const res = await dashboardService.getDoctorDashboard();
       setData(res.data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Unable to load clinical workspace.');
     } finally {
       setLoading(false);
     }
@@ -37,11 +59,12 @@ export default function DoctorDashboardView({ onNavigate }) {
     }
   };
 
-  const handleReject = async (appointmentId) => {
-    const reason = prompt('Please enter reason for rejection:') || 'Schedule conflict';
+  const handleConfirmReject = async () => {
+    if (!rejectModal.appointmentId) return;
     setActionLoading(true);
     try {
-      await appointmentService.rejectAppointment(appointmentId, reason);
+      await appointmentService.rejectAppointment(rejectModal.appointmentId, rejectReason);
+      setRejectModal({ open: false, appointmentId: null });
       await loadDashboard();
     } catch (err) {
       alert(`Rejection failed: ${err.message}`);
@@ -52,24 +75,26 @@ export default function DoctorDashboardView({ onNavigate }) {
 
   if (loading) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-gray-200">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-3"></div>
-        <p className="text-sm text-gray-500 font-medium">Loading clinical command center...</p>
+      <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="w-10 h-10 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          Loading Clinician Workspace & EHR Queue...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-700 space-y-3">
-        <div className="font-bold flex items-center space-x-2">
-          <span>⚠️</span>
-          <span>Failed to load doctor dashboard</span>
+      <div className="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 space-y-3">
+        <div className="font-bold flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-rose-600" />
+          <span>Clinical Dashboard Notice</span>
         </div>
         <p className="text-xs">{error}</p>
         <button
           onClick={loadDashboard}
-          className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold"
+          className="px-4 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 transition"
         >
           Retry
         </button>
@@ -81,97 +106,144 @@ export default function DoctorDashboardView({ onNavigate }) {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-teal-400">
-              Clinician Workspace & Triage
-            </span>
-            <h1 className="text-2xl font-bold mt-1">Doctor Command Center</h1>
-            <p className="text-xs text-slate-300 mt-1 max-w-xl">
-              Monitor patient queue, incoming appointment requests, triage post-discharge warning alerts, and review recovery vitals.
+      {/* 1. Clinician Header Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-teal-400 text-xs font-bold uppercase tracking-wider">
+              <Stethoscope className="w-4 h-4" />
+              <span>Clinician Command Center & EHR Triage</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              Physician Workbench
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Review and triage patient consultation queues, approve slot reservations with atomic locking,
+              monitor post-discharge warning alerts, and inspect vitals telemetry.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+
+          <div className="flex flex-wrap gap-2.5 shrink-0">
             <button
               onClick={() => onNavigate && onNavigate('availability')}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition shadow-md"
             >
-              📅 Set Schedule
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Configure Slots</span>
             </button>
             <button
               onClick={() => onNavigate && onNavigate('followup')}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-xs font-bold transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-300 rounded-xl text-xs font-bold transition"
             >
-              🌿 Care Plans
+              <Activity className="w-3.5 h-3.5" />
+              <span>Post-Discharge Plans</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* KPI Stats Row */}
+      {/* 2. Key Clinical Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase">Pending Requests</div>
-          <div className="text-2xl font-bold text-amber-600 mt-1">{summary?.pendingRequests || 0}</div>
-          <div className="text-[11px] text-gray-400 mt-1">Awaiting approval</div>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Pending Requests
+            </span>
+            <Clock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="text-2xl font-black text-amber-600 mt-2">
+            {summary?.pendingRequests || 0}
+          </div>
+          <div className="text-[11px] font-semibold text-amber-700 mt-1">
+            Awaiting Clinical Review
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase">Today's Visits</div>
-          <div className="text-2xl font-bold text-teal-700 mt-1">{summary?.todayAppointments || 0}</div>
-          <div className="text-[11px] text-gray-400 mt-1">Confirmed consultations</div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Today's Visits
+            </span>
+            <Calendar className="w-4 h-4 text-teal-600" />
+          </div>
+          <div className="text-2xl font-black text-teal-800 mt-2">
+            {summary?.todayAppointments || 0}
+          </div>
+          <div className="text-[11px] font-semibold text-teal-700 mt-1">
+            Confirmed Consultations
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase">Active Care Plans</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">{summary?.activeCarePlans || 0}</div>
-          <div className="text-[11px] text-gray-400 mt-1">Patients monitored</div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Monitored Patients
+            </span>
+            <Users className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className="text-2xl font-black text-slate-900 mt-2">
+            {summary?.activeCarePlans || 0}
+          </div>
+          <div className="text-[11px] font-semibold text-indigo-700 mt-1">
+            Active Care Plans
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500 uppercase">Triage Alerts</div>
-          <div className="text-2xl font-bold text-rose-600 mt-1">{summary?.alertsNeedingAttention || 0}</div>
-          <div className="text-[11px] text-rose-600 mt-1 font-semibold">Immediate attention</div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Triage Alerts
+            </span>
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+          </div>
+          <div className="text-2xl font-black text-rose-600 mt-2">
+            {summary?.alertsNeedingAttention || 0}
+          </div>
+          <div className="text-[11px] font-semibold text-rose-700 mt-1">
+            Immediate Attention Needed
+          </div>
         </div>
       </div>
 
-      {/* Critical Triage Escalation Section */}
+      {/* 3. Critical Post-Discharge Triage Alerts (If Any) */}
       {flaggedUpdates && flaggedUpdates.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-rose-200 pb-2">
-            <h3 className="font-bold text-rose-900 text-sm flex items-center space-x-2">
-              <span>🚨</span>
-              <span>Post-Discharge Triage: Patients Needing Attention ({flaggedUpdates.length})</span>
-            </h3>
+        <div className="bg-rose-50 border border-rose-200 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-rose-200 pb-3">
+            <div className="flex items-center gap-2 text-rose-900 font-extrabold text-sm">
+              <ShieldAlert className="w-5 h-5 text-rose-600" />
+              <span>Post-Discharge Triage: Flagged Patient Symptoms ({flaggedUpdates.length})</span>
+            </div>
             <button
               onClick={() => onNavigate && onNavigate('followup')}
-              className="text-xs text-rose-700 hover:text-rose-800 font-bold"
+              className="text-xs font-bold text-rose-700 hover:text-rose-900 flex items-center gap-1"
             >
-              Review All in Care Plans →
+              <span>Manage Care Plans</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {flaggedUpdates.map((u) => (
-              <div key={u._id} className="p-3 bg-white border border-rose-200 rounded-xl space-y-1.5 shadow-xs">
+              <div key={u._id} className="p-4 bg-white border border-rose-200 rounded-2xl space-y-2 shadow-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-gray-900">
+                  <span className="font-extrabold text-xs text-slate-900">
                     {u.patient?.firstName} {u.patient?.lastName}
                   </span>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800">
-                    Warning Symptoms Reported
+                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                    Warning Symptoms
                   </span>
                 </div>
-                <div className="text-[11px] text-gray-600">
-                  Diagnosis: <span className="font-medium text-gray-900">{u.plan?.diagnosis}</span>
+                <div className="text-xs text-slate-600">
+                  Diagnosis: <span className="font-semibold text-slate-900">{u.plan?.diagnosis}</span>
                 </div>
-                {u.symptomsNotes && (
-                  <div className="text-xs text-rose-900 bg-rose-50/70 p-2 rounded border border-rose-100 font-medium">
-                    "{u.symptomsNotes}"
+                {u.notes && (
+                  <div className="text-xs text-rose-900 bg-rose-50 p-2.5 rounded-xl border border-rose-100 italic">
+                    "{u.notes}"
                   </div>
                 )}
-                {u.vitals && (
-                  <div className="text-[11px] text-gray-500">
-                    BP: {u.vitals.bloodPressureSystolic || '--'}/{u.vitals.bloodPressureDiastolic || '--'} mmHg • Pulse: {u.vitals.heartRate || '--'} bpm
+                {u.vitalSigns && (
+                  <div className="text-[11px] text-slate-500 font-medium">
+                    BP: {u.vitalSigns.systolicBp}/{u.vitalSigns.diastolicBp} mmHg • Pulse: {u.vitalSigns.heartRate} bpm
                   </div>
                 )}
               </div>
@@ -180,111 +252,121 @@ export default function DoctorDashboardView({ onNavigate }) {
         </div>
       )}
 
-      {/* Two Column Layout: Today's Schedule & Pending Request Queue */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Appointments */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b pb-3">
-            <h3 className="font-bold text-gray-900 text-sm flex items-center space-x-2">
-              <span>📋</span>
-              <span>Today's Consultation Schedule</span>
+      {/* 4. Incoming Appointment Requests Queue */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-teal-600" />
+            <h3 className="font-extrabold text-slate-900 text-sm">
+              Incoming Consultation Requests ({pendingRequests?.length || 0})
             </h3>
-            <button
-              onClick={() => onNavigate && onNavigate('appointments')}
-              className="text-xs text-teal-600 hover:text-teal-700 font-semibold"
-            >
-              All Appts →
-            </button>
           </div>
+          <button
+            onClick={() => onNavigate && onNavigate('queue')}
+            className="text-xs font-bold text-teal-700 hover:text-teal-800 flex items-center gap-0.5"
+          >
+            <span>Full Queue Workbench</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-          {todayAppointments && todayAppointments.length > 0 ? (
-            <div className="space-y-3">
-              {todayAppointments.map((appt) => (
-                <div key={appt._id} className="p-3.5 border border-gray-200 rounded-xl bg-gray-50/50 flex items-center justify-between">
+        {pendingRequests && pendingRequests.length > 0 ? (
+          <div className="space-y-3">
+            {pendingRequests.map((apt) => (
+              <div
+                key={apt._id}
+                className="p-5 border border-slate-200 hover:border-slate-300 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/40 transition-all"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-teal-600 text-white font-extrabold flex items-center justify-center text-sm shadow-sm shrink-0">
+                    {apt.patient?.firstName?.[0] || 'P'}{apt.patient?.lastName?.[0] || 'T'}
+                  </div>
                   <div>
-                    <div className="font-bold text-xs text-gray-900">
-                      {appt.patient?.firstName} {appt.patient?.lastName}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-slate-900 text-sm">
+                        {apt.patient?.firstName} {apt.patient?.lastName}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        {apt.consultationType}
+                      </span>
                     </div>
-                    <div className="text-xs text-teal-700 font-semibold mt-0.5">
-                      🕒 {appt.appointmentTime} ({appt.consultationType})
+                    <div className="text-xs text-slate-600 mt-1">
+                      Scheduled: <span className="font-bold text-slate-800">{apt.appointmentDate} at {apt.appointmentTime}</span>
                     </div>
-                    {appt.reason && (
-                      <div className="text-[11px] text-gray-500 italic mt-0.5">
-                        "{appt.reason}"
+                    {apt.reason && (
+                      <div className="text-xs text-slate-600 mt-1 italic">
+                        "{apt.reason}"
                       </div>
                     )}
                   </div>
-                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                    CONFIRMED
-                  </span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400 text-xs">
-              No appointments scheduled for today.
-            </div>
-          )}
-        </div>
 
-        {/* Pending Requests Queue */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b pb-3">
-            <h3 className="font-bold text-gray-900 text-sm flex items-center space-x-2">
-              <span>⏳</span>
-              <span>Pending Requests Queue ({pendingRequests?.length || 0})</span>
-            </h3>
-            <button
-              onClick={() => onNavigate && onNavigate('queue')}
-              className="text-xs text-teal-600 hover:text-teal-700 font-semibold"
-            >
-              Full Queue →
-            </button>
+                <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+                  <button
+                    onClick={() => handleApprove(apt._id)}
+                    disabled={actionLoading}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve</span>
+                  </button>
+                  <button
+                    onClick={() => setRejectModal({ open: true, appointmentId: apt._id })}
+                    disabled={actionLoading}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition disabled:opacity-50"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Decline</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-
-          {pendingRequests && pendingRequests.length > 0 ? (
-            <div className="space-y-3">
-              {pendingRequests.map((req) => (
-                <div key={req._id} className="p-3.5 border border-amber-200 bg-amber-50/20 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-gray-900">
-                      {req.patient?.firstName} {req.patient?.lastName}
-                    </span>
-                    <span className="text-[11px] font-semibold text-gray-600">
-                      {req.appointmentDate} at {req.appointmentTime}
-                    </span>
-                  </div>
-                  {req.reason && (
-                    <div className="text-xs text-gray-600">
-                      Reason: <span className="italic">{req.reason}</span>
-                    </div>
-                  )}
-                  <div className="flex space-x-2 pt-2 border-t border-amber-100">
-                    <button
-                      onClick={() => handleApprove(req._id)}
-                      disabled={actionLoading}
-                      className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-bold transition disabled:opacity-50"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(req._id)}
-                      disabled={actionLoading}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded text-xs font-semibold transition disabled:opacity-50"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400 text-xs">
-              No pending appointment requests in your queue.
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="text-center py-10 text-slate-400 text-xs">
+            No pending appointment requests in queue. All consultations have been triaged!
+          </div>
+        )}
       </div>
+
+      {/* Reject Reason Confirmation Modal */}
+      {rejectModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 className="text-base font-bold text-slate-900 mb-2">Decline Consultation Request</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Please state the clinical or scheduling reason. The patient will be notified immediately.
+            </p>
+
+            <select
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 mb-4"
+            >
+              <option value="Schedule conflict">Schedule conflict / Emergency surgery</option>
+              <option value="Out of specialty scope">Referral needed (Out of specialty scope)</option>
+              <option value="Incomplete medical records">Incomplete medical diagnostic history</option>
+              <option value="Patient requested reschedule">Patient requested reschedule</option>
+            </select>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => setRejectModal({ open: false, appointmentId: null })}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReject}
+                disabled={actionLoading}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm disabled:opacity-50"
+              >
+                {actionLoading ? 'Declining...' : 'Confirm Decline'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

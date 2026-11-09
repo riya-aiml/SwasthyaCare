@@ -6,11 +6,14 @@
 const API_BASE_URL = '/api/auth';
 
 /**
- * Store token in localStorage
+ * Store token in localStorage (sets both 'authToken' and 'token' for cross-service consistency)
  * @param {string} token - JWT token
  */
 export const setAuthToken = (token) => {
-  localStorage.setItem('authToken', token);
+  if (token) {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('token', token);
+  }
 };
 
 /**
@@ -18,7 +21,7 @@ export const setAuthToken = (token) => {
  * @returns {string|null} JWT token or null
  */
 export const getAuthToken = () => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('token') || localStorage.getItem('authToken');
 };
 
 /**
@@ -26,6 +29,18 @@ export const getAuthToken = () => {
  */
 export const removeAuthToken = () => {
   localStorage.removeItem('authToken');
+  localStorage.removeItem('token');
+};
+
+/**
+ * Get standardized auth headers
+ */
+export const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 };
 
 /**
