@@ -30,3 +30,13 @@ dist-ssr
 *.sw?
 .vercel
 .claude/
+
+# Python & AI service
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+.venv/
+ai-service/venv/
+

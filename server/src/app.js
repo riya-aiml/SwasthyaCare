@@ -8,6 +8,7 @@ import userRoutes from './modules/users/user.routes.js';
 import doctorRoutes from './modules/doctors/doctor.routes.js';
 import appointmentRoutes from './modules/appointments/appointment.routes.js';
 import followUpRoutes from './modules/followups/followUp.routes.js';
+import aiRoutes from './modules/ai/ai.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables from .env file
@@ -37,6 +38,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/follow-ups', followUpRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

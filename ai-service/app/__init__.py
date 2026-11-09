@@ -1,0 +1,1 @@
+# SwasthyaCare AI Service Package
