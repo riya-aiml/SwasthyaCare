@@ -1,96 +1,66 @@
-# ML Sprint 1 — Implementation Summary
-## Problem Definition, Dataset Acquisition & Statistical Audit
+# Sprint 1 — Implementation Summary
+## Machine Learning Integration Discovery & Problem Definition
 
-**Sprint ID:** ML Sprint 1 — Disease Prediction & Dataset Audit  
+**Document ID:** SWC-ML-S1-SUM  
+**Sprint:** Sprint 1 — ML Integration & Problem Definition  
+**Parent Roadmap:** `Docs/SwasthyaCare_ML_Sprint_Integration_v1.0.md`  
 **Status:** ✅ COMPLETE  
 **Date Completed:** 2026-11-10  
 **Project:** SwasthyaCare — AI-Assisted Clinical Workflow & Disease Prediction System  
-**Lead Framework:** Agile Scrum (as per `Docs/Sprint/SwasthyaCare_ML_Agile.md`)  
 
 ---
 
 ## 🎯 Sprint Goal
-Precisely define what each model predicts, acquire and audit the benchmark medical datasets, document feature definitions and units, and establish explicit clinical safety boundaries and approved user-facing wording before model training begins.
+Understand the existing SwasthyaCare repository architecture without disrupting working systems, map the integration points for the Python/FastAPI ML service, define the four discrete prediction tasks (`ML-DIA-01`, `ML-DIA-02`, `ML-CVD-01`, `ML-CVD-02`), establish the ML Decision Log, audit candidate datasets, and generate the dataset audit checklist.
 
 ---
 
-## ✅ Sprint Tasks Completed
+## ✅ Tasks Completed
 
-| Task ID | Task Description | Priority | Status | Output Artifact |
-|---|---|:---:|:---:|---|
-| **ML1-01** | Cardiovascular classification problem statement | Must | ✅ Done | [`Docs/ml/problem_definitions.md`](../ml/problem_definitions.md) |
-| **ML1-02** | Diabetes classification problem statement | Must | ✅ Done | [`Docs/ml/problem_definitions.md`](../ml/problem_definitions.md) |
-| **ML1-03** | Download official dataset files & documentation | Must | ✅ Done | `ai-service/data/cardiovascular/` & `ai-service/data/diabetes/` |
-| **ML1-04** | Review dataset licenses & permitted use | Must | ✅ Done | CC BY 4.0 (Heart Disease) & CC0 Public Domain (CDC BRFSS) |
-| **ML1-05** | Inspect shape, data types, and target labels | Must | ✅ Done | [`Docs/ml/dataset_audit_metrics.json`](../ml/dataset_audit_metrics.json) |
-| **ML1-06** | Create comprehensive Data Dictionary with units | Must | ✅ Done | [`Docs/ml/data_dictionary.md`](../ml/data_dictionary.md) |
-| **ML1-07** | Quantify missing, duplicate, and invalid values | Must | ✅ Done | `ai-service/training/audit_datasets.py` |
-| **ML1-08** | Audit target leakage & post-outcome features | Must | ✅ Done | Documented in Dataset Cards (No leakage found) |
-| **ML1-09** | Record population limits & geographic mismatch | Must | ✅ Done | [`Docs/ml/cardiovascular_dataset_card.md`](../ml/cardiovascular_dataset_card.md), [`Docs/ml/diabetes_dataset_card.md`](../ml/diabetes_dataset_card.md) |
-| **ML1-10** | Agree on safe, non-diagnostic user wording | Must | ✅ Done | Approved in Problem Definitions (Section 2.5 & 3.5) |
+| Task ID | Task Description | Priority | Status | Output Deliverable |
+|:---:|---|:---:|:---:|---|
+| **ML-S1-01** | Inspect existing repository and running application | Must | ✅ Done | [`Docs/ml/integration_map.md`](../ml/integration_map.md) |
+| **ML-S1-02** | Identify correct location for the Python ML service | Must | ✅ Done | Mount point defined in `ai-service/` via internal RPC |
+| **ML-S1-03** | Define diabetes current-status target (`ML-DIA-01`) | Must | ✅ Done | [`Docs/ml/prediction_problem_definitions.md`](../ml/prediction_problem_definitions.md) |
+| **ML-S1-04** | Define cardiovascular current-status target (`ML-CVD-01`)| Must | ✅ Done | [`Docs/ml/prediction_problem_definitions.md`](../ml/prediction_problem_definitions.md) |
+| **ML-S1-05** | Specify future-risk target requirements & data gates | Must | ✅ Done | Tasks `ML-DIA-02` & `ML-CVD-02` marked data-dependent |
+| **ML-S1-06** | Create ML decision log and dataset register | Must | ✅ Done | [`Docs/ml/dataset_register_and_decision_log.md`](../ml/dataset_register_and_decision_log.md) & [`Docs/ml/dataset_audit_checklist.md`](../ml/dataset_audit_checklist.md) |
 
 ---
 
-## 📊 Dataset Profile & Audit Metrics
+## 🏗️ Architecture & Integration Verified
 
-### 1. UCI Cleveland Heart Disease Dataset (id=45)
-* **Cohort Size:** 303 rows, 14 columns (13 predictors + 1 target).
-* **Missing Values:** Exactly 6 cells across 6 rows:
-  * `ca` (Fluoroscopy major vessels): 4 missing values (1.32%).
-  * `thal` (Thallium myocardial perfusion defect): 2 missing values (0.66%).
-* **Duplicate Rows:** 0 (0.0%).
-* **Target Distribution:**
-  * Class `0` (Absence of coronary artery disease, $<50\%$ diameter stenosis): 164 records (**54.1%**).
-  * Class `1` (Presence of coronary artery disease, $\ge 50\%$ diameter stenosis): 139 records (**45.9%**).
-* **Class Ratio:** 1.18 : 1 (Naturally balanced binary classification baseline).
+```
+[ React 18 SPA (Client) ] ──HTTPS──> [ Express Gateway (Port 3001) ] ──Internal RPC──> [ FastAPI (Port 8000) ]
+                                             │                                                  │
+                                             ▼                                                  ▼
+                                   [ MongoDB Database ]                              [ Model Pipelines ]
+                                  (riskAssessments audit)                           (ML-CVD-01, ML-DIA-01)
+```
 
-### 2. CDC Diabetes Health Indicators Dataset (id=891)
-* **Cohort Size:** 253,680 rows, 22 columns (21 survey predictors + 1 target).
-* **Missing Values:** 0 missing values (Pre-cleaned by CDC).
-* **Duplicate Rows:** 24,206 duplicate rows (9.54%) reflecting survey population clustering across discrete categorical responses.
-* **Target Distribution:**
-  * Class `0` (No diabetes reported): 218,334 records (**86.07%**).
-  * Class `1` (Prediabetes or diabetes reported): 35,346 records (**13.93%**).
-* **Class Imbalance Ratio:** **6.18 : 1** (Requires class weighting and PR-AUC / Recall optimization in Sprints 2–4).
-
----
-
-## 🛡️ Critical Clinical & Regulatory Distinctions Established
-
-1. **Classification vs. 10-Year Prospective Risk:**
-   * The **Cleveland Heart Disease** classifier predicts *existing angiographic coronary artery disease* based on ECG and catheterization tests; it does NOT estimate future 10-year heart attack risk (which our Framingham ASCVD module handles).
-   * The **CDC Diabetes** classifier detects *reported disease status patterns* from survey lifestyle indicators; it does NOT replace biochemical venous fasting blood glucose or $\text{HbA}_{1c}$ laboratory assays.
-2. **Geographic Representation (Indian Demographics):**
-   * Indian populations exhibit premature coronary disease and lower BMI obesity thresholds ($\text{BMI} \ge 23$ for overweight vs $\ge 25$ in Western cohorts).
-   * Models will explicitly carry SaMD disclaimers noting this demographic variance.
+1. **Zero Disruption Guarantee:** Verified that all existing patient authentication, doctor scheduling, atomic CAS booking, follow-up recovery plans, and executive dashboards remain 100% operational.
+2. **Four Discrete Tasks Formulated:**
+   * **`ML-DIA-01`:** Diabetes Current-Status Classification (Active for Sprints 2–6).
+   * **`ML-DIA-02`:** Diabetes Future-Risk Estimation (Deferred pending longitudinal cohort data).
+   * **`ML-CVD-01`:** Cardiovascular Current-Status Classification (Active for Sprints 2–6).
+   * **`ML-CVD-02`:** Cardiovascular Future-Risk Estimation (Deferred pending longitudinal cohort data; existing Framingham ASCVD calculator continues serving prospective risk support).
+3. **Dataset Governance Established:**
+   * UCI Cleveland Heart Disease (303 records, CC BY 4.0) approved for `ML-CVD-01`.
+   * CDC BRFSS Diabetes Indicators (253,680 records, CC0 Public Domain) approved for `ML-DIA-01`.
+   * Pima Indians dataset rejected for general Indian outpatient screening due to population mismatch.
 
 ---
 
 ## 📁 Artifacts Produced in Sprint 1
 
-```
-Docs/
-├── ml/
-│   ├── problem_definitions.md          # Intended use, target formulations & wording
-│   ├── data_dictionary.md              # 35 feature definitions, ranges & units
-│   ├── cardiovascular_dataset_card.md  # UCI Cleveland provenance, audit & limits
-│   ├── diabetes_dataset_card.md        # CDC BRFSS provenance, class balance & limits
-│   └── dataset_audit_metrics.json      # Machine-readable audit statistics
-Docs/
-└── Sprint/
-    └── Sprint-ML-1-Summary.md          # Sprint 1 completion sign-off
-ai-service/
-├── data/
-│   ├── cardiovascular/
-│   │   └── processed.cleveland.data    # Verified local dataset copy
-│   └── diabetes/
-│       └── diabetes_health_indicators.csv # Verified local dataset copy
-└── training/
-    └── audit_datasets.py               # Reproducible profiling script
-```
+* [`Docs/ml/integration_map.md`](../ml/integration_map.md) — Monorepo mapping, endpoint inventory, and server-to-server RPC design.
+* [`Docs/ml/prediction_problem_definitions.md`](../ml/prediction_problem_definitions.md) — Mathematical definitions, exclusions, and approved safe wording for all 4 tasks.
+* [`Docs/ml/dataset_register_and_decision_log.md`](../ml/dataset_register_and_decision_log.md) — Provenance tracking and Architectural Decisions D-ML-01 through D-ML-08.
+* [`Docs/ml/dataset_audit_checklist.md`](../ml/dataset_audit_checklist.md) — 6-point verification checklist for dataset eligibility and SaMD compliance.
+* [`Docs/Sprint/Sprint-ML-1-Summary.md`](Sprint-ML-1-Summary.md) — Formal sprint acceptance sign-off.
 
 ---
 
-## ⏭️ Ready for ML Sprint 2
-All **Definition of Ready (DoR)** criteria for ML Sprint 2 have been satisfied:
-* Next Sprint Goal: **Exploratory Data Analysis (EDA) and Reproducible Preprocessing Pipelines**.
+## ⏭️ Ready for Sprint 2
+All **Definition of Ready (DoR)** criteria for Sprint 2 have been satisfied:
+* **Sprint 2 Goal:** Input contracts, versioned Pydantic schemas, shared preprocessing specifications, and safe synthetic development data pipeline (`ML-S2-01` to `ML-S2-07`).
