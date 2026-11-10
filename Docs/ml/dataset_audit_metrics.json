@@ -1,0 +1,96 @@
+{
+  "audit_timestamp": "2026-11-10T12:38:18.038548",
+  "cardiovascular": {
+    "dataset_name": "UCI Cleveland Heart Disease",
+    "provenance": "Cleveland Clinic Foundation (Robert Detrano, M.D., Ph.D.)",
+    "uci_id": 45,
+    "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "total_rows": 303,
+    "total_columns": 14,
+    "missing_values": {
+      "ca": 4,
+      "thal": 2
+    },
+    "duplicate_rows": 0,
+    "target_distribution_multiclass": {
+      "0": 164,
+      "1": 55,
+      "2": 36,
+      "3": 35,
+      "4": 13
+    },
+    "target_distribution_binary": {
+      "negative_0_no_disease": 164,
+      "positive_1_heart_disease": 139
+    },
+    "features": [
+      "age",
+      "sex",
+      "cp",
+      "trestbps",
+      "chol",
+      "fbs",
+      "restecg",
+      "thalach",
+      "exang",
+      "oldpeak",
+      "slope",
+      "ca",
+      "thal"
+    ],
+    "data_types": {
+      "age": "float64",
+      "sex": "float64",
+      "cp": "float64",
+      "trestbps": "float64",
+      "chol": "float64",
+      "fbs": "float64",
+      "restecg": "float64",
+      "thalach": "float64",
+      "exang": "float64",
+      "oldpeak": "float64",
+      "slope": "float64",
+      "ca": "float64",
+      "thal": "float64",
+      "target": "int64"
+    }
+  },
+  "diabetes": {
+    "dataset_name": "CDC Diabetes Health Indicators (BRFSS 2015)",
+    "provenance": "Centers for Disease Control and Prevention (CDC) - Behavioral Risk Factor Surveillance System",
+    "uci_id": 891,
+    "license": "Public Domain / CC0 (US Government Data)",
+    "total_rows": 253680,
+    "total_columns": 22,
+    "missing_values": {},
+    "duplicate_rows": 24206,
+    "target_distribution": {
+      "0_no_diabetes": 218334,
+      "1_prediabetes_or_diabetes": 35346
+    },
+    "features": [
+      "HighBP",
+      "HighChol",
+      "CholCheck",
+      "BMI",
+      "Smoker",
+      "Stroke",
+      "HeartDiseaseorAttack",
+      "PhysActivity",
+      "Fruits",
+      "Veggies",
+      "HvyAlcoholConsump",
+      "AnyHealthcare",
+      "NoDocbcCost",
+      "GenHlth",
+      "MentHlth",
+      "PhysHlth",
+      "DiffWalk",
+      "Sex",
+      "Age",
+      "Education",
+      "Income"
+    ],
+    "class_imbalance_ratio": "6.18:1"
+  }
+}

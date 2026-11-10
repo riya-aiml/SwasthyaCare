@@ -43,4 +43,10 @@ __pycache__/
 venv/
 .venv/
 ai-service/venv/
+ai-service/data/*.csv
+ai-service/data/*.data
+ai-service/data/**/*.csv
+ai-service/data/**/*.data
+!ai-service/data/**/.gitkeep
+
 
