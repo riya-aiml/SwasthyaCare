@@ -39,7 +39,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/follow-ups', followUpRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiRoutes); // Sprint 6: AI Clinical Decision Support & ML Current-Status
 app.use('/api/dashboards', dashboardRoutes);
 
 // Root endpoint

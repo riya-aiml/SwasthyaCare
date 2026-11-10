@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 from .routers.predict import router as predict_router
 from .routers.ocr import router as ocr_router
+from .routers.internal_assessments import router as internal_assessments_router
+from .services.model_registry import registry
 
 app = FastAPI(
     title="SwasthyaCare AI & Clinical Decision Support Service",
@@ -22,6 +24,12 @@ app.add_middleware(
 # Include Routers
 app.include_router(predict_router)
 app.include_router(ocr_router)
+app.include_router(internal_assessments_router)
+
+@app.on_event("startup")
+async def startup_event():
+    """Ensure models are warm-loaded on service startup."""
+    registry.load_all_models()
 
 @app.get("/health", tags=["Health"])
 async def health_check():
