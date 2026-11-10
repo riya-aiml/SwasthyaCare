@@ -1,0 +1,146 @@
+{
+  "report_id": "SWC-ML-FAIRNESS-S5-001",
+  "sprint": "Sprint 5 \u2014 Model Evaluation, Fairness & Model Cards",
+  "date": "2026-11-10",
+  "diabetes_subgroup_analysis": {
+    "task_id": "ML-DIA-01",
+    "model_id": "diabetes-current-status-lr",
+    "operating_threshold": 0.49,
+    "by_sex": {
+      "female": {
+        "samples": 1112,
+        "prevalence": 0.1088,
+        "sensitivity": 0.8099,
+        "specificity": 0.7437,
+        "precision": 0.2784,
+        "f1_score": 0.4144,
+        "roc_auc": 0.8537,
+        "confusion_matrix": {
+          "tn": 737,
+          "fp": 254,
+          "fn": 23,
+          "tp": 98
+        }
+      },
+      "male": {
+        "samples": 885,
+        "prevalence": 0.1695,
+        "sensitivity": 0.7733,
+        "specificity": 0.6667,
+        "precision": 0.3213,
+        "f1_score": 0.454,
+        "roc_auc": 0.798,
+        "confusion_matrix": {
+          "tn": 490,
+          "fp": 245,
+          "fn": 34,
+          "tp": 116
+        }
+      },
+      "equal_opportunity_ratio": 0.955
+    },
+    "by_age": {
+      "age_under_55": {
+        "samples": 772,
+        "prevalence": 0.0738,
+        "sensitivity": 0.6491,
+        "specificity": 0.8825,
+        "precision": 0.3058,
+        "f1_score": 0.4157,
+        "roc_auc": 0.8804,
+        "confusion_matrix": {
+          "tn": 631,
+          "fp": 84,
+          "fn": 20,
+          "tp": 37
+        }
+      },
+      "age_55_and_older": {
+        "samples": 1225,
+        "prevalence": 0.1747,
+        "sensitivity": 0.8271,
+        "specificity": 0.5895,
+        "precision": 0.299,
+        "f1_score": 0.4392,
+        "roc_auc": 0.7851,
+        "confusion_matrix": {
+          "tn": 596,
+          "fp": 415,
+          "fn": 37,
+          "tp": 177
+        }
+      },
+      "equal_opportunity_ratio": 0.785
+    }
+  },
+  "cardiovascular_subgroup_analysis": {
+    "task_id": "ML-CVD-01",
+    "model_id": "cardiovascular-current-status-rf",
+    "operating_threshold": 0.55,
+    "by_sex": {
+      "female": {
+        "samples": 20,
+        "prevalence": 0.35,
+        "sensitivity": 0.8571,
+        "specificity": 1.0,
+        "precision": 1.0,
+        "f1_score": 0.9231,
+        "roc_auc": 1.0,
+        "confusion_matrix": {
+          "tn": 13,
+          "fp": 0,
+          "fn": 1,
+          "tp": 6
+        }
+      },
+      "male": {
+        "samples": 41,
+        "prevalence": 0.5122,
+        "sensitivity": 0.9524,
+        "specificity": 0.9,
+        "precision": 0.9091,
+        "f1_score": 0.9302,
+        "roc_auc": 0.9524,
+        "confusion_matrix": {
+          "tn": 18,
+          "fp": 2,
+          "fn": 1,
+          "tp": 20
+        }
+      },
+      "equal_opportunity_ratio": 0.9
+    },
+    "by_age": {
+      "age_under_55": {
+        "samples": 28,
+        "prevalence": 0.25,
+        "sensitivity": 1.0,
+        "specificity": 1.0,
+        "precision": 1.0,
+        "f1_score": 1.0,
+        "roc_auc": 1.0,
+        "confusion_matrix": {
+          "tn": 21,
+          "fp": 0,
+          "fn": 0,
+          "tp": 7
+        }
+      },
+      "age_55_and_older": {
+        "samples": 33,
+        "prevalence": 0.6364,
+        "sensitivity": 0.9048,
+        "specificity": 0.8333,
+        "precision": 0.9048,
+        "f1_score": 0.9048,
+        "roc_auc": 0.9008,
+        "confusion_matrix": {
+          "tn": 10,
+          "fp": 2,
+          "fn": 2,
+          "tp": 19
+        }
+      }
+    }
+  }
+}
