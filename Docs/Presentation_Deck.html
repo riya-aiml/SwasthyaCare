@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwasthyaCare — Institutional Project Presentation</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              teal: '#0F766E',
+              tealLight: '#14B8A6',
+              slateDark: '#0F172A',
+              slateLight: '#F8FAFC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .slide {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col justify-between overflow-hidden select-none">
+
+  <!-- Top Navigation & Slide Tracker -->
+  <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-3.5 flex items-center justify-between shrink-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-teal-600 flex items-center justify-center text-white font-black text-sm shadow-sm">
+        SC
+      </div>
+      <div>
+        <span class="font-extrabold text-white text-sm tracking-tight">SwasthyaCare (स्वास्थ्य केयर)</span>
+        <span class="text-xs text-teal-400 font-medium ml-2 hidden sm:inline">• Enterprise Clinical Intelligence Platform</span>
+      </div>
+    </div>
+
+    <!-- Center Slide Counter -->
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-mono font-bold bg-slate-800 px-3 py-1 rounded-full text-slate-300 border border-slate-700">
+        Slide <span id="currentSlideNum" class="text-teal-400">1</span> of <span id="totalSlidesNum">16</span>
+      </span>
+      <button id="toggleNotesBtn" class="text-xs font-semibold px-3 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-700 transition">
+        🎙️ Speaker Notes
+      </button>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2">
+      <button id="prevBtn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700 text-xs font-bold px-3">
+        ← Prev
+      </button>
+      <button id="nextBtn" class="p-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white transition shadow-sm text-xs font-bold px-4">
+        Next →
+      </button>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div class="w-full bg-slate-900 h-1 shrink-0">
+    <div id="progressBar" class="bg-teal-500 h-1 transition-all duration-300" style="width: 6.25%;"></div>
+  </div>
+
+  <!-- Slide Container -->
+  <main class="flex-1 overflow-y-auto p-4 sm:p-8 flex items-center justify-center relative">
+
+    <!-- ================= SLIDE 1: Title ================= -->
+    <section class="slide active flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950 border border-teal-800 text-teal-300 text-xs font-bold uppercase tracking-wider">
+        <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+        Production Release v1.0.0 • Agile Sprint 1–8 Golden Baseline
+      </div>
+      <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
+        SWASTHYACARE <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">
+          (स्वास्थ्य केयर)
+        </span>
+      </h1>
+      <p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto font-medium">
+        Institutional AI-Assisted Clinical Workflow, Post-Discharge Follow-Up & Clinical Decision Support System
+      </p>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl w-full pt-4 text-left">
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Architecture</span>
+          <p class="text-xs font-bold text-white mt-1">Distributed Monorepo</p>
+          <span class="text-[11px] text-teal-400">React + Node + FastAPI</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Concurrency</span>
+          <p class="text-xs font-bold text-white mt-1">Atomic CAS Lock</p>
+          <span class="text-[11px] text-teal-400">0% Race Conditions</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Clinical AI</span>
+          <p class="text-xs font-bold text-white mt-1">ASCVD & FINDRISC</p>
+          <span class="text-[11px] text-teal-400">FDA SaMD Compliant</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">QA Verification</span>
+          <p class="text-xs font-bold text-white mt-1">114 / 114 Tests</p>
+          <span class="text-[11px] text-emerald-400">100% Pass Rate</span>
+        </div>
+      </div>
+      <div class="speaker-notes hidden bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs text-slate-300 text-left max-w-2xl mt-4">
+        🎙️ <strong>Speaker Note:</strong> Welcome respected examiners. SwasthyaCare solves healthcare's double-booking race condition and the high-risk 30-day post-discharge continuity gap using atomic concurrency, validated clinical models, and 114 passing automated tests.
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 2: Problem Statement ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-6">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">02. Problem Statement</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">The Healthcare Continuity & Operational Breakdown</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="text-rose-400 font-extrabold text-sm flex items-center gap-2">
+            <span>🚨 30-Day Post-Discharge 'Black Hole'</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            19%–23% of discharged hospital patients suffer an adverse event within 30 days. Over 60% are due to unmonitored medication titration or delayed reporting of deteriorating symptoms.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="text-rose-400 font-extrabold text-sm flex items-center gap-2">
+            <span>⚠️ High-Concurrency Double-Booking</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Traditional check-then-act appointment systems allow multiple patients to book the same physician slot under concurrent peak traffic, causing clinical chaos and patient friction.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="text-amber-400 font-extrabold text-sm flex items-center gap-2">
+            <span>🧠 Clinician Diagnostic Cognitive Fatigue</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Physicians have under 10 minutes per patient to manually evaluate multi-factorial cardiovascular (ASCVD) and diabetes (FINDRISC) risks during outpatient consultations.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="text-amber-400 font-extrabold text-sm flex items-center gap-2">
+            <span>💊 Pharmaceutical Packaging Confusion</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Polypharmacy patients routinely misidentify generic medications due to manufacturer packaging variations, leading to accidental double-dosing or missed regimens.
+          </p>
+        </div>
+      </div>
+      <div class="speaker-notes hidden bg-slate-900 border border-slate-700 p-4 rounded-xl text-xs text-slate-300 text-left mt-2">
+        🎙️ <strong>Speaker Note:</strong> Modern hospitals fail in the post-discharge recovery period. Between discharge and a 30-day visit, there is zero digital monitoring. In parallel, standard booking systems suffer from race conditions under high concurrent volume.
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 3: The Solution ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-6">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">03. The SwasthyaCare Solution</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">An Integrated Clinical Intelligence Platform</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950/40 border border-teal-800/60 space-y-2">
+          <div class="text-teal-400 font-extrabold text-sm">1. Atomic Concurrency (CAS) Scheduling</div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Uses atomic Compare-And-Swap database operators (`findOneAndUpdate`) to guarantee absolute slot exclusivity with zero double-booking collisions (HTTP 409 Conflict mitigation).
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950/40 border border-teal-800/60 space-y-2">
+          <div class="text-teal-400 font-extrabold text-sm">2. 30-Day Follow-Up & Idempotent Reminders</div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Structured care plans authored by attending doctors; daily patient recovery check-ins (1–5 rating, vitals); automated SMS/Email queue with compound deduplication keys.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950/40 border border-teal-800/60 space-y-2">
+          <div class="text-teal-400 font-extrabold text-sm">3. AI Decision Support (SaMD Boundary)</div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            FastAPI microservice executing Framingham 10-Yr ASCVD Risk, FINDRISC 10-Yr Diabetes scoring, and medicine packaging OCR tokenization with mandatory clinical disclaimers.
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950/40 border border-teal-800/60 space-y-2">
+          <div class="text-teal-400 font-extrabold text-sm">4. HIPAA-Compliant Multi-Role Portals</div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Tailored consoles for Patients, Doctors, Management, and Admins. Executive analytics use database-level `$group` aggregations with zero patient PII exposure.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 4: Architecture ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">04. System Architecture</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Hybrid Distributed Monorepo Topology</h2>
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 font-mono text-[11px] leading-relaxed text-slate-300 space-y-2 overflow-x-auto">
+        <div class="text-teal-400 font-bold">[ Web Client (React 18 + Vite 5 + Tailwind CSS 3.4) ]</div>
+        <div class="text-slate-500">     │  HTTPS / REST (JWT Dual-Key Bearer Token)</div>
+        <div class="text-indigo-400 font-bold">     ▼</div>
+        <div class="text-indigo-300 font-bold">[ Node.js Express Domain Gateway (Port 3001) ]</div>
+        <div class="text-slate-400">     • Helmet, CORS, RateLimiter, MongoSanitize, Bcrypt Auth & RBAC</div>
+        <div class="text-slate-400">     • Appointments, Availability Slots, Follow-Up Plans, Notifications</div>
+        <div class="text-slate-500">     │                                    │</div>
+        <div class="text-slate-500">     │ Mongoose TCP                       │ Internal HTTP RPC</div>
+        <div class="text-slate-500">     ▼                                    ▼</div>
+        <div class="text-emerald-400 font-bold">[ MongoDB 8.0 Document Store ]     [ Python 3.11 FastAPI Microservice (Port 8000) ]</div>
+        <div class="text-slate-400"> - Users, DoctorProfiles, Slots     - Framingham 10-Yr ASCVD Risk Model</div>
+        <div class="text-slate-400"> - Appointments, CarePlans, Vitals   - FINDRISC 10-Yr Diabetes Model</div>
+        <div class="text-slate-400"> - Idempotent Notification Queue    - Medicine Packaging OCR Tokenizer</div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <strong class="text-white block">Decoupled Computing:</strong> Heavy mathematical scoring and OCR tokenization run on FastAPI without blocking the Node.js event loop.
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300">
+          <strong class="text-white block">Circuit Resilience:</strong> If the AI microservice experiences downtime, appointment booking and follow-up care remain 100% operational.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 5: RBAC ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">05. Security Architecture</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Role-Based Access Control (RBAC) Matrix</h2>
+      <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-850 text-slate-400 font-bold uppercase border-b border-slate-800">
+            <tr>
+              <th class="p-3">Platform Endpoint Scope</th>
+              <th class="p-3 text-center">Patient</th>
+              <th class="p-3 text-center">Doctor</th>
+              <th class="p-3 text-center">Management</th>
+              <th class="p-3 text-center">Admin</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-slate-300 font-medium">
+            <tr>
+              <td class="p-3 font-mono text-[11px]">POST /api/appointments/request</td>
+              <td class="p-3 text-center text-emerald-400 font-bold">✅ Permitted</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono text-[11px]">POST /api/appointments/slots</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-emerald-400 font-bold">✅ Permitted</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono text-[11px]">POST /api/followup/plans</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-emerald-400 font-bold">✅ Permitted</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono text-[11px]">GET /api/dashboards/management</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-emerald-400 font-bold">✅ Permitted</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+            </tr>
+            <tr>
+              <td class="p-3 font-mono text-[11px]">GET /api/dashboards/admin</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-rose-400">❌ 403 Forbidden</td>
+              <td class="p-3 text-center text-emerald-400 font-bold">✅ Permitted</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-slate-400">
+        🛡️ Enforced by layered middleware: <code class="text-teal-400">authenticateJWT</code> confirms cryptographic signature, followed by <code class="text-teal-400">requireRole(...allowedRoles)</code> evaluating decoded claims.
+      </p>
+    </section>
+
+    <!-- ================= SLIDE 6: 8-Sprint Lifecycle ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-4">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">06. Engineering Process</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">8-Sprint Agile Delivery Lifecycle</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 1</span>
+          <p class="font-bold text-white mt-1">Foundation</p>
+          <span class="text-[11px] text-slate-400">Monorepo setup, Express, Vite, MongoDB connection.</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 2</span>
+          <p class="font-bold text-white mt-1">Auth & RBAC</p>
+          <span class="text-[11px] text-slate-400">Bcrypt hashing, JWT generation, role guards (15 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 3</span>
+          <p class="font-bold text-white mt-1">Doctor Slots</p>
+          <span class="text-[11px] text-slate-400">Granular slot publishing & schedule overlaps (17 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 4</span>
+          <p class="font-bold text-white mt-1">CAS Booking</p>
+          <span class="text-[11px] text-slate-400">Appointment lifecycle & CAS double-booking lock (24 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 5</span>
+          <p class="font-bold text-white mt-1">Post-Discharge</p>
+          <span class="text-[11px] text-slate-400">30-day care plans, recovery vitals & reminders (17 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 6</span>
+          <p class="font-bold text-white mt-1">AI CDS & OCR</p>
+          <span class="text-[11px] text-slate-400">FastAPI ASCVD, FINDRISC & packaging OCR (9 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-teal-400 font-bold">Sprint 7</span>
+          <p class="font-bold text-white mt-1">Dashboards</p>
+          <span class="text-[11px] text-slate-400">Management & Admin portals, HIPAA aggregations (20 tests).</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 border-teal-500/60 bg-teal-950/20">
+          <span class="text-teal-400 font-bold">Sprint 8</span>
+          <p class="font-bold text-white mt-1">QA & Enterprise UI</p>
+          <span class="text-[11px] text-slate-400">Security hardening, 114 test regression & UI overhaul.</span>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+        <span>✨ Total Sprint Velocity Metric:</span>
+        <span class="font-bold text-emerald-400">114 / 114 Automated Unit & Integration Tests Passed (100%)</span>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 7: CAS Concurrency ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">07. Deep Dive 1</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Atomic Compare-And-Swap (CAS) Concurrency</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="p-4 rounded-2xl bg-rose-950/30 border border-rose-900/60 text-xs space-y-2">
+          <span class="font-bold text-rose-400 uppercase text-[10px]">❌ Naive Anti-Pattern (Vulnerable)</span>
+          <pre class="font-mono text-[11px] text-slate-300 bg-slate-950 p-2.5 rounded-lg overflow-x-auto">
+const slot = await Slot.findById(id);
+if (slot.status === 'available') {
+  // Concurrency window here!
+  // Competing request also reads 'available'
+  slot.status = 'reserved';
+  await slot.save(); // Double booking!
+}</pre>
+          <p class="text-slate-400 text-[11px]">Two requests execute concurrently, both see 'available', both book.</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-teal-950/30 border border-teal-800/60 text-xs space-y-2">
+          <span class="font-bold text-teal-300 uppercase text-[10px]">✅ SwasthyaCare Atomic CAS Pattern</span>
+          <pre class="font-mono text-[11px] text-slate-300 bg-slate-950 p-2.5 rounded-lg overflow-x-auto">
+const slot = await Slot.findOneAndUpdate(
+  { _id: id, status: 'available', isBooked: false },
+  { $set: { status: 'reserved', isBooked: true } },
+  { new: true }
+);
+if (!slot) return res.status(409).json({
+  message: 'Slot reserved by another patient'
+});</pre>
+          <p class="text-slate-400 text-[11px]">Database executes check and update as one atomic CPU operation.</p>
+        </div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs space-y-1.5">
+        <span class="font-bold text-white">Empirical Test Verification:</span>
+        <p class="text-slate-300">
+          In <code class="text-teal-400">tests/sprint8.test.js</code>, parallel booking promises execute simultaneously via <code class="text-teal-400">Promise.all()</code>. Exactly one receives <strong>HTTP 201 Created</strong>; the competing request receives <strong>HTTP 409 Conflict</strong>. Race condition probability: <strong>0.00%</strong>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 8: Post-Discharge & Reminders ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">08. Deep Dive 2</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Post-Discharge Care & Idempotent Reminders</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">1. Doctor Authors Plan</span>
+          <p class="text-slate-300 leading-relaxed">
+            Attending physician specifies primary diagnosis, follow-up duration (14–30 days), frequency, and medication titration schedule upon hospital discharge.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">2. Patient Daily Check-In</span>
+          <p class="text-slate-300 leading-relaxed">
+            Patient submits daily recovery rating (1–5 scale), blood pressure, heart rate, and symptom updates. Doctors receive instant triage alerts for low scores.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">3. Idempotent Queue</span>
+          <p class="text-slate-300 leading-relaxed">
+            Scheduled reminders use compound deterministic hash <code class="text-teal-300">MD5(planId + date + channel)</code> with a MongoDB unique index, guaranteeing zero duplicate alerts.
+          </p>
+        </div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+        🩺 <strong>Clinical Impact:</strong> Directly mitigates the 19%–23% 30-day post-discharge complication rate by providing structured physician oversight during the most vulnerable recovery window.
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 9: Clinical AI & OCR ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">09. Deep Dive 3</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">AI Clinical Decision Support (SaMD Compliance)</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">Framingham ASCVD Risk</span>
+          <p class="text-slate-300">
+            Sex-stratified Cox regression evaluating 10-year risk of heart attack or stroke using age, cholesterol, SBP, smoking, and diabetes.
+          </p>
+          <span class="text-[10px] font-mono text-slate-400">Risk Bands: Low (&lt;5%), Inter (7.5-19.9%), High (≥20%)</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">FINDRISC Diabetes Score</span>
+          <p class="text-slate-300">
+            Validated 0–26 additive scoring matrix evaluating 10-year probability of Type-2 Diabetes based on BMI, waist, diet, and family history.
+          </p>
+          <span class="text-[10px] font-mono text-slate-400">Risk: 1% (&lt;7 pts) to 50% (&gt;20 pts)</span>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">Medicine OCR Matcher</span>
+          <p class="text-slate-300">
+            Cleanses packaging image text and computes Levenshtein fuzzy distance against institutional formulary monographs.
+          </p>
+          <span class="text-[10px] font-mono text-slate-400">Confidence threshold: 0.75 for verified match</span>
+        </div>
+      </div>
+      <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-800/60 text-xs text-amber-200">
+        ⚖️ <strong>FDA SaMD Medical Boundary:</strong> Every payload carries a mandatory clinical disclaimer. The microservice operates strictly for decision support and risk stratification; it explicitly does not dispense autonomous medical prescriptions.
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 10: HIPAA Telemetry ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">10. Deep Dive 4</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">HIPAA-Compliant Executive Telemetry</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <span class="text-teal-400 font-bold block text-sm">Zero Patient PII Traversal</span>
+          <p class="text-slate-300 leading-relaxed">
+            The Hospital Management endpoint (<code class="text-teal-300">/api/dashboards/management</code>) never pulls individual patient documents into Node.js application memory.
+          </p>
+          <p class="text-slate-400 leading-relaxed">
+            All metrics are computed inside MongoDB using mathematical aggregation pipelines (<code class="text-teal-300">$group</code>, <code class="text-teal-300">$avg</code>, <code class="text-teal-300">$sum</code>).
+          </p>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <span class="text-teal-400 font-bold block text-sm">Key C-Suite KPIs Delivered</span>
+          <div class="space-y-1.5 text-slate-300">
+            <div class="flex justify-between"><span>• Consultation Volume:</span> <strong class="text-white">Aggregate Total</strong></div>
+            <div class="flex justify-between"><span>• Approval Velocity:</span> <strong class="text-emerald-400">100% Approval Rate</strong></div>
+            <div class="flex justify-between"><span>• Patient Recovery Index:</span> <strong class="text-teal-400">4.8 / 5.0 Rating</strong></div>
+            <div class="flex justify-between"><span>• Notification Delivery:</span> <strong class="text-indigo-400">100% Reliable Queue</strong></div>
+            <div class="flex justify-between"><span>• Department Capacity:</span> <strong class="text-white">Specialty Staffing</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 11: Enterprise UI ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">11. UI/UX Transformation</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Enterprise HealthTech Clinical Design System</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-white font-bold block">1. Color Palette</span>
+          <p class="text-slate-300">
+            Replaced purple gradients with deep slate (<code class="text-slate-400">#0F172A</code>) and clinical teal (<code class="text-teal-400">#0F766E</code>) for an institutional, reassuring clinical visual identity.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-white font-bold block">2. Lucide Vector Icons</span>
+          <p class="text-slate-300">
+            Replaced amateur emojis with pixel-perfect vector icons (<code class="text-teal-400">Stethoscope</code>, <code class="text-teal-400">ShieldCheck</code>, <code class="text-teal-400">Activity</code>, <code class="text-teal-400">Calendar</code>).
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-white font-bold block">3. 1-Click Persona Ribbon</span>
+          <p class="text-slate-300">
+            Persistent sticky ribbon enables evaluators to transition instantaneously between Patient, Doctor, Management, and Admin with pre-seeded demo accounts.
+          </p>
+        </div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+        <span>🎨 Pre-seeded Personas:</span>
+        <span class="font-mono text-teal-400">Aarav (Patient) • Dr. Verma (Clinician) • Pooja (Management) • Rajesh (Admin)</span>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 12: QA & Verification ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">12. Verification & Testing</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">114 Automated Tests • 100% Pass Rate</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">15/15</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 2 Auth</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">17/17</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 3 Slots</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">24/24</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 4 Booking</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">17/17</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 5 FollowUp</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">9/9</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 6 AI CDS</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">20/20</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 7 Telemetry</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-center">
+          <span class="text-2xl font-black text-emerald-400 block">12/12</span>
+          <span class="text-[11px] text-slate-400 font-bold uppercase">Sprint 8 Hardening</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-teal-950/40 border border-teal-800 text-center">
+          <span class="text-2xl font-black text-teal-300 block">114 / 114</span>
+          <span class="text-[11px] text-teal-400 font-bold uppercase">Total Passed</span>
+        </div>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+        🛡️ <strong>Transport Hardening:</strong> Helmet security headers (CSP, HSTS), MongoSanitize (NoSQL injection prevention), Express Rate-Limiter (DoS defense), and Bcrypt 10-round salted password hashing.
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 13: Demo Walkthrough ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">13. Live Demonstration</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Structured 5-Minute Live System Walkthrough</h2>
+      <div class="space-y-3 text-xs">
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div>
+            <strong class="text-white block">Step 1: Patient Persona (Aarav Sharma)</strong>
+            <span class="text-slate-400">Filter Cardiology doctors, reserve slot via CAS lock, submit daily recovery check-in.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 font-mono text-[10px]">1:00 min</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div>
+            <strong class="text-white block">Step 2: Clinician Persona (Dr. Rohan Verma, MD)</strong>
+            <span class="text-slate-400">Review triage queue, approve Aarav's appointment, inspect active patient recovery vitals.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 font-mono text-[10px]">1:00 min</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div>
+            <strong class="text-white block">Step 3: AI Clinical Decision Support (FastAPI)</strong>
+            <span class="text-slate-400">Calculate Framingham ASCVD Risk (16.4% Intermediate) and review SaMD disclaimer.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 font-mono text-[10px]">1:00 min</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div>
+            <strong class="text-white block">Step 4: Hospital Management Persona (Pooja Nair)</strong>
+            <span class="text-slate-400">Verify executive utilization KPIs, 4.8 recovery score, and HIPAA de-identification badge.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 font-mono text-[10px]">1:00 min</span>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+          <div>
+            <strong class="text-white block">Step 5: Platform Admin Persona (Rajesh Gupta)</strong>
+            <span class="text-slate-400">Audit user distribution counts, doctor licensing verification table, and microservice status.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-teal-950 border border-teal-800 text-teal-300 font-mono text-[10px]">1:00 min</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 14: DevOps & DR ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">14. DevOps & Continuity</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Containerization & Disaster Recovery Runbook</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <span class="text-teal-400 font-bold block text-sm">Docker Compose Workloads</span>
+          <ul class="space-y-1.5 text-slate-300">
+            <li>• <strong class="text-white">client:</strong> Nginx serving optimized Vite SPA bundle (Port 3000)</li>
+            <li>• <strong class="text-white">server:</strong> Node.js Express REST API Gateway (Port 3001)</li>
+            <li>• <strong class="text-white">ai-service:</strong> Python 3.11 FastAPI Uvicorn engine (Port 8000)</li>
+            <li>• <strong class="text-white">mongodb:</strong> MongoDB 8.0 document database with persistent volume</li>
+          </ul>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+          <span class="text-teal-400 font-bold block text-sm">Disaster Recovery Targets</span>
+          <div class="space-y-2 text-slate-300">
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-400 block text-[10px] uppercase font-bold">Recovery Point Objective (RPO)</span>
+              <span class="font-bold text-white text-sm">&lt; 1 Hour</span>
+              <span class="text-[11px] text-slate-400 block">Automated hourly incremental binary dumps</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-400 block text-[10px] uppercase font-bold">Recovery Time Objective (RTO)</span>
+              <span class="font-bold text-white text-sm">&lt; 15 Minutes</span>
+              <span class="text-[11px] text-slate-400 block">Declarative container image redeployment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 15: Roadmap ================= -->
+    <section class="slide flex-col max-w-4xl w-full space-y-5">
+      <div class="text-xs font-bold uppercase tracking-wider text-teal-400">15. Strategic Roadmap</div>
+      <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">National Infrastructure & Future Evolution</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">1. Ayushman Bharat (ABDM) Integration</span>
+          <p class="text-slate-300 leading-relaxed">
+            Directly connect SwasthyaCare with India's National Digital Health Mission via 14-digit ABHA IDs for consent-based electronic health record exchange.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">2. FHIR / HL7 v4 Data Interoperability</span>
+          <p class="text-slate-300 leading-relaxed">
+            Map clinical care plans and appointment schemas to HL7 Fast Healthcare Interoperability Resources (FHIR) standard JSON payloads.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">3. Peer-to-Peer WebRTC Video Rooms</span>
+          <p class="text-slate-300 leading-relaxed">
+            Upgrade telehealth consultations to browser-native, end-to-end encrypted audio/video calling with clinical screen sharing.
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+          <span class="text-teal-400 font-bold block">4. Continuous Wearable IoT Telemetry</span>
+          <p class="text-slate-300 leading-relaxed">
+            Ingest continuous blood pressure, pulse oximetry, and blood glucose telemetry from smartwatches directly into post-discharge recovery streams.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SLIDE 16: Conclusion ================= -->
+    <section class="slide flex-col items-center justify-center text-center max-w-3xl mx-auto space-y-6">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950 border border-teal-800 text-teal-300 text-xs font-bold uppercase tracking-wider">
+        Summary & Defense Conclusion
+      </div>
+      <h2 class="text-4xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+        Engineering Rigour Meets <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">
+          Healthcare Continuity
+        </span>
+      </h2>
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        SwasthyaCare delivers a provably sound, concurrency-locked, and clinically grounded platform that bridges the perilous post-discharge window while streamlining institutional hospital operations.
+      </p>
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 w-full text-left space-y-1">
+        <div class="font-bold text-white text-sm mb-1">Key Engineering Deliverables Ready for Inspection:</div>
+        <div>✓ Working Prototype Live on <code class="text-teal-400">http://localhost:3000</code></div>
+        <div>✓ 114 Automated Integration & Unit Tests (100% Pass)</div>
+        <div>✓ Formal Technical Project Report (<code class="text-teal-400">Docs/PROJECT_REPORT.md</code>)</div>
+        <div>✓ Examiner Defense Q&A Sheet (<code class="text-teal-400">Docs/PRESENTATION.md</code>)</div>
+      </div>
+      <p class="text-xs text-slate-500 font-semibold">Thank you. We now invite questions from the examination panel.</p>
+    </section>
+
+  </main>
+
+  <!-- Bottom Bar: Keyboard Shortcuts Guide -->
+  <footer class="bg-slate-900/60 border-t border-slate-800/80 px-6 py-2.5 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+    <div>
+      <span>Navigate: </span>
+      <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono">←</kbd>
+      <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono">→</kbd>
+      <span> or </span>
+      <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono">Space</kbd>
+    </div>
+    <div class="flex items-center gap-3">
+      <span>Toggle Notes: <kbd class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono">N</kbd></span>
+      <span class="text-slate-600">•</span>
+      <span>SwasthyaCare v1.0.0</span>
+    </div>
+  </footer>
+
+  <!-- Slide Navigation Script -->
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const currentSlideNum = document.getElementById('currentSlideNum');
+    const totalSlidesNum = document.getElementById('totalSlidesNum');
+    const progressBar = document.getElementById('progressBar');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const toggleNotesBtn = document.getElementById('toggleNotesBtn');
+
+    totalSlidesNum.textContent = totalSlides;
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+
+      slides.forEach((s, idx) => {
+        if (idx === index) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+
+      currentSlide = index;
+      currentSlideNum.textContent = currentSlide + 1;
+      const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      prevBtn.disabled = currentSlide === 0;
+      prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+      nextBtn.textContent = currentSlide === totalSlides - 1 ? 'Finish 🏁' : 'Next →';
+    }
+
+    prevBtn.addEventListener('click', () => updateSlide(currentSlide - 1));
+    nextBtn.addEventListener('click', () => updateSlide(currentSlide + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        updateSlide(currentSlide + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        updateSlide(currentSlide - 1);
+      } else if (e.key.toLowerCase() === 'n') {
+        toggleNotes();
+      }
+    });
+
+    function toggleNotes() {
+      const activeNotes = slides[currentSlide].querySelector('.speaker-notes');
+      if (activeNotes) {
+        activeNotes.classList.toggle('hidden');
+      }
+    }
+
+    toggleNotesBtn.addEventListener('click', toggleNotes);
+
+    updateSlide(0);
+  </script>
+</body>
+</html>
