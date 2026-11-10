@@ -1,0 +1,227 @@
+[
+  {
+    "test_case": "age_below_18",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 14,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "age"
+  },
+  {
+    "test_case": "resting_bp_below_60",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 45,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "resting_bp"
+  },
+  {
+    "test_case": "resting_bp_above_260",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 310,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "resting_bp"
+  },
+  {
+    "test_case": "cholesterol_below_80",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 50,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "cholesterol"
+  },
+  {
+    "test_case": "cholesterol_above_650",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 800,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "cholesterol"
+  },
+  {
+    "test_case": "cp_out_of_range",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 5,
+      "resting_bp": 130,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "chest_pain_type"
+  },
+  {
+    "test_case": "thal_invalid_code",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 1.2,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 4
+    },
+    "expected_field": "thalassemia"
+  },
+  {
+    "test_case": "st_depression_negative",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": -2.0,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "st_depression"
+  },
+  {
+    "test_case": "st_depression_above_10",
+    "payload": {
+      "schema_version": "v1.0.0",
+      "provenance": {
+        "source": "manual_entry",
+        "patient_confirmed": true,
+        "entered_at": "2026-11-10T10:00:00Z"
+      },
+      "age": 55,
+      "sex": "male",
+      "chest_pain_type": 2,
+      "resting_bp": 130,
+      "cholesterol": 220,
+      "fasting_blood_sugar_gt_120": false,
+      "resting_ecg": 0,
+      "max_heart_rate": 150,
+      "exercise_induced_angina": false,
+      "st_depression": 15.5,
+      "st_slope": 1,
+      "num_major_vessels": 0,
+      "thalassemia": 3
+    },
+    "expected_field": "st_depression"
+  }
+]
