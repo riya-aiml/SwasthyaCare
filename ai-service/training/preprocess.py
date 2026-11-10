@@ -50,7 +50,7 @@ def build_diabetes_preprocessor() -> ColumnTransformer:
     ])
 
     binary_transformer = Pipeline(steps=[
-        ("to_int", FunctionTransformer(_to_int)),
+        ("to_int", FunctionTransformer(_to_int, feature_names_out="one-to-one")),
         ("imputer", SimpleImputer(strategy="most_frequent"))
     ])
 
@@ -96,7 +96,7 @@ def build_cardiovascular_preprocessor() -> ColumnTransformer:
     ])
 
     binary_transformer = Pipeline(steps=[
-        ("to_int", FunctionTransformer(_to_int)),
+        ("to_int", FunctionTransformer(_to_int, feature_names_out="one-to-one")),
         ("imputer", SimpleImputer(strategy="most_frequent"))
     ])
 

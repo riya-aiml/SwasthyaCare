@@ -43,10 +43,13 @@ def load_and_validate_diabetes_data(
     log validation errors, and produce stratified train/test partitions.
     """
     if source_path is None:
-        # Default to synthetic if raw is not present
+        # Check for full BRFSS or 10k benchmark sample before synthetic
         raw_csv = os.path.join(RAW_DIR, "diabetes_binary_health_indicators_BRFSS2015.csv")
+        sample_csv = os.path.join(RAW_DIR, "cdc_diabetes_sample_10k.csv")
         if os.path.exists(raw_csv):
             source_path = raw_csv
+        elif os.path.exists(sample_csv):
+            source_path = sample_csv
         else:
             source_path = os.path.join(SYNTHETIC_DIR, "diabetes_valid_records.json")
 

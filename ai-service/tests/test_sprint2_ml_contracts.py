@@ -97,11 +97,13 @@ class TestSprint2MLContracts(unittest.TestCase):
 
     def test_data_loader_stratified_split(self):
         """Verify that data loaders return stratified 80/20 train/test splits with zero leakage."""
-        X_tr_dia, X_te_dia, y_tr_dia, y_te_dia, meta_dia = load_and_validate_diabetes_data()
+        synth_dia_path = os.path.join(self.synthetic_dir, "diabetes_valid_records.json")
+        X_tr_dia, X_te_dia, y_tr_dia, y_te_dia, meta_dia = load_and_validate_diabetes_data(source_path=synth_dia_path)
         self.assertEqual(meta_dia["validation_failures"], 0)
         self.assertAlmostEqual(len(X_te_dia) / (len(X_tr_dia) + len(X_te_dia)), 0.20, delta=0.03)
 
-        X_tr_cvd, X_te_cvd, y_tr_cvd, y_te_cvd, meta_cvd = load_and_validate_cardiovascular_data()
+        synth_cvd_path = os.path.join(self.synthetic_dir, "cardiovascular_valid_records.json")
+        X_tr_cvd, X_te_cvd, y_tr_cvd, y_te_cvd, meta_cvd = load_and_validate_cardiovascular_data(source_path=synth_cvd_path)
         self.assertEqual(meta_cvd["validation_failures"], 0)
         self.assertAlmostEqual(len(X_te_cvd) / (len(X_tr_cvd) + len(X_te_cvd)), 0.20, delta=0.03)
 

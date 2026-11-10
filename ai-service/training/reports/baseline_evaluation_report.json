@@ -1,0 +1,253 @@
+{
+  "report_id": "SWC-ML-EVAL-S4-001",
+  "sprint": "Sprint 4 \u2014 Diabetes and Cardiovascular Current-Status Baselines",
+  "date": "2026-11-10",
+  "diabetes_evaluation": {
+    "task_id": "ML-DIA-01",
+    "task_name": "Diabetes Current-Status Assessment",
+    "dataset_source": "CDC BRFSS 2015 Benchmark",
+    "train_samples": 7985,
+    "test_samples": 1997,
+    "class_prevalence_test": 0.1357035553329995,
+    "models": {
+      "logistic_regression": {
+        "model_id": "diabetes-current-status-lr",
+        "version": "1.0.0",
+        "role": "Primary Baseline (Approved for Inference)",
+        "default_metrics_threshold_0_5": {
+          "threshold": 0.5,
+          "confusion_matrix": {
+            "tn": 1235,
+            "fp": 491,
+            "fn": 60,
+            "tp": 211
+          },
+          "sensitivity_recall": 0.7786,
+          "specificity": 0.7155,
+          "precision": 0.3006,
+          "f1_score": 0.4337,
+          "accuracy": 0.7241,
+          "roc_auc": 0.8292,
+          "pr_auc": 0.4291,
+          "brier_score": 0.1779
+        },
+        "calibrated_metrics": {
+          "threshold": 0.49,
+          "confusion_matrix": {
+            "tn": 1227,
+            "fp": 499,
+            "fn": 57,
+            "tp": 214
+          },
+          "sensitivity_recall": 0.7897,
+          "specificity": 0.7109,
+          "precision": 0.3001,
+          "f1_score": 0.435,
+          "accuracy": 0.7216,
+          "roc_auc": 0.8292,
+          "pr_auc": 0.4291,
+          "brier_score": 0.1779
+        },
+        "optimal_decision_threshold": 0.49,
+        "top_contributing_biomarkers": [
+          {
+            "feature": "bin__chol_check_5yr",
+            "weight": 1.7084
+          },
+          {
+            "feature": "bin__heavy_alcohol",
+            "weight": -0.8563
+          },
+          {
+            "feature": "bin__high_bp",
+            "weight": 0.8232
+          },
+          {
+            "feature": "bin__high_chol",
+            "weight": 0.7839
+          },
+          {
+            "feature": "ord__gen_hlth",
+            "weight": 0.6612
+          },
+          {
+            "feature": "num__bmi",
+            "weight": 0.4789
+          },
+          {
+            "feature": "ord__age",
+            "weight": 0.4506
+          },
+          {
+            "feature": "cat__sex_male",
+            "weight": 0.2942
+          }
+        ]
+      },
+      "random_forest": {
+        "model_id": "diabetes-current-status-rf",
+        "version": "1.0.0",
+        "role": "Ensemble Comparison",
+        "default_metrics_threshold_0_5": {
+          "threshold": 0.5,
+          "confusion_matrix": {
+            "tn": 1204,
+            "fp": 522,
+            "fn": 53,
+            "tp": 218
+          },
+          "sensitivity_recall": 0.8044,
+          "specificity": 0.6976,
+          "precision": 0.2946,
+          "f1_score": 0.4313,
+          "accuracy": 0.7121,
+          "roc_auc": 0.825,
+          "pr_auc": 0.4233,
+          "brier_score": 0.1727
+        },
+        "calibrated_metrics": {
+          "threshold": 0.53,
+          "confusion_matrix": {
+            "tn": 1276,
+            "fp": 450,
+            "fn": 66,
+            "tp": 205
+          },
+          "sensitivity_recall": 0.7565,
+          "specificity": 0.7393,
+          "precision": 0.313,
+          "f1_score": 0.4428,
+          "accuracy": 0.7416,
+          "roc_auc": 0.825,
+          "pr_auc": 0.4233,
+          "brier_score": 0.1727
+        },
+        "optimal_decision_threshold": 0.53
+      }
+    }
+  },
+  "cardiovascular_evaluation": {
+    "task_id": "ML-CVD-01",
+    "task_name": "Cardiovascular Current-Status Assessment",
+    "dataset_source": "UCI Cleveland Clinic Catheterization Benchmark",
+    "train_samples": 242,
+    "test_samples": 61,
+    "class_prevalence_test": 0.45901639344262296,
+    "models": {
+      "logistic_regression": {
+        "model_id": "cardiovascular-current-status-lr",
+        "version": "1.0.0",
+        "role": "Linear Baseline",
+        "default_metrics_threshold_0_5": {
+          "threshold": 0.5,
+          "confusion_matrix": {
+            "tn": 27,
+            "fp": 6,
+            "fn": 3,
+            "tp": 25
+          },
+          "sensitivity_recall": 0.8929,
+          "specificity": 0.8182,
+          "precision": 0.8065,
+          "f1_score": 0.8475,
+          "accuracy": 0.8525,
+          "roc_auc": 0.9567,
+          "pr_auc": 0.9368,
+          "brier_score": 0.085
+        },
+        "calibrated_metrics": {
+          "threshold": 0.71,
+          "confusion_matrix": {
+            "tn": 32,
+            "fp": 1,
+            "fn": 3,
+            "tp": 25
+          },
+          "sensitivity_recall": 0.8929,
+          "specificity": 0.9697,
+          "precision": 0.9615,
+          "f1_score": 0.9259,
+          "accuracy": 0.9344,
+          "roc_auc": 0.9567,
+          "pr_auc": 0.9368,
+          "brier_score": 0.085
+        },
+        "optimal_decision_threshold": 0.71
+      },
+      "random_forest": {
+        "model_id": "cardiovascular-current-status-rf",
+        "version": "1.0.0",
+        "role": "Primary Ensemble Baseline (Approved for Inference)",
+        "default_metrics_threshold_0_5": {
+          "threshold": 0.5,
+          "confusion_matrix": {
+            "tn": 29,
+            "fp": 4,
+            "fn": 2,
+            "tp": 26
+          },
+          "sensitivity_recall": 0.9286,
+          "specificity": 0.8788,
+          "precision": 0.8667,
+          "f1_score": 0.8966,
+          "accuracy": 0.9016,
+          "roc_auc": 0.9675,
+          "pr_auc": 0.9562,
+          "brier_score": 0.0943
+        },
+        "calibrated_metrics": {
+          "threshold": 0.55,
+          "confusion_matrix": {
+            "tn": 31,
+            "fp": 2,
+            "fn": 2,
+            "tp": 26
+          },
+          "sensitivity_recall": 0.9286,
+          "specificity": 0.9394,
+          "precision": 0.9286,
+          "f1_score": 0.9286,
+          "accuracy": 0.9344,
+          "roc_auc": 0.9675,
+          "pr_auc": 0.9562,
+          "brier_score": 0.0943
+        },
+        "optimal_decision_threshold": 0.55,
+        "top_contributing_biomarkers": [
+          {
+            "feature": "cat__chest_pain_type_4.0",
+            "importance": 0.1542
+          },
+          {
+            "feature": "cat__thalassemia_7.0",
+            "importance": 0.1445
+          },
+          {
+            "feature": "num__max_heart_rate",
+            "importance": 0.1221
+          },
+          {
+            "feature": "disc__num_major_vessels",
+            "importance": 0.1205
+          },
+          {
+            "feature": "num__st_depression",
+            "importance": 0.0954
+          },
+          {
+            "feature": "bin__exercise_induced_angina",
+            "importance": 0.0687
+          },
+          {
+            "feature": "num__age",
+            "importance": 0.0672
+          },
+          {
+            "feature": "num__cholesterol",
+            "importance": 0.0539
+          }
+        ]
+      }
+    }
+  }
+}
