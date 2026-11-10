@@ -8,8 +8,8 @@
     "start": "node src/app.js",
     "dev": "node --watch src/app.js",
     "test": "node tests/sprint8.test.js",
-    "test:ml": "node tests/ml_assessments_sprint6.test.js && node tests/ml_assessments_sprint7.test.js",
-    "test:all": "node tests/sprint2.test.js && node tests/sprint3.test.js && node tests/sprint4.test.js && node tests/sprint5.test.js && node tests/sprint6.test.js && node tests/sprint7.test.js && node tests/sprint8.test.js && node tests/ml_assessments_sprint6.test.js && node tests/ml_assessments_sprint7.test.js"
+    "test:ml": "node tests/ml_assessments_sprint6.test.js && node tests/ml_assessments_sprint7.test.js && node tests/ml_release_gate_sprint8.test.js",
+    "test:all": "node tests/sprint2.test.js && node tests/sprint3.test.js && node tests/sprint4.test.js && node tests/sprint5.test.js && node tests/sprint6.test.js && node tests/sprint7.test.js && node tests/sprint8.test.js && node tests/ml_assessments_sprint6.test.js && node tests/ml_assessments_sprint7.test.js && node tests/ml_release_gate_sprint8.test.js"
   },
   "keywords": [
     "healthcare",
