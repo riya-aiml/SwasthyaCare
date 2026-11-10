@@ -1,0 +1,22 @@
+{
+  "task_id": "ML-CVD-01",
+  "preprocessor_version": "v1.0.0",
+  "serialization_format": "joblib",
+  "input_features": [
+    "age",
+    "sex",
+    "chest_pain_type",
+    "resting_bp",
+    "cholesterol",
+    "fasting_blood_sugar_gt_120",
+    "resting_ecg",
+    "max_heart_rate",
+    "exercise_induced_angina",
+    "st_depression",
+    "st_slope",
+    "num_major_vessels",
+    "thalassemia"
+  ],
+  "train_samples_fit": 242,
+  "created_at": "2026-11-10T19:15:00Z"
+}

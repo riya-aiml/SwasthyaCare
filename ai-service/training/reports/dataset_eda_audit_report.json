@@ -1,0 +1,134 @@
+{
+  "report_id": "SWC-ML-EDA-001",
+  "sprint": "Sprint 3 \u2014 Dataset Audit and Exploratory Analysis",
+  "date": "2026-11-10",
+  "diabetes_audit": {
+    "primary_dataset_cdc": {
+      "dataset_name": "CDC Diabetes Health Indicators (BRFSS 2015)",
+      "uci_id": 891,
+      "license": "CC0 Public Domain (U.S. Federal Government Open Data)",
+      "instances": 253680,
+      "features_count": 21,
+      "target_column": "Diabetes_binary",
+      "target_distribution_counts": {
+        "0": 218334,
+        "1": 35346
+      },
+      "target_distribution_percentages": {
+        "0": 86.07,
+        "1": 13.93
+      },
+      "imbalance_ratio": "6.18:1",
+      "missing_values_count": 0,
+      "duplicate_rows_count": 24206,
+      "duplicate_rows_percentage": 9.54,
+      "bmi_summary": {
+        "count": 253680.0,
+        "mean": 28.38,
+        "std": 6.61,
+        "min": 12.0,
+        "25%": 24.0,
+        "50%": 27.0,
+        "75%": 31.0,
+        "max": 98.0
+      },
+      "high_bp_prevalence": 42.9,
+      "high_chol_prevalence": 42.41,
+      "top_positive_correlations": {
+        "GenHlth": 0.2936,
+        "HighBP": 0.2631,
+        "DiffWalk": 0.2183,
+        "BMI": 0.2168,
+        "HighChol": 0.2003
+      }
+    },
+    "evaluated_comparison_pima": {
+      "dataset_name": "Pima Indians Diabetes Database",
+      "provenance": "National Institute of Diabetes and Digestive and Kidney Diseases (NIDDK)",
+      "cohort": "Pima Native American females aged >= 21 years (Phoenix, Arizona)",
+      "instances": 768,
+      "features_count": 8,
+      "target_distribution": {
+        "0": 500,
+        "1": 268
+      },
+      "positive_percentage": 34.9,
+      "missing_value_anomaly": "Physiological zeros present in fasting glucose (5 zeros), BP (35 zeros), skinfold (227 zeros), BMI (11 zeros), insulin (374 zeros)",
+      "audit_decision": "REJECTED for general Indian clinical outpatient screening due to genetic homogeneity and restricted cohort traits."
+    }
+  },
+  "cardiovascular_audit": {
+    "primary_dataset_cleveland": {
+      "dataset_name": "UCI Cleveland Heart Disease",
+      "uci_id": 45,
+      "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+      "provenance": "Cleveland Clinic Foundation (Dr. Robert Detrano et al., 1988)",
+      "cohort": "Inpatient cardiology referral patients undergoing coronary angiography",
+      "instances": 303,
+      "features_count": 13,
+      "target_definition": "Angiographic diameter narrowing >= 50% in at least one major vessel (fluoroscopic ground truth)",
+      "raw_severity_scale_counts": {
+        "0": 164,
+        "1": 55,
+        "2": 36,
+        "3": 35,
+        "4": 13
+      },
+      "binary_target_counts": {
+        "0": 164,
+        "1": 139
+      },
+      "binary_target_percentages": {
+        "0": 54.13,
+        "1": 45.87
+      },
+      "missing_values_by_column": {
+        "ca": 4,
+        "thal": 2
+      },
+      "total_missing_values": 6,
+      "duplicate_rows_count": 0,
+      "demographics": {
+        "mean_age": 54.4,
+        "age_range": "29-77",
+        "male_percentage": 67.99,
+        "female_percentage": 32.01
+      },
+      "biomarker_summary": {
+        "resting_bp_mean": 131.7,
+        "cholesterol_mean": 246.7,
+        "max_heart_rate_mean": 149.6,
+        "oldpeak_mean": 1.04
+      },
+      "top_stenosis_correlates": {
+        "thal": 0.5257,
+        "ca": 0.4604,
+        "exang": 0.4319,
+        "oldpeak": 0.4245,
+        "cp": 0.4144,
+        "slope": 0.3392,
+        "sex": 0.2768,
+        "age": 0.2231,
+        "restecg": 0.1692,
+        "trestbps": 0.1508,
+        "chol": 0.0852,
+        "fbs": 0.0253,
+        "thalach": -0.4172
+      }
+    },
+    "evaluated_comparison_framingham": {
+      "dataset_name": "Framingham Heart Study Cohort",
+      "provenance": "National Heart, Lung, and Blood Institute (NHLBI) & Boston University",
+      "cohort": "General community population of Framingham, MA followed prospectively since 1948",
+      "longitudinal_follow_up": "10-year and 30-year prospectively tracked incident MACE endpoints",
+      "data_availability": "Restricted access; requires formal BioLINCC data-use agreement and institutional review board approval",
+      "current_platform_use": "SwasthyaCare implements published Framingham ASCVD Cox regression coefficients (Sprint 6). De novo ML model training deferred pending raw longitudinal cohort access."
+    }
+  },
+  "gating_decisions": {
+    "ML-DIA-01": "APPROVED (CDC BRFSS supports cross-sectional diabetes status)",
+    "ML-DIA-02": "GATED / DEFERRED (Cross-sectional data cannot model 5-year future risk)",
+    "ML-CVD-01": "APPROVED (UCI Cleveland supports angiographic stenosis classification)",
+    "ML-CVD-02": "GATED / DEFERRED (Inpatient catheterization data cannot model 10-year prospective MACE)"
+  }
+}
