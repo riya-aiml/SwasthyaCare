@@ -249,7 +249,29 @@ export default function PatientDashboardView({ onNavigate }) {
         )}
       </div>
 
-      {/* 4. Two Column Layout: Active Care Plans & Recent Recovery Logs */}
+      {/* 4. AI Clinical Risk Assessment Quick Access Banner (Sprint 7: ML-S7-01) */}
+      <div className="bg-gradient-to-r from-teal-50 via-slate-50 to-indigo-50 border border-teal-200/80 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-teal-700 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Brain className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="text-sm font-extrabold text-slate-900">AI Clinical Risk Screening & History (ML-DIA-01 & ML-CVD-01)</h4>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Access calibrated non-diagnostic clinical decision support, inspect risk indicators, and review your confidential assessment history.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => onNavigate && onNavigate('risk-assessment')}
+          className="px-4 py-2.5 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition shrink-0 shadow-sm"
+        >
+          <span>Open Risk Assessments</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* 5. Two Column Layout: Active Care Plans & Recent Recovery Logs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Care Plans */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">

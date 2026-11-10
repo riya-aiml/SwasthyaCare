@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Video,
   MapPin,
+  Brain,
 } from 'lucide-react';
 
 export default function DoctorDashboardView({ onNavigate }) {
@@ -137,6 +138,13 @@ export default function DoctorDashboardView({ onNavigate }) {
             >
               <Activity className="w-3.5 h-3.5" />
               <span>Post-Discharge Plans</span>
+            </button>
+            <button
+              onClick={() => onNavigate && onNavigate('risk-assessment')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-teal-300 rounded-xl text-xs font-bold transition"
+            >
+              <Brain className="w-3.5 h-3.5" />
+              <span>AI Decision Support</span>
             </button>
           </div>
         </div>
