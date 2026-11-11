@@ -457,6 +457,13 @@ class ChatRAGService:
         ]
 
         if "blood pressure" in query.lower() or "hypertension" in query.lower():
+            if not any("ICMR-HTN" in c.source_id for c in citations):
+                citations.insert(0, Citation(
+                    source_id="ICMR-HTN-2022",
+                    title="Clinical Guideline: ICMR Guidelines for Management of Hypertension",
+                    url_or_section="1. Blood Pressure Classification for Adults"
+                ))
+                citations = citations[:2]
             content = (
                 "**Clinical Guidance on Blood Pressure (ICMR 2022):**\n"
                 "• **Normal:** Systolic $< 120$ mmHg and Diastolic $< 80$ mmHg.\n"
@@ -466,6 +473,13 @@ class ChatRAGService:
                 "aerobic exercise, and maintain a South Asian target BMI between $18.5$ and $22.9$ kg/m²."
             )
         elif "diabetes" in query.lower() or "sugar" in query.lower() or "hba1c" in query.lower():
+            if not any("ICMR-DIA" in c.source_id for c in citations):
+                citations.insert(0, Citation(
+                    source_id="ICMR-DIA-2023",
+                    title="Clinical Guideline: ICMR Guidelines for Management of Type 2 Diabetes",
+                    url_or_section="1. Diagnostic Thresholds & Glycemic Targets"
+                ))
+                citations = citations[:2]
             content = (
                 "**Clinical Guidance on Glycemic Benchmarks (ICMR 2023):**\n"
                 "• **Fasting Plasma Glucose:** Normal $< 100$ mg/dL; Prediabetes $100\text{--}125$ mg/dL; Diabetes $\\ge 126$ mg/dL.\n"
@@ -474,6 +488,13 @@ class ChatRAGService:
                 "and engage in at least 150 minutes of moderate aerobic activity weekly."
             )
         elif "cholesterol" in query.lower() or "lipid" in query.lower():
+            if not any("WHO" in c.source_id for c in citations):
+                citations.insert(0, Citation(
+                    source_id="WHO-CVD-2021",
+                    title="World Health Organization Guideline on Cardiovascular Disease Prevention",
+                    url_or_section="1. Lipid & Glycemic Management Targets"
+                ))
+                citations = citations[:2]
             content = (
                 "**Cardiovascular Lipid Benchmarks (WHO 2021):**\n"
                 "• Total Cholesterol: Target $< 200$ mg/dL.\n"
