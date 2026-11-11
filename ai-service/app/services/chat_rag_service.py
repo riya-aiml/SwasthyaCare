@@ -38,17 +38,17 @@ CLINICAL_DIR = os.path.join(KB_DIR, "clinical_guidelines")
 # =====================================================================
 
 EMERGENCY_TRIGGERS = [
-    (r"\b(chest pain|heart attack|crushing chest|pain radiating to (left )?arm|pain in jaw)\b",
+    (r"(chest\s+(pain|pressure|tightness|heaviness)|crushing\s+(chest|pressure)|radiat(ing|es|ed).*?(left\s+arm|jaw)|heart\s+attack)",
      "Possible Acute Coronary Syndrome / Heart Attack"),
-    (r"\b(stroke|facial droop|face droop|slurred speech|arm numbness|loss of speech|FAST symptoms)\b",
+    (r"\b(stroke|facial\s+droop|face\s+droop|slurr(ed|ing)\s+speech|arm\s+numbness|loss\s+of\s+speech|FAST\s+symptoms)\b",
      "Possible Acute Stroke"),
-    (r"\b(cannot breathe|can't breathe|suffocating|gasping for air|severe shortness of breath)\b",
+    (r"\b(cannot\s+breathe|can't\s+breathe|suffocating|gasping\s+for\s+air|(severe\s+)?shortness\s+of\s+breath|difficulty\s+breathing)\b",
      "Severe Acute Respiratory Distress"),
-    (r"\b(kill myself|suicide|end my life|want to die|self harm)\b",
+    (r"\b(kill\s+myself|suicid(e|al)|end\s+my\s+life|want\s+to\s+die|self\s+harm)\b",
      "Mental Health Crisis / Suicide Risk"),
-    (r"\b(anaphylaxis|throat (is )?closing|swollen tongue|severe allergic reaction)\b",
+    (r"\b(anaphylaxis|throat\s+(is\s+)?closing|swollen\s+tongue|severe\s+allergic\s+reaction)\b",
      "Possible Anaphylactic Shock"),
-    (r"\b(unconscious|passed out|unresponsive|heavy bleeding|coughing blood)\b",
+    (r"\b(unconscious|passed\s+out|unresponsive|heavy\s+bleeding|coughing\s+blood|loss\s+of\s+consciousness)\b",
      "Medical Emergency")
 ]
 
