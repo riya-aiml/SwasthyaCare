@@ -92,7 +92,7 @@ class DocumentChunk:
 
     def _tokenize(self, text: str) -> List[str]:
         cleaned = re.sub(r"[^a-zA-Z0-9\s]", " ", text.lower())
-        return [w for w in cleaned.split() if len(w) > 2]
+        return [w for w in cleaned.split() if len(w) >= 2]
 
 
 class KnowledgeStore:
@@ -168,7 +168,7 @@ class KnowledgeStore:
 
     def search(self, query: str, target_scope: Optional[str] = None, top_k: int = 2) -> List[Tuple[DocumentChunk, float]]:
         cleaned = re.sub(r"[^a-zA-Z0-9\s]", " ", query.lower())
-        q_tokens = [w for w in cleaned.split() if len(w) > 2]
+        q_tokens = [w for w in cleaned.split() if len(w) >= 2]
         if not q_tokens or not self.chunks:
             return []
 
@@ -270,7 +270,13 @@ class ChatRAGService:
         # -------------------------------------------------------------
         # 5. RETRIEVAL & GROUNDED SYNTHESIS
         # -------------------------------------------------------------
-        if intent == "ASSESSMENT_EXPLAIN":
+        if intent == "GREETING":
+            return self._handle_greeting(request)
+        elif intent == "ACKNOWLEDGEMENT":
+            return self._handle_acknowledgement(request)
+        elif intent == "SYMPTOM_INFO":
+            return self._handle_symptom_info(query)
+        elif intent == "ASSESSMENT_EXPLAIN":
             return self._handle_assessment_explanation(request)
         elif intent == "APPOINTMENT_ASSIST":
             return self._handle_appointment_assistance(query)
@@ -286,19 +292,44 @@ class ChatRAGService:
     def _classify_intent(self, q: str, request: Optional[ChatCompletionRequest] = None) -> str:
         ctx = request.patient_context if request else None
         has_assessment = bool(ctx and ctx.latest_assessment)
+        q_clean = q.strip()
 
+        # 1. Greetings & Identity / Capabilities
+        if re.search(r"^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening))\b", q_clean) or q_clean in ["hi", "hello", "hey", "namaste", "hola", "yo"]:
+            return "GREETING"
+        if any(w in q for w in ["who are you", "what can you do", "what is this", "what is swasthya", "help me", "how to use", "features of"]):
+            return "GREETING"
+
+        # 2. Acknowledgments, Gratitude & Conversational Closes
+        if re.search(r"^(done|done\s+consult|ok|okay|k|thanks|thank\s+you|thx|got\s+it|great|cool|understood|sure)\b", q_clean) or q_clean in ["done", "done consult", "ok", "okay", "thanks", "thank you", "got it", "fine"]:
+            return "ACKNOWLEDGEMENT"
+
+        # 3. Clinical Symptoms & First-Aid Guidance (Non-Emergency)
+        if any(w in q for w in ["fever", "cough", "cold", "headache", "stomach ache", "stomach pain", "body ache", "nausea", "vomiting", "sore throat", "dizziness", "weakness"]):
+            return "SYMPTOM_INFO"
+
+        # 4. Appointments & Specialists
         if any(w in q for w in ["appointment", "book", "schedule", "slot", "cancel visit", "specialist", "doctor"]):
             return "APPOINTMENT_ASSIST"
+
+        # 5. Risk Assessment Explanation
         if any(w in q for w in ["risk score", "diabetes score", "heart risk", "ml-dia", "ml-cvd", "assessment", "bmi factor", "my risk", "screening", "elevated pattern"]):
             return "ASSESSMENT_EXPLAIN"
         if has_assessment and any(w in q for w in ["diabetes", "risk", "pattern", "my result"]):
             return "ASSESSMENT_EXPLAIN"
+
+        # 6. App Help & Workflows
         if any(w in q for w in ["queue", "wait time", "token", "check in", "follow up", "recovery update", "how to"]):
             return "APP_HELP"
+
+        # 7. Lab Reports
         if any(w in q for w in ["report", "hba1c", "creatinine", "glucose", "platelet", "hemoglobin", "blood test", "lab"]):
             return "REPORT_EXPLAIN"
+
+        # 8. Clinical Guidelines
         if any(w in q for w in ["blood pressure", "hypertension", "normal bp", "diet", "sodium", "exercise", "cholesterol", "fiber"]):
             return "HEALTH_INFO"
+
         return "HEALTH_INFO"
 
     def _build_emergency_response(self, query: str, emergency_label: str) -> ChatCompletionResponse:
@@ -320,6 +351,79 @@ class ChatRAGService:
                 target="tel:112"
             ),
             is_emergency=True
+        )
+
+    def _handle_greeting(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+        name = request.patient_context.first_name if request.patient_context and request.patient_context.first_name else None
+        greeting_prefix = f"Hello {name}! 👋" if name else "Hello! 👋"
+
+        content = (
+            f"{greeting_prefix} I am your SwasthyaCare AI Health Assistant.\n\n"
+            "I can assist you with:\n"
+            "• **Appointments & Specialists:** Find doctors and schedule real-time consultation slots\n"
+            "• **AI Risk Screening:** Explain your Type 2 Diabetes (ML-DIA-01) or Cardiovascular (ML-CVD-01) risk factors\n"
+            "• **Live OPD Queue:** Check your queue position and dynamic wait time\n"
+            "• **Clinical Guidelines:** Learn about ICMR guidelines on Blood Pressure, Glycemic targets, and Sodium limits\n\n"
+            "How can I help you today?"
+        )
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="APP_HELP",
+            content=content,
+            citations=[
+                Citation(
+                    source_id="SWC-APP-01",
+                    title="SwasthyaCare Platform Architecture & Clinical Workflows",
+                    url_or_section="Overview"
+                )
+            ],
+            action_suggestion=ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Explore Specialists",
+                target="directory"
+            ),
+            is_emergency=False
+        )
+
+    def _handle_acknowledgement(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+        content = (
+            "You're very welcome! 👍 I'm glad I could help.\n\n"
+            "If you need anything else — such as booking a follow-up consultation, inspecting your calculated risk factors, or checking queue status — feel free to ask anytime!"
+        )
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="APP_HELP",
+            content=content,
+            citations=[],
+            action_suggestion=ActionSuggestion(type="NONE"),
+            is_emergency=False
+        )
+
+    def _handle_symptom_info(self, query: str) -> ChatCompletionResponse:
+        content = (
+            "**General Health & Symptom Guidance:**\n"
+            "• **Hydration & Rest:** Stay well hydrated with fluids, electrolytes, or warm broth, and allow adequate physical rest.\n"
+            "• **Monitoring:** Monitor your temperature and symptoms carefully.\n"
+            "• **When to Consult a Clinician:** If symptoms persist for more than 48 hours, worsen, or are accompanied by high fever ($>101^\\circ\\text{F}$), severe pain, or persistent vomiting, a clinical consultation is advised.\n\n"
+            "*Notice: SwasthyaCare provides educational decision support and does not provide formal medical diagnoses or prescriptions. Would you like to schedule an appointment with a general physician?*"
+        )
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="HEALTH_INFO",
+            content=content,
+            citations=[
+                Citation(
+                    source_id="SWC-APP-01",
+                    title="SwasthyaCare Appointment Booking",
+                    url_or_section="Section 1: Finding Specialists"
+                )
+            ],
+            action_suggestion=ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Find a General Physician",
+                target="directory"
+            ),
+            is_emergency=False
         )
 
     def _handle_assessment_explanation(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
@@ -503,7 +607,26 @@ class ChatRAGService:
                 "Aerobic exercise and replacing saturated fats with heart-healthy unsaturated oils (mustard, olive) support optimal lipid profiles."
             )
         else:
-            content = results[0][0].content if results else "Please consult your healthcare provider for clinical assessments."
+            if results and results[0][1] > 0.15:
+                content = results[0][0].content
+            else:
+                content = (
+                    "I am your SwasthyaCare AI Health Assistant, grounded in verified ICMR & WHO clinical guidelines "
+                    "and SwasthyaCare hospital workflows.\n\n"
+                    "Here are a few ways I can help:\n"
+                    "• **Find Specialists & Appointments:** Ask *'How do I book an appointment with a cardiologist?'*\n"
+                    "• **AI Risk Models:** Ask *'Explain my diabetes risk factors'* or *'How does heart screening work?'*\n"
+                    "• **Clinical Benchmarks:** Ask *'What is normal blood pressure under ICMR guidelines?'*\n"
+                    "• **Live OPD Queue:** Ask *'How does the live token queue work?'*\n\n"
+                    "How can I assist you with your health or appointment needs today?"
+                )
+                citations = [
+                    Citation(
+                        source_id="SWC-APP-01",
+                        title="SwasthyaCare Platform Architecture & Clinical Workflows",
+                        url_or_section="Overview"
+                    )
+                ]
 
         return ChatCompletionResponse(
             response_id=f"resp_{uuid.uuid4().hex[:10]}",
