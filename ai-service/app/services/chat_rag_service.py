@@ -274,8 +274,12 @@ class ChatRAGService:
             return self._handle_greeting(request)
         elif intent == "ACKNOWLEDGEMENT":
             return self._handle_acknowledgement(request)
+        elif intent == "MENTAL_WELLNESS":
+            return self._handle_mental_wellness(query)
         elif intent == "SYMPTOM_INFO":
             return self._handle_symptom_info(query)
+        elif intent == "LIFESTYLE_INFO":
+            return self._handle_lifestyle_info(query)
         elif intent == "ASSESSMENT_EXPLAIN":
             return self._handle_assessment_explanation(request)
         elif intent == "APPOINTMENT_ASSIST":
@@ -304,30 +308,57 @@ class ChatRAGService:
         if re.search(r"^(done|done\s+consult|ok|okay|k|thanks|thank\s+you|thx|got\s+it|great|cool|understood|sure)\b", q_clean) or q_clean in ["done", "done consult", "ok", "okay", "thanks", "thank you", "got it", "fine"]:
             return "ACKNOWLEDGEMENT"
 
-        # 3. Clinical Symptoms & First-Aid Guidance (Non-Emergency)
-        if any(w in q for w in ["fever", "cough", "cold", "headache", "stomach ache", "stomach pain", "body ache", "nausea", "vomiting", "sore throat", "dizziness", "weakness"]):
+        # 3. Clinical Guidelines & Cardiovascular/Metabolic Benchmarks (BP, Diabetes)
+        if any(w in q for w in ["blood pressure", "hypertension", "normal bp"]):
+            return "HEALTH_INFO"
+
+        # 4. Mental Health, Emotional Wellness & Sleep
+        if any(w in q for w in [
+            "anxious", "anxiety", "panic", "stressed", "stress", "overwhelm",
+            "nervous", "worry", "worried", "scared", "fear", "restless", "racing thought",
+            "depress", "feeling low", "sad", "hopeless", "burnout", "crying",
+            "can't sleep", "trouble sleeping", "cannot sleep", "insomnia", "sleepless", "nightmare",
+            "ghabrahat", "chinta", "neend nahi", "mental tension", "dar lag", "udaas", "pareshan"
+        ]) or re.search(r"(?<!hyper)\btension\b", q):
+            return "MENTAL_WELLNESS"
+
+        # 5. Clinical Symptoms & First-Aid Guidance (Non-Emergency)
+        if any(w in q for w in [
+            "fever", "cough", "cold", "headache", "migraine", "stomach", "acidity", "indigestion",
+            "heartburn", "gas", "bloating", "body ache", "nausea", "vomiting", "sore throat",
+            "dizziness", "weakness", "fatigue", "tired", "back pain", "neck pain", "joint pain",
+            "bukhar", "khasi", "sar dard", "pet dard", "chakkar"
+        ]):
             return "SYMPTOM_INFO"
 
-        # 4. Appointments & Specialists
+        # 6. Lifestyle, Nutrition & Preventive Living
+        if any(w in q for w in [
+            "diet", "nutrition", "weight loss", "lose weight", "weight gain", "healthy eating",
+            "meal plan", "calorie", "protein", "workout", "exercise", "walking", "fitness",
+            "water intake", "hydration"
+        ]):
+            return "LIFESTYLE_INFO"
+
+        # 7. Appointments & Specialists
         if any(w in q for w in ["appointment", "book", "schedule", "slot", "cancel visit", "specialist", "doctor"]):
             return "APPOINTMENT_ASSIST"
 
-        # 5. Risk Assessment Explanation
+        # 8. Risk Assessment Explanation
         if any(w in q for w in ["risk score", "diabetes score", "heart risk", "ml-dia", "ml-cvd", "assessment", "bmi factor", "my risk", "screening", "elevated pattern"]):
             return "ASSESSMENT_EXPLAIN"
         if has_assessment and any(w in q for w in ["diabetes", "risk", "pattern", "my result"]):
             return "ASSESSMENT_EXPLAIN"
 
-        # 6. App Help & Workflows
+        # 9. App Help & Workflows
         if any(w in q for w in ["queue", "wait time", "token", "check in", "follow up", "recovery update", "how to"]):
             return "APP_HELP"
 
-        # 7. Lab Reports
+        # 10. Lab Reports
         if any(w in q for w in ["report", "hba1c", "creatinine", "glucose", "platelet", "hemoglobin", "blood test", "lab"]):
             return "REPORT_EXPLAIN"
 
-        # 8. Clinical Guidelines
-        if any(w in q for w in ["blood pressure", "hypertension", "normal bp", "diet", "sodium", "exercise", "cholesterol", "fiber"]):
+        # 11. Clinical Guidelines General
+        if any(w in q for w in ["diet", "sodium", "exercise", "cholesterol", "fiber"]):
             return "HEALTH_INFO"
 
         return "HEALTH_INFO"
@@ -399,29 +430,201 @@ class ChatRAGService:
             is_emergency=False
         )
 
-    def _handle_symptom_info(self, query: str) -> ChatCompletionResponse:
-        content = (
-            "**General Health & Symptom Guidance:**\n"
-            "• **Hydration & Rest:** Stay well hydrated with fluids, electrolytes, or warm broth, and allow adequate physical rest.\n"
-            "• **Monitoring:** Monitor your temperature and symptoms carefully.\n"
-            "• **When to Consult a Clinician:** If symptoms persist for more than 48 hours, worsen, or are accompanied by high fever ($>101^\\circ\\text{F}$), severe pain, or persistent vomiting, a clinical consultation is advised.\n\n"
-            "*Notice: SwasthyaCare provides educational decision support and does not provide formal medical diagnoses or prescriptions. Would you like to schedule an appointment with a general physician?*"
-        )
+    def _handle_mental_wellness(self, query: str) -> ChatCompletionResponse:
+        q_lower = query.lower()
+        citations = [
+            Citation(
+                source_id="NIMHANS-MH-2023",
+                title="NIMHANS & WHO Guidelines for Mental Health and Emotional Wellness",
+                url_or_section="Section 1: Acute Anxiety & Grounding Protocols"
+            )
+        ]
+
+        if any(w in q_lower for w in ["sleep", "insomnia", "neend", "nightmare", "awake"]):
+            content = (
+                "**I hear you, and trouble sleeping can be deeply exhausting.** 🌙\n\n"
+                "Here are clinically proven sleep hygiene practices (NIMHANS / WHO):\n\n"
+                "• **The 20-Minute Reset:** If you can't fall asleep after 20 minutes, gently get out of bed. Sit in low light and read or listen to calming sounds until drowsy. Do not force sleep.\n"
+                "• **Screens & Melatonin:** Disconnect from phone and computer screens at least 45–60 minutes before bed; blue light suppresses your natural melatonin.\n"
+                "• **Comfortable Sanctuary:** Keep your bedroom cool ($18\text{--}22^\circ\text{C}$), completely dark, and quiet.\n"
+                "• **Evening Rhythm:** Avoid caffeine, heavy dinners, or alcohol within 4 hours of sleeping.\n\n"
+                "Would you like to speak with a physician or counselor regarding persistent sleep difficulties?"
+            )
+            action = ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Consult a Specialist for Sleep",
+                target="directory"
+            )
+        elif any(w in q_lower for w in ["panic", "panic attack", "racing heart", "trembling"]):
+            content = (
+                "**Take a slow, gentle breath. You are safe, and this feeling will pass.** 🌿\n\n"
+                "Panic attacks are intense surges of adrenaline that feel terrifying, but they naturally peak and subside. Try this grounding technique right now:\n\n"
+                "**1. Box Breathing (4-4-4-4):**\n"
+                "• Breathe in slowly through your nose for **4 seconds**\n"
+                "• Hold your breath gently for **4 seconds**\n"
+                "• Exhale slowly through your mouth for **4 seconds**\n"
+                "• Pause empty for **4 seconds** — Repeat 3 times.\n\n"
+                "**2. 5-4-3-2-1 Sensory Grounding:**\n"
+                "Look around you and name:\n"
+                "• 5 things you can see\n"
+                "• 4 things you can physically touch\n"
+                "• 3 things you can hear\n"
+                "• 2 things you can smell\n"
+                "• 1 positive thing you appreciate about yourself\n\n"
+                "📞 **Tele-MANAS Free Crisis Helpline:** Dial **14416** (24/7 toll-free mental health support in India)."
+            )
+            action = ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Find a Clinical Counselor",
+                target="directory"
+            )
+        else:
+            content = (
+                "**I hear you, and it is completely okay to feel anxious, stressed, or overwhelmed.** 💙\n\n"
+                "Your feelings are valid. Let's take a moment together to help you feel more grounded:\n\n"
+                "**Immediate Calming Step — The 4-7-8 Relaxation Breath:**\n"
+                "• Inhale quietly through your nose for **4 seconds**\n"
+                "• Hold your breath comfortably for **7 seconds**\n"
+                "• Exhale completely through your mouth with a soft whoosh for **8 seconds**\n"
+                "*(This activates your body's vagus nerve and gently slows your heart rate).*\n\n"
+                "**Gentle Actions for Today:**\n"
+                "• **Hydrate:** Sip a glass of cool or room-temperature water slowly.\n"
+                "• **Pause:** Step away from bright screens, notifications, and stressful tasks for 10 minutes.\n"
+                "• **Express:** Share what you are experiencing with a trusted person, counselor, or doctor.\n\n"
+                "📞 **Tele-MANAS Mental Health Support:** You can speak with a compassionate counselor 24/7 by dialing **14416** (Toll-Free, Govt. of India).\n\n"
+                "Would you like to browse our specialist directory to consult with a psychologist or psychiatrist?"
+            )
+            action = ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Explore Mental Health Specialists",
+                target="directory"
+            )
+
         return ChatCompletionResponse(
             response_id=f"resp_{uuid.uuid4().hex[:10]}",
             intent="HEALTH_INFO",
             content=content,
-            citations=[
-                Citation(
-                    source_id="SWC-APP-01",
-                    title="SwasthyaCare Appointment Booking",
-                    url_or_section="Section 1: Finding Specialists"
-                )
-            ],
+            citations=citations,
+            action_suggestion=action,
+            is_emergency=False
+        )
+
+    def _handle_symptom_info(self, query: str) -> ChatCompletionResponse:
+        q_lower = query.lower()
+        citations = [
+            Citation(
+                source_id="ICMR-GEN-2023",
+                title="ICMR Clinical Guidance for General Outpatient Symptoms & First-Aid Triage",
+                url_or_section="Section 1: Common Outpatient Triage Protocols"
+            )
+        ]
+
+        if any(w in q_lower for w in ["headache", "migraine", "sar dard"]):
+            content = (
+                "**Supportive Guidance for Headache & Head Tension:** 💆‍♂️\n\n"
+                "Common triggers include dehydration, prolonged screen glare, neck muscle strain, or lack of sleep.\n\n"
+                "• **Immediate Comfort Measures:**\n"
+                "  - Rest in a quiet, dimly lit or dark room.\n"
+                "  - Place a cool, damp cloth or ice pack wrapped in a cloth across your forehead or back of your neck.\n"
+                "  - Drink 1–2 glasses of water or electrolyte fluids to ensure hydration.\n"
+                "  - Gently massage your temples and relax your neck and shoulder muscles.\n\n"
+                "• **Red-Flag Warning Signs (Seek Urgent Care):**\n"
+                "  - Sudden, explosive onset ('worst headache of your life').\n"
+                "  - Accompanied by stiff neck, high fever, vomiting, confusion, or difficulty speaking.\n\n"
+                "*Would you like to schedule an appointment with a general physician for an evaluation?*"
+            )
+            action = ActionSuggestion(type="NAVIGATE_TAB", label="Consult a General Physician", target="directory")
+        elif any(w in q_lower for w in ["acidity", "indigestion", "heartburn", "gas", "bloating", "pet dard", "stomach"]):
+            content = (
+                "**Supportive Guidance for Acidity & Digestive Discomfort:** 🫖\n\n"
+                "Acidity and indigestion are frequently triggered by spicy or oily meals, eating late, stress, or caffeine.\n\n"
+                "• **Immediate Comfort Measures:**\n"
+                "  - Stay upright for at least 2 hours after meals; avoid lying flat.\n"
+                "  - Sip room-temperature water, cooling fresh buttermilk (chaas), or chamomile/ginger tea.\n"
+                "  - Eat smaller, lighter meals (such as khichdi, oats, or bananas) rather than heavy portions.\n"
+                "  - Avoid carbonated drinks, citrus, and fried food while your stomach settles.\n\n"
+                "• **Red-Flag Warning Signs:**\n"
+                "  - Severe, sharp or localized abdominal pain.\n"
+                "  - Persistent vomiting, inability to keep liquids down, or black/bloody stools.\n\n"
+                "*Would you like to schedule an appointment with a gastroenterologist or physician?*"
+            )
+            action = ActionSuggestion(type="NAVIGATE_TAB", label="Find a Digestive Health Specialist", target="directory")
+        elif any(w in q_lower for w in ["fever", "bukhar", "cough", "cold", "sore throat", "khasi", "chills"]):
+            content = (
+                "**Supportive Guidance for Fever, Cough & Cold:** 🌡️\n\n"
+                "Viral respiratory infections are common and typically respond well to supportive care:\n\n"
+                "• **Supportive Comfort Steps:**\n"
+                "  - **Hydration:** Drink plenty of fluids (warm water, broths, herbal teas, coconut water).\n"
+                "  - **Sore Throat & Cough:** Gargle with warm salt water twice daily; inhale warm steam to ease congestion; warm water with honey can soothe throat irritation.\n"
+                "  - **Rest:** Allow your body ample physical rest to support immune recovery.\n"
+                "  - **Monitor:** Record your body temperature every 4 to 6 hours.\n\n"
+                "• **Red-Flag Warning Signs:**\n"
+                "  - Fever above $103^\circ\text{F}$ ($39.4^\circ\text{C}$) or lasting longer than 3 days.\n"
+                "  - Difficulty breathing, persistent chest tightness, or severe wheezing.\n\n"
+                "*Would you like to find an available physician in our directory?*"
+            )
+            action = ActionSuggestion(type="NAVIGATE_TAB", label="Find a General Physician", target="directory")
+        elif any(w in q_lower for w in ["fatigue", "tired", "weakness", "dizziness", "chakkar"]):
+            content = (
+                "**Supportive Guidance for Fatigue & Low Energy:** ⚡\n\n"
+                "Tiredness and weakness can stem from viral recovery, dehydration, inadequate sleep, stress, or nutritional gaps (e.g., Vitamin D, B12, Iron).\n\n"
+                "• **Supportive Measures:**\n"
+                "  - Prioritize 7–8 hours of uninterrupted sleep in a dark, quiet room.\n"
+                "  - Stay well-hydrated throughout the day with water and electrolyte-rich liquids.\n"
+                "  - Take a warm shower and avoid strenuous exertion until your energy levels stabilize.\n\n"
+                "• **When to Consult:** If fatigue persists for more than 2 weeks or is accompanied by unexplained weight loss or shortness of breath, a physician visit and basic blood panel are recommended."
+            )
+            action = ActionSuggestion(type="NAVIGATE_TAB", label="Consult a Physician", target="directory")
+        else:
+            content = (
+                "**General Health & Symptom Guidance:**\n"
+                "• **Hydration & Rest:** Stay well hydrated with fluids, electrolytes, or warm broth, and allow adequate physical rest.\n"
+                "• **Monitoring:** Monitor your temperature and symptoms carefully.\n"
+                "• **When to Consult a Clinician:** If symptoms persist for more than 48 hours, worsen, or are accompanied by high fever ($>101^\\circ\\text{F}$), severe pain, or persistent vomiting, a clinical consultation is advised.\n\n"
+                "*Notice: SwasthyaCare provides educational decision support and does not provide formal medical diagnoses or prescriptions. Would you like to schedule an appointment with a general physician?*"
+            )
+            action = ActionSuggestion(type="NAVIGATE_TAB", label="Find a General Physician", target="directory")
+
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="HEALTH_INFO",
+            content=content,
+            citations=citations,
+            action_suggestion=action,
+            is_emergency=False
+        )
+
+    def _handle_lifestyle_info(self, query: str) -> ChatCompletionResponse:
+        citations = [
+            Citation(
+                source_id="ICMR-NUTR-2024",
+                title="ICMR & NIN Dietary Guidelines and Lifestyle Wellness",
+                url_or_section="Section 1: Balanced Dietary Principles & Physical Activity"
+            )
+        ]
+
+        content = (
+            "**Clinical Guidelines for Nutrition & Active Living (ICMR / NIN 2024):** 🥗🏃‍♂️\n\n"
+            "• **Balanced Plate (South Asian Adult Recommendations):**\n"
+            "  - **Complex Carbs:** Base 50–55% of your daily energy on unrefined whole grains and millets (ragi, jowar, brown rice) rather than white flour.\n"
+            "  - **Fiber:** Aim for 30–40g of dietary fiber daily through vegetables, whole legumes, and seasonal fruits.\n"
+            "  - **Protein:** Include quality protein at every meal (lentils, dal, paneer, tofu, eggs, fish).\n"
+            "  - **Salt & Sugar Limits:** Restrict added salt to $< 5$g/day ($< 2$g sodium) and limit refined sugars to $< 25$g/day.\n\n"
+            "• **Physical Activity Targets:**\n"
+            "  - At least 150–300 minutes of moderate aerobic exercise (brisk walking, cycling) per week.\n"
+            "  - 2 sessions of strength training weekly to preserve lean muscle and optimize insulin sensitivity.\n\n"
+            "Would you like to check your lifestyle risk score on our AI Risk Scoring workbench?"
+        )
+
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="HEALTH_INFO",
+            content=content,
+            citations=citations,
             action_suggestion=ActionSuggestion(
                 type="NAVIGATE_TAB",
-                label="Find a General Physician",
-                target="directory"
+                label="Open AI Risk Scoring Workbench",
+                target="risk-assessment"
             ),
             is_emergency=False
         )
@@ -611,14 +814,13 @@ class ChatRAGService:
                 content = results[0][0].content
             else:
                 content = (
-                    "I am your SwasthyaCare AI Health Assistant, grounded in verified ICMR & WHO clinical guidelines "
-                    "and SwasthyaCare hospital workflows.\n\n"
-                    "Here are a few ways I can help:\n"
-                    "• **Find Specialists & Appointments:** Ask *'How do I book an appointment with a cardiologist?'*\n"
-                    "• **AI Risk Models:** Ask *'Explain my diabetes risk factors'* or *'How does heart screening work?'*\n"
-                    "• **Clinical Benchmarks:** Ask *'What is normal blood pressure under ICMR guidelines?'*\n"
-                    "• **Live OPD Queue:** Ask *'How does the live token queue work?'*\n\n"
-                    "How can I assist you with your health or appointment needs today?"
+                    "I want to make sure I give you the most accurate and supportive health information. 🌿\n\n"
+                    "While I don't have a direct clinical match for that specific phrasing, I can assist you with:\n"
+                    "• **Mental Wellness & Stress:** Calming breathing exercises, sleep hygiene, and Tele-MANAS (14416) support\n"
+                    "• **Symptom Guidance:** First-aid supportive care for fever, headaches, cough, acidity, or fatigue\n"
+                    "• **Clinical Benchmarks:** ICMR guidelines on Blood Pressure, Diabetes HbA1c, and Cholesterol\n"
+                    "• **Doctor Consultations:** Finding and booking an appointment with verified hospital specialists\n\n"
+                    "Feel free to describe what you are experiencing or ask about any of these topics!"
                 )
                 citations = [
                     Citation(
