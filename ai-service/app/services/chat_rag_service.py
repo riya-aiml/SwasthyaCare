@@ -274,6 +274,10 @@ class ChatRAGService:
             return self._handle_greeting(request)
         elif intent == "ACKNOWLEDGEMENT":
             return self._handle_acknowledgement(request)
+        elif intent == "FRUSTRATION":
+            return self._handle_frustration()
+        elif intent == "ACUTE_MALAISE":
+            return self._handle_acute_malaise(query)
         elif intent == "MENTAL_WELLNESS":
             return self._handle_mental_wellness(query)
         elif intent == "SYMPTOM_INFO":
@@ -297,6 +301,7 @@ class ChatRAGService:
         ctx = request.patient_context if request else None
         has_assessment = bool(ctx and ctx.latest_assessment)
         q_clean = q.strip()
+        q_norm = re.sub(r"[=_\-\+]", " ", q_clean.lower())
 
         # 1. Greetings & Identity / Capabilities
         if re.search(r"^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening))\b", q_clean) or q_clean in ["hi", "hello", "hey", "namaste", "hola", "yo"]:
@@ -308,11 +313,27 @@ class ChatRAGService:
         if re.search(r"^(done|done\s+consult|ok|okay|k|thanks|thank\s+you|thx|got\s+it|great|cool|understood|sure)\b", q_clean) or q_clean in ["done", "done consult", "ok", "okay", "thanks", "thank you", "got it", "fine"]:
             return "ACKNOWLEDGEMENT"
 
-        # 3. Clinical Guidelines & Cardiovascular/Metabolic Benchmarks (BP, Diabetes)
+        # 3. User Frustration / Expressing Dissatisfaction
+        if any(w in q for w in [
+            "u are shit", "you are shit", "you suck", "stupid", "useless",
+            "dumb", "worst bot", "bad bot", "terrible bot", "bakwas", "bekar"
+        ]):
+            return "FRUSTRATION"
+
+        # 4. Severe Malaise, Feeling Like Dying / "Like Death" / Acute Distress
+        if any(w in q_norm for w in [
+            "like death", "feel like death", "feeling like death", "like i am death",
+            "feel like dying", "feeling like i am dying", "feeling terrible", "feel terrible",
+            "feel awful", "feeling awful", "feel horrible", "feeling horrible",
+            "feel miserable", "feeling miserable"
+        ]) or re.search(r"\b(feel|feeling)\s+(like\s+)?(i\s+am\s+)?death\b", q_norm):
+            return "ACUTE_MALAISE"
+
+        # 5. Clinical Guidelines & Cardiovascular/Metabolic Benchmarks (BP, Diabetes)
         if any(w in q for w in ["blood pressure", "hypertension", "normal bp"]):
             return "HEALTH_INFO"
 
-        # 4. Mental Health, Emotional Wellness & Sleep
+        # 6. Mental Health, Emotional Wellness & Sleep
         if any(w in q for w in [
             "anxious", "anxiety", "panic", "stressed", "stress", "overwhelm",
             "nervous", "worry", "worried", "scared", "fear", "restless", "racing thought",
@@ -322,7 +343,7 @@ class ChatRAGService:
         ]) or re.search(r"(?<!hyper)\btension\b", q):
             return "MENTAL_WELLNESS"
 
-        # 5. Clinical Symptoms & First-Aid Guidance (Non-Emergency)
+        # 7. Clinical Symptoms & First-Aid Guidance (Non-Emergency)
         if any(w in q for w in [
             "fever", "cough", "cold", "headache", "migraine", "stomach", "acidity", "indigestion",
             "heartburn", "gas", "bloating", "body ache", "nausea", "vomiting", "sore throat",
@@ -331,7 +352,7 @@ class ChatRAGService:
         ]):
             return "SYMPTOM_INFO"
 
-        # 6. Lifestyle, Nutrition & Preventive Living
+        # 8. Lifestyle, Nutrition & Preventive Living
         if any(w in q for w in [
             "diet", "nutrition", "weight loss", "lose weight", "weight gain", "healthy eating",
             "meal plan", "calorie", "protein", "workout", "exercise", "walking", "fitness",
@@ -339,25 +360,25 @@ class ChatRAGService:
         ]):
             return "LIFESTYLE_INFO"
 
-        # 7. Appointments & Specialists
+        # 9. Appointments & Specialists
         if any(w in q for w in ["appointment", "book", "schedule", "slot", "cancel visit", "specialist", "doctor"]):
             return "APPOINTMENT_ASSIST"
 
-        # 8. Risk Assessment Explanation
+        # 10. Risk Assessment Explanation
         if any(w in q for w in ["risk score", "diabetes score", "heart risk", "ml-dia", "ml-cvd", "assessment", "bmi factor", "my risk", "screening", "elevated pattern"]):
             return "ASSESSMENT_EXPLAIN"
         if has_assessment and any(w in q for w in ["diabetes", "risk", "pattern", "my result"]):
             return "ASSESSMENT_EXPLAIN"
 
-        # 9. App Help & Workflows
+        # 11. App Help & Workflows
         if any(w in q for w in ["queue", "wait time", "token", "check in", "follow up", "recovery update", "how to"]):
             return "APP_HELP"
 
-        # 10. Lab Reports
+        # 12. Lab Reports
         if any(w in q for w in ["report", "hba1c", "creatinine", "glucose", "platelet", "hemoglobin", "blood test", "lab"]):
             return "REPORT_EXPLAIN"
 
-        # 11. Clinical Guidelines General
+        # 13. Clinical Guidelines General
         if any(w in q for w in ["diet", "sodium", "exercise", "cholesterol", "fiber"]):
             return "HEALTH_INFO"
 
@@ -427,6 +448,60 @@ class ChatRAGService:
             content=content,
             citations=[],
             action_suggestion=ActionSuggestion(type="NONE"),
+            is_emergency=False
+        )
+
+    def _handle_frustration(self) -> ChatCompletionResponse:
+        content = (
+            "I'm really sorry for frustrating you. 🙏 I want to provide you with the most helpful and supportive experience possible.\n\n"
+            "I can assist you with:\n"
+            "• **Guidance on Symptoms:** Supportive first-aid steps for headaches, stomach acidity, fever, cough, fatigue, or stress\n"
+            "• **Mental Wellness & Grounding:** Breathing exercises, sleep hygiene, and 24/7 Tele-MANAS helpline (**14416**)\n"
+            "• **AI Risk Screening:** Explaining cardiovascular (heart) or diabetes risk indicators and biomarkers\n"
+            "• **Doctor Appointments:** Connecting you with specialized doctors and booking verified hospital slots\n\n"
+            "Please tell me what you need, or if you prefer to speak directly with a healthcare provider, you can connect through our specialist directory."
+        )
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="APP_HELP",
+            content=content,
+            citations=[],
+            action_suggestion=ActionSuggestion(
+                type="NAVIGATE_TAB",
+                label="Consult a Healthcare Specialist",
+                target="directory"
+            ),
+            is_emergency=False
+        )
+
+    def _handle_acute_malaise(self, query: str) -> ChatCompletionResponse:
+        content = (
+            "**I am deeply concerned to hear that you are feeling so terrible and completely exhausted.** 🤍\n\n"
+            "Your wellbeing and safety are the top priority. Let's make sure you get the right support immediately:\n\n"
+            "• 🚨 **Acute Physical Red Flags (Dial 112 / 108 immediately):**\n"
+            "  If you are experiencing sudden crushing chest pressure, severe shortness of breath, sudden numbness, difficulty speaking, severe dizziness, or fainting, **please do not wait** — call India emergency services at **112** or **108** right away.\n\n"
+            "• 💙 **Emotional Distress or Overwhelm (Dial 14416):**\n"
+            "  If this is an overwhelming emotional crisis, despair, or panic, please know that you are not alone. You can speak confidentially with a compassionate counselor 24/7 by calling **14416** (Tele-MANAS, Govt. of India toll-free).\n\n"
+            "• 🛌 **Severe Malaise / Illness / Exhaustion:**\n"
+            "  If this is extreme weakness, fever, or exhaustion from illness, please lie down, sip warm water or electrolytes, alert a family member or friend nearby, and schedule an urgent medical consultation.\n\n"
+            "Would you like to connect with our emergency line, or consult an on-call physician?"
+        )
+        return ChatCompletionResponse(
+            response_id=f"resp_{uuid.uuid4().hex[:10]}",
+            intent="EMERGENCY_RED_FLAG",
+            content=content,
+            citations=[
+                Citation(
+                    source_id="NIMHANS-MH-2023",
+                    title="NIMHANS & WHO Guidelines for Crisis Support & Wellness",
+                    url_or_section="Crisis Helplines & Acute Support"
+                )
+            ],
+            action_suggestion=ActionSuggestion(
+                type="EMERGENCY_MODAL",
+                label="Emergency Hotlines: 112 / 14416",
+                target="tel:112"
+            ),
             is_emergency=False
         )
 
@@ -632,21 +707,24 @@ class ChatRAGService:
     def _handle_assessment_explanation(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         ctx = request.patient_context
         latest = ctx.latest_assessment if ctx else None
+        q = request.message.lower()
 
         citations = [
             Citation(
                 source_id="SWC-APP-03",
                 title="SwasthyaCare AI Risk Models",
-                url_or_section="Section 2: Diabetes Screening (ML-DIA-01)"
+                url_or_section="Section 1: AI Risk Screening Workflows"
             ),
             Citation(
                 source_id="ICMR-DIA-2023",
                 title="ICMR Guidelines for Management of Type 2 Diabetes",
-                url_or_section="Section 2: South Asian BMI Cutoffs"
+                url_or_section="Section 2: South Asian Clinical Cutoffs"
             )
         ]
 
-        if latest:
+        is_heart_query = any(w in q for w in ["heart", "cardio", "cvd", "coronary", "stenosis", "chest"])
+
+        if latest and not (is_heart_query and latest.get("task_id") == "ML-DIA-01"):
             task = latest.get("task_id", "ML-DIA-01")
             prob = latest.get("probability", 0.65)
             percent = round(prob * 100, 1)
@@ -656,14 +734,42 @@ class ChatRAGService:
             content = (
                 f"Your latest **{task}** screening calculated an estimated continuous probability of **{percent}%**.\n\n"
                 f"**Primary Contributing Indicators:** {factors_str}.\n\n"
-                "**Clinical Context (ICMR 2023):** In South Asian populations, an adult BMI $\\ge 23$ kg/m² represents an overweight "
-                "threshold associated with increased metabolic risk. Please note this model is an educational screening prototype based on "
-                "survey patterns. It does not measure blood sugar directly. A formal fasting blood glucose and HbA1c test is recommended."
+                "**Clinical Context (ICMR / WHO):** In South Asian populations, metabolic and cardiovascular indicators "
+                "such as elevated BMI ($\\ge 23$ kg/m²), resting blood pressure, and cholesterol profile significantly influence overall risk. "
+                "Please note this model is an educational screening prototype based on survey and clinical features. It does not replace a clinical examination. "
+                "A formal blood panel (HbA1c, Lipid profile) and physician evaluation is recommended."
+            )
+        elif is_heart_query:
+            citations = [
+                Citation(
+                    source_id="SWC-APP-03",
+                    title="SwasthyaCare AI Risk Models",
+                    url_or_section="Section 3: Cardiovascular Risk Model (ML-CVD-01)"
+                ),
+                Citation(
+                    source_id="WHO-CVD-2021",
+                    title="WHO Guidelines on Cardiovascular Disease Prevention",
+                    url_or_section="Key Risk Biomarkers & Clinical Features"
+                )
+            ]
+            content = (
+                "**Main Contributing Factors in the SwasthyaCare Heart Risk Estimate (ML-CVD-01):** 🫀\n\n"
+                "Our cardiovascular risk screening model evaluates key clinical, hemodynamic, and lifestyle biomarkers:\n\n"
+                "1. **Chest Pain Presentation (Angina Index):** Evaluating whether symptoms represent typical angina, atypical angina, or non-anginal pain.\n"
+                "2. **Resting Blood Pressure:** Baseline arterial pressure ($\ge 130/80$ mmHg marks elevated cardiovascular strain).\n"
+                "3. **Serum Cholesterol & Lipid Profile:** Total cholesterol ($\ge 200$ mg/dL) and LDL/HDL ratios indicating plaque risk.\n"
+                "4. **Fasting Blood Sugar:** Elevated glucose ($\ge 120$ mg/dL) compounds microvascular and macrovascular damage.\n"
+                "5. **Exercise ST-Segment Depression (Oldpeak):** Measures ischemic response under physical exertion.\n"
+                "6. **Thallium Stress & Major Fluoroscopy Vessels:** Clinical indicators of myocardial blood perfusion.\n\n"
+                "You can run or update your personalized heart risk screening directly in the **AI Risk Scoring** workbench."
             )
         else:
             content = (
-                "SwasthyaCare offers ML risk screening for Diabetes (ML-DIA-01) and Coronary Stenosis (ML-CVD-01). "
-                "You can complete a screening under the AI Risk Scoring tab to inspect your personalized lifestyle risk factors."
+                "**SwasthyaCare AI Risk Models & Contributing Factors:** 📊\n\n"
+                "Our clinical decision support engine offers screening for two major conditions:\n\n"
+                "• **Type 2 Diabetes (ML-DIA-01):** Analyzes South Asian BMI cutoffs ($\ge 23$ kg/m²), physical inactivity, high blood pressure history, and dietary habits.\n"
+                "• **Cardiovascular Stenosis (ML-CVD-01):** Analyzes resting blood pressure, serum cholesterol, exercise-induced angina, and ST-segment depression.\n\n"
+                "You can complete a personalized screening in the **AI Risk Scoring** tab to generate your probability estimate and factor breakdown."
             )
 
         return ChatCompletionResponse(

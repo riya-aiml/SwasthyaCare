@@ -184,3 +184,71 @@ def test_internal_chat_endpoint_security_and_completion():
     assert "citations" in data
     assert "disclaimer" in data
     assert data["intent"] in ["HEALTH_INFO", "REPORT_EXPLAIN"]
+
+
+def test_mental_wellness_anxiety_grounding():
+    """
+    Verifies that mental health queries like 'i am feeling anxious'
+    trigger empathetic grounding guidance and Tele-MANAS hotline.
+    """
+    req = ChatCompletionRequest(
+        session_id="test_session_mw",
+        user_id="test_patient_mw",
+        message="I am feeling anxious and stressed today"
+    )
+    res = chat_rag_service.process_message(req)
+
+    assert "4-7-8" in res.content or "Tele-MANAS" in res.content or "14416" in res.content
+    assert any("NIMHANS" in c.title or "NIMHANS" in c.source_id for c in res.citations)
+
+
+def test_acute_malaise_and_distress():
+    """
+    Verifies that acute expressions like 'feeling like death' provide immediate
+    safety triage, emergency helpline (112/108), and Tele-MANAS (14416).
+    """
+    req = ChatCompletionRequest(
+        session_id="test_session_am",
+        user_id="test_patient_am",
+        message="I m=am feeling like I am death bro"
+    )
+    res = chat_rag_service.process_message(req)
+
+    assert "112" in res.content
+    assert "14416" in res.content
+    assert res.action_suggestion.type == "EMERGENCY_MODAL"
+
+
+def test_user_frustration_redirection():
+    """
+    Verifies that user venting like 'u are shit bro' receives a polite,
+    supportive, and constructive navigational redirection.
+    """
+    req = ChatCompletionRequest(
+        session_id="test_session_frust",
+        user_id="test_patient_frust",
+        message="u are shit bro"
+    )
+    res = chat_rag_service.process_message(req)
+
+    assert "sorry" in res.content.lower()
+    assert res.action_suggestion.type == "NAVIGATE_TAB"
+    assert res.action_suggestion.target == "directory"
+
+
+def test_cardiovascular_risk_factors_explanation():
+    """
+    Verifies that inquiries about heart risk factors explain the ML-CVD-01
+    biomarkers (chest pain, blood pressure, cholesterol, ST depression).
+    """
+    req = ChatCompletionRequest(
+        session_id="test_session_cvd",
+        user_id="test_patient_cvd",
+        message="What are the main contributing factors in my heart risk estimate?"
+    )
+    res = chat_rag_service.process_message(req)
+
+    assert res.intent == "ASSESSMENT_EXPLAIN"
+    assert "ML-CVD-01" in res.content
+    assert "Cholesterol" in res.content or "Blood Pressure" in res.content
+
