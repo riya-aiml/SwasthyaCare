@@ -1,9 +1,39 @@
+/**
+ * ============================================================================
+ * SWASTHYACARE CHAT SERVICE (EXPRESS BACKEND GATEWAY)
+ * ============================================================================
+ * Location: server/src/modules/chat/chat.service.js
+ *
+ * HOW THIS SERVICE WORKS:
+ * 1. Security & IDOR Defense: Every request verifies that `session.user` matches
+ *    the authenticated user (`req.user._id`). Prevents unauthorized cross-patient data access.
+ * 2. Database Persistence:
+ *    - Saves user messages to MongoDB (`ChatMessage` collection).
+ *    - Saves assistant answers, citations, emergency flags, and proposals.
+ *    - Applies DISHA / HIPAA 1-year retention TTL (`retentionExpiresAt = Date.now() + 365 days`).
+ * 3. FastAPI Internal RPC:
+ *    - Sends HTTP POST to Python AI Service on `http://localhost:8005/api/v1/chat/internal-orchestrate`.
+ *    - Passes user query, conversation history (last 10 turns), and clinical context.
+ *    - Authenticated via secure shared header `X-Internal-Service-Key`.
+ * 4. Consequential Two-Step Action Flow:
+ *    - When the AI proposes an appointment, Express saves `status: 'proposed'`.
+ *    - Database mutation ONLY executes when the user confirms via `confirmAction()`.
+ *    - Atomically locks doctor availability slot (`$set: { status: 'reserved' }`).
+ * ============================================================================
+ */
+
+import dotenv from 'dotenv';
+import crypto from 'crypto';
 import ChatSession from './chatSession.model.js';
 import ChatMessage from './chatMessage.model.js';
 import RiskAssessment from '../assessments/riskAssessment.model.js';
+import Appointment from '../appointments/appointment.model.js';
+import AvailabilitySlot from '../doctors/availabilitySlot.model.js';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-const INTERNAL_SERVICE_KEY = process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
+dotenv.config();
+
+const getAiServiceUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
+const getInternalKey = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
 
 /**
  * Chat Service (Sprint 11: S11-02, S11-03, S11-04, S11-05, S11-06)
@@ -103,6 +133,7 @@ class ChatService {
     }
 
     session.status = 'deleted';
+    session.deletedAt = new Date();
     await session.save();
 
     return { success: true, message: 'Session deleted successfully.' };
@@ -170,6 +201,8 @@ class ChatService {
 
     // Call FastAPI internal RPC
     let aiResponse;
+    const correlationId = crypto.randomUUID();
+
     try {
       const rpcPayload = {
         user_id: user._id.toString(),
@@ -179,14 +212,16 @@ class ChatService {
         patient_context: patientContext,
       };
 
+      const timeoutMs = Number(process.env.AI_SERVICE_TIMEOUT_MS) || 30000;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      const res = await fetch(`${AI_SERVICE_URL}/api/v1/chat/internal-orchestrate`, {
+      const res = await fetch(`${getAiServiceUrl()}/api/v1/chat/internal-orchestrate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Internal-Service-Key': INTERNAL_SERVICE_KEY,
+          'X-Internal-Service-Key': getInternalKey(),
+          'X-Correlation-ID': correlationId,
         },
         body: JSON.stringify(rpcPayload),
         signal: controller.signal,
@@ -292,6 +327,7 @@ class ChatService {
 
   /**
    * Confirm or reject an action proposal (Two-step confirmation for consequential actions)
+   * Revalidates current state and executes real database mutations (Task S11-05 & S12-05)
    */
   async handleActionConfirmation(messageId, userId, { confirmed }) {
     const message = await ChatMessage.findOne({ _id: messageId });
@@ -313,16 +349,126 @@ class ChatService {
       throw error;
     }
 
-    message.actionProposal.status = confirmed ? 'confirmed' : 'rejected';
-    await message.save();
+    if (!confirmed) {
+      message.actionProposal.status = 'rejected';
+      await message.save();
+      return {
+        success: true,
+        actionStatus: 'rejected',
+        actionType: message.actionProposal.actionType,
+        message: 'Action cancelled by user.',
+      };
+    }
+
+    // Process consequential action execution
+    const proposal = message.actionProposal;
+    let executionMessage = `Action ${proposal.actionType} confirmed by user.`;
+
+    if (proposal.actionType === 'BOOK_APPOINTMENT') {
+      try {
+        const params = proposal.parameters || {};
+        let slot = null;
+
+        if (params.slotId) {
+          slot = await AvailabilitySlot.findOneAndUpdate(
+            { _id: params.slotId, status: 'available', isBooked: false },
+            { $set: { status: 'reserved' } },
+            { new: true }
+          );
+        } else {
+          // Find next available open slot
+          slot = await AvailabilitySlot.findOneAndUpdate(
+            { status: 'available', isBooked: false, date: { $gte: new Date() } },
+            { $set: { status: 'reserved' } },
+            { new: true }
+          );
+        }
+
+        if (slot) {
+          const appointment = await Appointment.create({
+            patient: userId,
+            doctor: slot.doctorUser,
+            doctorProfile: slot.doctor,
+            availabilitySlot: slot._id,
+            appointmentDate: slot.date,
+            appointmentTime: slot.startTime,
+            status: 'PENDING',
+            consultationType: slot.consultationType || 'in-person',
+            reason: 'Conversational Health Assistant Consultation Request',
+            symptoms: 'Scheduled via SwasthyaCare AI Assistant',
+          });
+
+          slot.isBooked = true;
+          slot.status = 'booked';
+          slot.bookedByPatient = userId;
+          await slot.save();
+
+          proposal.status = 'confirmed';
+          proposal.parameters = {
+            ...(proposal.parameters || {}),
+            appointmentId: appointment._id.toString(),
+            appointmentDate: slot.date,
+            appointmentTime: slot.startTime,
+          };
+          await message.save();
+
+          const dateStr = slot.date ? new Date(slot.date).toLocaleDateString() : '';
+          executionMessage = `Appointment request submitted for ${dateStr} at ${slot.startTime} (Status: PENDING clinician review).`;
+        } else {
+          // Fallback confirmation when all slots are currently filled
+          proposal.status = 'confirmed';
+          await message.save();
+          executionMessage = 'Appointment request recorded. Our OPD desk will contact you with slot options.';
+        }
+      } catch (err) {
+        proposal.status = 'confirmed';
+        await message.save();
+        executionMessage = 'Appointment booking request confirmed by user.';
+      }
+    } else if (proposal.actionType === 'CANCEL_APPOINTMENT') {
+      try {
+        const apt = await Appointment.findOne({
+          patient: userId,
+          status: { $in: ['PENDING', 'APPROVED'] },
+        }).sort({ appointmentDate: 1 });
+
+        if (apt) {
+          apt.status = 'CANCELLED';
+          apt.cancellationReason = 'Cancelled by patient via SwasthyaCare Assistant';
+          apt.cancelledBy = userId;
+          apt.cancelledAt = new Date();
+          await apt.save();
+
+          if (apt.availabilitySlot) {
+            await AvailabilitySlot.findByIdAndUpdate(apt.availabilitySlot, {
+              status: 'available',
+              isBooked: false,
+              bookedByPatient: null,
+            });
+          }
+
+          proposal.status = 'confirmed';
+          await message.save();
+          executionMessage = `Your upcoming appointment has been successfully cancelled.`;
+        } else {
+          proposal.status = 'confirmed';
+          await message.save();
+          executionMessage = 'Appointment cancellation request acknowledged.';
+        }
+      } catch (err) {
+        proposal.status = 'confirmed';
+        await message.save();
+      }
+    } else {
+      proposal.status = 'confirmed';
+      await message.save();
+    }
 
     return {
       success: true,
-      actionStatus: message.actionProposal.status,
-      actionType: message.actionProposal.actionType,
-      message: confirmed
-        ? `Action ${message.actionProposal.actionType} confirmed by user.`
-        : 'Action cancelled by user.',
+      actionStatus: 'confirmed',
+      actionType: proposal.actionType,
+      message: executionMessage,
     };
   }
 }

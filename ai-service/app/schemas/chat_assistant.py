@@ -30,13 +30,33 @@ class MessageRole(str, Enum):
 
 
 class ChatIntent(str, Enum):
+    # Acute clinical safety (P0)
     INTENT_EMERGENCY = "INTENT_EMERGENCY"
-    INTENT_APP_ACTION = "INTENT_APP_ACTION"
-    INTENT_APP_NAVIGATION = "INTENT_APP_NAVIGATION"
-    INTENT_REPORT_EXPLANATION = "INTENT_REPORT_EXPLANATION"
+
+    # Clinical education & guidelines (P2)
     INTENT_CLINICAL_QA = "INTENT_CLINICAL_QA"
+    INTENT_MEDICINE_INFORMATION = "INTENT_MEDICINE_INFORMATION"
+
+    # Reports & Assessments (P1)
+    INTENT_REPORT_EXPLANATION = "INTENT_REPORT_EXPLANATION"
+    INTENT_ASSESSMENT_EXPLANATION = "INTENT_ASSESSMENT_EXPLANATION"
+
+    # Platform navigation & hospital operations (P1)
+    INTENT_NAVIGATION = "INTENT_NAVIGATION"
+    INTENT_APP_NAVIGATION = "INTENT_APP_NAVIGATION"  # Backward compatibility alias
+    INTENT_QUEUE_HELP = "INTENT_QUEUE_HELP"
+    INTENT_FOLLOW_UP_HELP = "INTENT_FOLLOW_UP_HELP"
+
+    # Appointment workflows & Consequential actions (P1)
+    INTENT_APPOINTMENT_HELP = "INTENT_APPOINTMENT_HELP"
+    INTENT_APPOINTMENT_ACTION = "INTENT_APPOINTMENT_ACTION"
+    INTENT_APP_ACTION = "INTENT_APP_ACTION"  # Backward compatibility alias
+
+    # Human escalation & General (P3)
+    INTENT_HUMAN_SUPPORT = "INTENT_HUMAN_SUPPORT"
     INTENT_GENERAL_CHITCHAT = "INTENT_GENERAL_CHITCHAT"
-    INTENT_UNKNOWN = "INTENT_UNKNOWN"
+    INTENT_UNCLEAR = "INTENT_UNCLEAR"
+    INTENT_UNKNOWN = "INTENT_UNKNOWN"  # Backward compatibility alias
 
 
 class ActionType(str, Enum):
@@ -44,6 +64,8 @@ class ActionType(str, Enum):
     CANCEL_APPOINTMENT = "CANCEL_APPOINTMENT"
     VIEW_RISK_REPORT = "VIEW_RISK_REPORT"
     SUBMIT_FOLLOWUP = "SUBMIT_FOLLOWUP"
+    CONTACT_SUPPORT = "CONTACT_SUPPORT"
+    QUEUE_CHECK = "QUEUE_CHECK"
     NONE = "NONE"
 
 
@@ -84,4 +106,6 @@ class ChatOrchestrationResponse(BaseModel):
     disclaimer: str = CLINICAL_CHAT_DISCLAIMER
     latency_ms: int = Field(0, description="Processing duration in milliseconds")
     provider: str = Field("deterministic-mock", description="LLM provider used (anthropic, openai, or mock)")
+    model: Optional[str] = Field("swasthya-clinical-engine-v1", description="Model name or version")
+    tokens_used: Optional[Dict[str, int]] = Field(default_factory=dict, description="Token consumption metrics")
     timestamp_utc: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

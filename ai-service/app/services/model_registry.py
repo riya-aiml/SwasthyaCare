@@ -86,8 +86,24 @@ class ModelRegistry:
         else:
             logger.warning(f"Model artifact not found at: {cvd_model_path}")
 
+        # 3. Medical Specialty Department Classifier (ML-DEP-01)
+        dep_dir = os.path.join(MODELS_DIR, "ML-DEP-01")
+        dep_model_path = os.path.join(dep_dir, "specialty_classifier_v1.0.0.joblib")
+        dep_meta_path = os.path.join(dep_dir, "model_metadata.json")
+
+        if os.path.exists(dep_model_path):
+            try:
+                self.models["ML-DEP-01"] = joblib.load(dep_model_path)
+                with open(dep_meta_path, "r") as f:
+                    self.metadata["ML-DEP-01"] = json.load(f)
+                logger.info("Successfully loaded model pipeline: ML-DEP-01 (clinical-department-specialty-classifier v1.0.0)")
+            except Exception as e:
+                logger.error(f"Failed to load ML-DEP-01 model: {e}")
+        else:
+            logger.warning(f"Model artifact not found at: {dep_model_path}")
+
     def is_healthy(self) -> bool:
-        """Check if both active models are loaded and ready."""
+        """Check if active clinical models are loaded and ready."""
         return "ML-DIA-01" in self.models and "ML-CVD-01" in self.models
 
     def predict_diabetes(self, request: DiabetesAssessmentRequest) -> DiabetesAssessmentResponse:

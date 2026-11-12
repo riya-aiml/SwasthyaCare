@@ -1,16 +1,41 @@
 """
-SwasthyaCare AI Service — Dual RAG Engine & Conversational Orchestrator
-Sprint 10: Tasks S10-01 to S10-06
-Provides dual-domain document retrieval (Platform vs Clinical), intent routing,
-Priority 0 emergency red-flag triage, anti-prompt injection, and pluggable provider adapters.
+============================================================================
+SWASTHYACARE AI SERVICE — DUAL RAG ENGINE & CONVERSATIONAL ORCHESTRATOR
+============================================================================
+Location: ai-service/app/services/chat_rag_service.py
+
+HOW THIS PYTHON AI SERVICE WORKS:
+1. Dual-Corpus Knowledge Base:
+   - Platform Corpus (app_docs/): Hospital booking rules, digital token queue, OPD triage.
+   - Clinical Corpus (clinical_guidelines/): ICMR (Diabetes, Hypertension), WHO, NIMHANS, MoHFW.
+2. Hybrid Retrieval Engine (BM25 + Dense Semantic Vectors + Vernacular Normalization):
+   - BM25 Lexical Keyword Search: Okapi BM25 scoring for exact medical keyword matches.
+   - Dense Semantic Vector Search: TF-IDF + TruncatedSVD Latent Semantic Analysis (LSA).
+   - Vernacular Normalizer: Translates Hindi/Hinglish terms (e.g. "chhati me dard", "shakkar",
+     "teeka", "bachha") into clinical concepts for accurate search and triage.
+3. Clinical Safety Guardrails:
+   - Priority 0 Emergency Triage: Intercepts cardiac, stroke, respiratory, or suicidal emergencies.
+   - NegEx Negation Detection: Evaluates context windows so "I do NOT have chest pain" does
+     NOT trigger an emergency false-positive lockout.
+   - Anti-Prescription Defense: Rejects illegal drug prescription requests.
+4. Orchestration Pipeline (`ChatRAGService.orchestrate`):
+   Step 1: Classify user intent & detect emergency / red-flags.
+   Step 2: Search appropriate knowledge-base corpus (Platform vs Clinical) via hybrid retrieval.
+   Step 3: Call configured LLM provider (Claude Sonnet 5.5, GPT-4o, or Offline Mock).
+   Step 4: Package citations with exact doc IDs [DOC-CLIN-01, DOC-PLAT-01].
+   Step 5: Generate two-step action proposals if appointment booking/cancellation was requested.
+============================================================================
 """
 
 import os
 import re
 import time
 import math
+import logging
 from typing import List, Dict, Any, Optional, Tuple
 from abc import ABC, abstractmethod
+
+logger = logging.getLogger(__name__)
 
 from app.schemas.chat_assistant import (
     ChatOrchestrationRequest,
@@ -23,27 +48,22 @@ from app.schemas.chat_assistant import (
     PRESCRIPTION_REFUSAL_TEXT,
 )
 
-# Emergency Escalation Response Template (Sprint 9 & 10 Clinical Safety Protocol)
-EMERGENCY_ESCALATION_TEMPLATE = (
-    "🚨 **CRITICAL MEDICAL ALERT: IMMEDIATE ACTION REQUIRED**\n\n"
-    "Your symptoms indicate a potentially life-threatening medical emergency. "
-    "**Please seek immediate emergency medical care.**\n\n"
-    "### Emergency Actions:\n"
-    "1. **Call Emergency Services IMMEDIATELY:**\n"
-    "   - **112** — All-India Unified Emergency Helpline\n"
-    "   - **108** — Emergency Medical Services & Ambulance\n"
-    "2. **If experiencing a mental health crisis:**\n"
-    "   - **14416** / **1800-891-4416** — Tele-MANAS (Toll-Free, 24/7)\n"
-    "   - **1800-599-0019** — KIRAN Mental Health Helpline\n"
-    "3. **Go to the Nearest Hospital Casualty / Emergency Department.**\n"
-    "   Do not wait for symptoms to improve or drive yourself if you are feeling faint or disoriented.\n\n"
-    "*Notice: SwasthyaCare Assistant is an automated educational tool, not an emergency medical service.*"
+from app.services.llm_providers import (
+    BaseLLMProvider,
+    DeterministicMockProvider,
+    AnthropicClaudeProvider,
+    OpenAIProvider,
+    ProviderFactory,
+    ProviderResult,
+    CLINICAL_SYSTEM_PROMPT,
+    EMERGENCY_ESCALATION_TEMPLATE,
+    NO_EVIDENCE_FALLBACK,
 )
-
-NO_EVIDENCE_FALLBACK = (
-    "I don't have enough verified clinical information in my guidelines to answer this specific question. "
-    "Please consult your physician or specialist for personalized medical guidance."
+from app.services.hybrid_retrieval import (
+    HybridCorpusIndex,
+    VernacularNormalizer,
 )
+from app.services.clinical_guardrails import ClinicalNegationDetector
 
 
 class DocumentChunk:
@@ -86,6 +106,8 @@ class DualCorpusManager:
         self.clinical_docs_dir = os.path.join(base_data_dir, "knowledge_base", "clinical_guidelines")
         self.platform_chunks: List[DocumentChunk] = []
         self.clinical_chunks: List[DocumentChunk] = []
+        self.platform_index = HybridCorpusIndex(alpha=0.55)
+        self.clinical_index = HybridCorpusIndex(alpha=0.50)
         self._load_and_index_corpora()
 
     def _parse_markdown_file(self, file_path: str, category: str) -> List[DocumentChunk]:
@@ -153,6 +175,10 @@ class DualCorpusManager:
                     fpath = os.path.join(self.clinical_docs_dir, fname)
                     self.clinical_chunks.extend(self._parse_markdown_file(fpath, "clinical"))
 
+        # Build Hybrid Indexes (BM25 Lexical + Dense Semantic Vectors)
+        self.platform_index.build_index(self.platform_chunks)
+        self.clinical_index.build_index(self.clinical_chunks)
+
     def _score_chunk(self, query_tokens: set, chunk: DocumentChunk) -> float:
         if not query_tokens or not chunk.tokens:
             return 0.0
@@ -183,7 +209,13 @@ class DualCorpusManager:
         return min(base_score, 1.0)
 
     def search_platform(self, query: str, top_k: int = 2, threshold: float = 0.10) -> List[Tuple[DocumentChunk, float]]:
-        q_tokens = DocumentChunk._tokenize(query)
+        # Primary: Hybrid retrieval (BM25 + Semantic Vectors + Vernacular Normalization)
+        results = self.platform_index.search(query, top_k=top_k, threshold=threshold)
+        if results:
+            return results
+
+        # Resilient fallback: lexical overlap
+        q_tokens = DocumentChunk._tokenize(VernacularNormalizer.expand_query(query))
         scored = []
         for chk in self.platform_chunks:
             s = self._score_chunk(q_tokens, chk)
@@ -193,7 +225,13 @@ class DualCorpusManager:
         return scored[:top_k]
 
     def search_clinical(self, query: str, top_k: int = 2, threshold: float = 0.10) -> List[Tuple[DocumentChunk, float]]:
-        q_tokens = DocumentChunk._tokenize(query)
+        # Primary: Hybrid retrieval (BM25 + Semantic Vectors + Vernacular Normalization)
+        results = self.clinical_index.search(query, top_k=top_k, threshold=threshold)
+        if results:
+            return results
+
+        # Resilient fallback: lexical overlap
+        q_tokens = DocumentChunk._tokenize(VernacularNormalizer.expand_query(query))
         scored = []
         for chk in self.clinical_chunks:
             s = self._score_chunk(q_tokens, chk)
@@ -219,13 +257,21 @@ class IntentClassifier:
         r"\b(anaphyla(xis|ctic))\b",
         r"\b(throat|lips?|tongue)\s+(is\s+)?(swell(ing|ed|t)?|closing)\b",
         r"\b(uncontrolled\s+bleed(ing)?|arterial\s+bleed|head\s+injury\s+unconscious)\b",
+        # Vernacular / Hinglish Red Flags
+        r"\b(chhati|seene?)\b.*?\b(dard|takleef|jalan|peeda|dabav)\b",
+        r"\b(saans|saas)\b.*?\b(takleef|dikkat|ruk|fool|rukna)\b",
+        r"\b(jaan\s+dena|mar\s+jaana|khudkushi|aatmhatya)\b",
+        r"\b(khoon\s+behna|khoon\s+ki\s+ulti|raktasrav)\b",
     ]
 
     # Prescription / Dosage Patterns
     PRESCRIPTION_PATTERNS = [
         r"\b(prescribe|prescription|write\s+a\s+prescription)\b",
         r"\b(what\s+dose|dosage|how\s+many\s+mg|take\s+\d+\s*mg)\b",
-        r"\b(can\s+i\s+give\s+\d+\s*mg|stop\s+taking\s+my\s+medicin(e|ation))\b",
+        r"\b(can\s+i\s+give\s+\d+\s*mg|stop\s+taking\s+.*?\bmedicin(e|ation))\b",
+        r"\b(stop|discontinue|alter|change|increase|decrease)\s+.*?\b(medicin|medication|drug|dose|dosage)\b",
+        r"\b(dawa|dawai|goli|aushadhi)\s+(likh|bata|de\s+do|kitni\s+leni)\b",
+        r"\b(konsi\s+dawa|kaunsi\s+dawai)\b",
     ]
 
     # Jailbreak & Prompt Injection Patterns
@@ -241,34 +287,86 @@ class IntentClassifier:
         r"\b(cancel|reschedule)\s+(my\s+)?appointment\b",
     ]
 
-    # App Navigation
+    # Appointment Guidance & Pricing
+    APPOINTMENT_HELP_PATTERNS = [
+        r"\b(how\s+to\s+book|booking\s+fee|consultation\s+fee|opd\s+charges)\b",
+        r"\b(doctor\s+schedule|visiting\s+hours|available\s+slots|doctor\s+profiles?)\b",
+    ]
+
+    # Queue & OPD Mechanics
+    QUEUE_PATTERNS = [
+        r"\b(opd|token|queue|wait\s+time|token\s+number|digital\s+token)\b",
+    ]
+
+    # Follow-Up & Recovery
+    FOLLOWUP_PATTERNS = [
+        r"\b(follow\s*up|recovery|discharge|post-discharge|vital\s*signs?|check-?ins?)\b",
+    ]
+
+    # General Hospital Navigation
     NAVIGATION_PATTERNS = [
-        r"\b(opd|token|queue|wait\s+time|how\s+to\s+book|find\s+doctor|doctor\s+list)\b",
-        r"\b(follow\s*up|recovery\s+update|discharge\s+plan)\b",
+        r"\b(find\s+doctor|doctor\s+list|department|hospital\s+map|lab\s+location)\b",
         r"\b(risk\s+assessment|risk\s+model|framingham|findrisc|cardiac\s+score|diabetes\s+score)\b",
+    ]
+
+    # Human Support Escalation
+    HUMAN_SUPPORT_PATTERNS = [
+        r"\b(talk\s+to|speak\s+with|connect\s+(me\s+)?to)\s+(a\s+)?(human|agent|operator|receptionist|nurse|desk)\b",
+        r"\b(customer\s+support|helpdesk|contact\s+support|real\s+person)\b",
+    ]
+
+    # Medicine / Pharmacology
+    MEDICINE_PATTERNS = [
+        r"\b(metformin|telmisartan|atorvastatin|aspirin|amlodipine|paracetamol|insulin)\b",
+        r"\b(antibiotic|blood\s+thinner|painkiller|side\s+effects?)\b",
+    ]
+
+    # Report & Risk Model Explanation
+    REPORT_PATTERNS = [
+        r"\b(my\s+.*(risk|score|report)|risk\s+score|risk\s+report|risk\s+model|framingham|findrisc)\b",
+        r"\b(percentage\s+risk|explain\s+.*(risk|score|report))\b",
     ]
 
     # Greetings & Chitchat
     CHITCHAT_PATTERNS = [
-        r"^(hi|hello|hey|good\s+morning|good\s+evening|namaste|greetings)[\.!]?$",
-        r"^(thanks|thank\s+you|ok|bye|goodbye|see\s+you)[\.!]?$",
+        r"\b(hi|hello|hey|good\s+(morning|afternoon|evening|day)|namaste|greetings)\b",
+        r"\b(thanks|thank\s+you|ok|bye|goodbye|see\s+you)\b",
         r"\b(who\s+are\s+you|what\s+can\s+you\s+do|write\s+a\s+poem|tell\s+a\s+joke)\b",
-        r"\b(capital\s+of|weather|score|football|cricket)\b",
+        r"\b(capital\s+of|weather|(sports?|match|game|cricket|football)\s+score|football|cricket)\b",
     ]
 
     @classmethod
     def detect_emergency(cls, message: str) -> bool:
         lower = message.lower()
-        for pat in cls.RED_FLAG_PATTERNS:
-            if re.search(pat, lower):
+        # 1. Evaluate raw message with negation awareness
+        is_em, _ = ClinicalNegationDetector.evaluate_emergency_with_negation(
+            lower, cls.RED_FLAG_PATTERNS
+        )
+        if is_em:
+            return True
+
+        # 2. Evaluate vernacular expansion only if raw message was not explicitly negated
+        expanded = VernacularNormalizer.expand_query(lower)
+        if expanded != lower:
+            is_em_exp, _ = ClinicalNegationDetector.evaluate_emergency_with_negation(
+                expanded, cls.RED_FLAG_PATTERNS
+            )
+            # Ensure the raw query does not contain negation around vernacular terms
+            has_raw_negation = any(
+                re.search(neg, lower)
+                for neg in [r"\bnahi\b", r"\bno\b", r"\bnot\b", r"\bkoi\s+nahi\b", r"\bbina\b"]
+            )
+            if is_em_exp and not has_raw_negation:
                 return True
+
         return False
 
     @classmethod
     def detect_prescription_request(cls, message: str) -> bool:
         lower = message.lower()
+        expanded = VernacularNormalizer.expand_query(lower)
         for pat in cls.PRESCRIPTION_PATTERNS:
-            if re.search(pat, lower):
+            if re.search(pat, lower) or re.search(pat, expanded):
                 return True
         return False
 
@@ -282,7 +380,7 @@ class IntentClassifier:
 
     @classmethod
     def classify_intent(cls, message: str) -> ChatIntent:
-        lower = message.lower()
+        lower = message.lower().strip()
 
         # P0: Emergency Check
         if cls.detect_emergency(lower):
@@ -292,26 +390,82 @@ class IntentClassifier:
         if cls.detect_prompt_injection(lower):
             return ChatIntent.INTENT_GENERAL_CHITCHAT
 
-        # P1: App Actions
+        # P1: Human Support Request
+        for pat in cls.HUMAN_SUPPORT_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_HUMAN_SUPPORT
+
+        # P2: Consequential App Actions (Booking / Cancelling)
         for pat in cls.ACTION_PATTERNS:
             if re.search(pat, lower):
                 return ChatIntent.INTENT_APP_ACTION
 
-        # P1: App Navigation
-        for pat in cls.NAVIGATION_PATTERNS:
+        # P3: App Navigation & Workflows (Queue, Follow-up, Directory)
+        for pat in cls.QUEUE_PATTERNS + cls.FOLLOWUP_PATTERNS + cls.NAVIGATION_PATTERNS:
             if re.search(pat, lower):
                 return ChatIntent.INTENT_APP_NAVIGATION
 
-        # P1: Report explanation
-        if re.search(r"\b(my\s+risk|my\s+score|my\s+report|percentage\s+risk)\b", lower):
-            return ChatIntent.INTENT_REPORT_EXPLANATION
+        # P4: Report explanation
+        for pat in cls.REPORT_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_REPORT_EXPLANATION
 
-        # P3: Greetings / Chitchat
+        # P5: Medicine information (Educational Pharmacology)
+        for pat in cls.MEDICINE_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_MEDICINE_INFORMATION
+
+        # P6: Appointment Help
+        for pat in cls.APPOINTMENT_HELP_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_APPOINTMENT_HELP
+
+        # P7: Greetings / Chitchat
         for pat in cls.CHITCHAT_PATTERNS:
             if re.search(pat, lower):
                 return ChatIntent.INTENT_GENERAL_CHITCHAT
 
         # Default to Clinical QA
+        return ChatIntent.INTENT_CLINICAL_QA
+
+    @classmethod
+    def classify_granular_intent(cls, message: str) -> ChatIntent:
+        """Granular 13-intent classifier matching the full application taxonomy."""
+        lower = message.lower().strip()
+
+        if cls.detect_emergency(lower):
+            return ChatIntent.INTENT_EMERGENCY
+        if cls.detect_prompt_injection(lower):
+            return ChatIntent.INTENT_GENERAL_CHITCHAT
+        for pat in cls.HUMAN_SUPPORT_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_HUMAN_SUPPORT
+        for pat in cls.ACTION_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_APPOINTMENT_ACTION
+        for pat in cls.APPOINTMENT_HELP_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_APPOINTMENT_HELP
+        for pat in cls.QUEUE_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_QUEUE_HELP
+        for pat in cls.FOLLOWUP_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_FOLLOW_UP_HELP
+        for pat in cls.REPORT_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_REPORT_EXPLANATION
+        for pat in cls.MEDICINE_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_MEDICINE_INFORMATION
+        for pat in cls.NAVIGATION_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_NAVIGATION
+        for pat in cls.CHITCHAT_PATTERNS:
+            if re.search(pat, lower):
+                return ChatIntent.INTENT_GENERAL_CHITCHAT
+        if not lower or re.match(r"^[^a-zA-Z0-9]+$", lower):
+            return ChatIntent.INTENT_UNCLEAR
         return ChatIntent.INTENT_CLINICAL_QA
 
 
@@ -426,49 +580,62 @@ class DeterministicMockProvider(BaseLLMProvider):
             )
 
         # Clinical QA
-        if intent == ChatIntent.INTENT_CLINICAL_QA:
+        if intent in (
+            ChatIntent.INTENT_CLINICAL_QA,
+            ChatIntent.INTENT_MEDICINE_INFORMATION,
+        ):
+            # Never invent clinical facts when there is no retrieved evidence.
             if not citations:
                 return NO_EVIDENCE_FALLBACK
 
-            primary = citations[0]
-            # Hypertension
-            if "blood pressure" in lower or "hypertension" in lower or "sodium" in lower or "salt" in lower:
-                return (
-                    "According to ICMR and Indian Guidelines on Hypertension (IGH-IV) [DOC-CLIN-02], normal blood pressure "
-                    "for adults is below 120/80 mmHg. Lifestyle measures include restricting dietary sodium to under 2,000 mg/day "
-                    "(approx. 1 flat teaspoon of salt), increasing potassium-rich fresh fruits and vegetables, maintaining regular "
-                    "aerobic activity (150 minutes/week), and avoiding tobacco."
-                )
-            # Diabetes
-            if "diabetes" in lower or "sugar" in lower or "glucose" in lower or "hba1c" in lower:
-                return (
-                    "Per ICMR Type 2 Diabetes Management Guidelines [DOC-CLIN-01], normal fasting plasma glucose is below 100 mg/dL "
-                    "and HbA1c is below 5.7%. Preventive management emphasizes a fiber-rich diet with complex carbohydrates (oats, "
-                    "whole grains, pulses), restricting refined sugars, and engaging in at least 150 minutes of weekly moderate aerobic exercise."
-                )
-            # Cardiovascular / WHO
-            if "heart" in lower or "cardiovascular" in lower or "cholesterol" in lower:
-                return (
-                    "World Health Organization (WHO) HEARTS guidelines [DOC-CLIN-03] emphasize key modifiable cardiovascular factors: "
-                    "smoking cessation, maintaining healthy blood pressure, managing lipid levels (reducing saturated fats and eliminating "
-                    "trans-fats), and engaging in 150–300 minutes of moderate-intensity physical activity weekly."
-                )
-            # Mental health / Stress
-            if "stress" in lower or "mental" in lower or "sleep" in lower or "anxiety" in lower:
-                return (
-                    "Non-pharmacological stress management based on NIMHANS and Tele-MANAS protocols [DOC-CLIN-05] includes daily "
-                    "diaphragmatic breathing (4s inhale, 6s exhale), consistent sleep hygiene (7–9 hours), and regular exercise. "
-                    "For free, confidential 24/7 mental wellness support, the Tele-MANAS helpline is available at 14416."
+            # Keep only non-empty retrieved evidence.
+            evidence_blocks = []
+
+            for doc in citations:
+                content = (doc.text or "").strip()
+
+                if not content:
+                    continue
+
+                heading = (
+                    getattr(doc, "section_title", "")
+                    or getattr(doc, "title", "Clinical information")
                 )
 
-            # Generic clinical synthesis using retrieved snippet
+                evidence_blocks.append(
+                    f"### {heading}\n"
+                    f"{content}\n"
+                    f"Source: {doc.source_organization} — "
+                    f"{doc.title} [{doc.doc_id}]"
+                )
+
+            if not evidence_blocks:
+                return NO_EVIDENCE_FALLBACK
+
+            # Deterministic mock: return actual retrieved evidence,
+            # rather than an unrelated generic response.
             return (
-                f"Based on {primary.source_organization} guidelines ({primary.title}) [{primary.doc_id}]: "
-                f"Key recommendations emphasize evidence-based lifestyle modifications, regular screening, "
-                f"and consultation with a qualified medical practitioner."
+                "Here is the relevant information from the "
+                "clinical documents available to SwasthyaCare:\n\n"
+                + "\n\n".join(evidence_blocks)
+                + "\n\n"
+                "This information is for general education and "
+                "does not replace an individual medical assessment."
             )
 
         return NO_EVIDENCE_FALLBACK
+
+
+SPECIALTY_DOCTOR_MAP: Dict[str, Tuple[str, str]] = {
+    "Cardiology": ("Dr. Vikram Anand", "Cardiology & Vascular Medicine"),
+    "Endocrinology": ("Dr. Sunita Rao", "Endocrinology & Diabetology"),
+    "Pulmonology": ("Dr. Rajesh Gupta", "Pulmonology & Respiratory Medicine"),
+    "Gastroenterology": ("Dr. Alok Verma", "Gastroenterology & Hepatology"),
+    "Orthopedics": ("Dr. Priya Sen", "Orthopedics & Joint Replacement"),
+    "Neurology": ("Dr. Rohan Mehta", "Neurology & Comprehensive Stroke Care"),
+    "Dermatology": ("Dr. Ananya Roy", "Dermatology & Skin Biology"),
+    "General_Medicine": ("Dr. Meera Sharma", "Internal & Preventive Medicine"),
+}
 
 
 class ChatRAGService:
@@ -477,8 +644,9 @@ class ChatRAGService:
     1. Input sanitization & red-flag check
     2. Intent classification
     3. Dual-Corpus search (Platform vs Clinical)
-    4. Response generation via pluggable provider
+    4. Response generation via pluggable provider (Claude Sonnet 5.5, OpenAI, or Mock)
     5. Action proposal generation
+    6. Performance and token metadata tracking
     """
 
     def __init__(self, base_data_dir: Optional[str] = None):
@@ -488,10 +656,10 @@ class ChatRAGService:
                 "data",
             )
         self.corpus_manager = DualCorpusManager(base_data_dir)
-        self.provider = DeterministicMockProvider()
+        self.provider: BaseLLMProvider = ProviderFactory.get_provider()
 
     def _extract_action_proposal(self, message: str, intent: ChatIntent) -> Optional[ActionProposal]:
-        if intent != ChatIntent.INTENT_APP_ACTION:
+        if intent not in [ChatIntent.INTENT_APP_ACTION, ChatIntent.INTENT_APPOINTMENT_ACTION]:
             return None
 
         lower = message.lower()
@@ -504,8 +672,18 @@ class ChatRAGService:
                 preview_summary="Cancel upcoming appointment request",
             )
 
-        # Detect doctor or specialty if present
-        doctor_name = "Dr. Sharma"
+        # Classical ML Specialty Routing (Task: ML-DEP-01)
+        # Classify symptom context using trained TF-IDF + Calibrated Logistic Regression pipeline
+        from app.services.specialty_classifier import specialty_classifier_service
+        ml_result = specialty_classifier_service.predict(message)
+        dept = ml_result.get("predicted_department", "General_Medicine")
+        conf = ml_result.get("confidence", 0.5)
+
+        default_doctor, specialization = SPECIALTY_DOCTOR_MAP.get(
+            dept, ("Dr. Meera Sharma", "Internal & Preventive Medicine")
+        )
+
+        doctor_name = default_doctor
         if "dr." in lower or "doctor" in lower:
             doc_match = re.search(r"\b(dr\.?\s+[a-z]+)\b", lower)
             if doc_match:
@@ -516,11 +694,13 @@ class ChatRAGService:
             target_resource="appointment",
             parameters={
                 "doctor_name": doctor_name,
-                "specialization": "General Medicine / Cardiology",
+                "specialization": specialization,
+                "department": dept,
+                "ml_routing_confidence": conf,
                 "preferred_time": "Morning (10:00 AM - 12:00 PM)",
             },
             requires_confirmation=True,
-            preview_summary=f"Request appointment with {doctor_name}",
+            preview_summary=f"Request OPD appointment with {doctor_name} ({specialization})",
         )
 
     async def orchestrate(self, request: ChatOrchestrationRequest) -> ChatOrchestrationResponse:
@@ -534,23 +714,83 @@ class ChatRAGService:
         # Step 2: Retrieve from appropriate domain
         citations: List[DocumentChunk] = []
         if not is_emergency:
-            if intent in [ChatIntent.INTENT_APP_NAVIGATION, ChatIntent.INTENT_APP_ACTION, ChatIntent.INTENT_REPORT_EXPLANATION]:
+            if intent in [
+                ChatIntent.INTENT_APP_NAVIGATION,
+                ChatIntent.INTENT_NAVIGATION,
+                ChatIntent.INTENT_APP_ACTION,
+                ChatIntent.INTENT_APPOINTMENT_ACTION,
+                ChatIntent.INTENT_APPOINTMENT_HELP,
+                ChatIntent.INTENT_QUEUE_HELP,
+                ChatIntent.INTENT_FOLLOW_UP_HELP,
+                ChatIntent.INTENT_REPORT_EXPLANATION,
+                ChatIntent.INTENT_ASSESSMENT_EXPLANATION,
+                ChatIntent.INTENT_HUMAN_SUPPORT,
+            ]:
                 results = self.corpus_manager.search_platform(user_msg, top_k=2)
                 citations = [r[0] for r in results]
-            elif intent == ChatIntent.INTENT_CLINICAL_QA:
-                results = self.corpus_manager.search_clinical(user_msg, top_k=2)
-                citations = [r[0] for r in results]
+            elif intent in [
+                ChatIntent.INTENT_CLINICAL_QA,
+                ChatIntent.INTENT_MEDICINE_INFORMATION,
+            ]:
+                results = self.corpus_manager.search_clinical(
+                    user_msg,
+                    top_k=5,
+                )
 
-        # Step 3: Generate response via provider
-        response_text = self.provider.generate(
+                citations = [result[0] for result in results]
+
+                logger.info(
+                    "Clinical retrieval | Intent=%s | "
+                    "Retrieved=%d | Document IDs=%s",
+                    intent,
+                    len(results),
+                    [result[0].doc_id for result in results],
+                )
+
+                if not citations:
+                    logger.warning(
+                        "No clinical evidence retrieved. "
+                        "Check clinical knowledge-base files and retrieval index."
+                    )
+
+        # Step 3: Assemble action proposal via Classical ML Routing (if applicable)
+        action_proposal = self._extract_action_proposal(user_msg, intent)
+
+        # Enhance system prompt if an action proposal with clinical routing exists
+        system_prompt = CLINICAL_SYSTEM_PROMPT
+        if action_proposal and action_proposal.parameters:
+            dept = action_proposal.parameters.get("department", "").replace("_", " ")
+            doc = action_proposal.parameters.get("doctor_name", "")
+            spec = action_proposal.parameters.get("specialization", "")
+            if dept and doc:
+                system_prompt += (
+                    f"\n\n[SPECIALIST CLINICAL ROUTING CONTEXT]:\n"
+                    f"The patient's symptom query has been matched by our classical ML specialty model to:\n"
+                    f"- Department: {dept}\n"
+                    f"- Recommended Specialist: {doc} ({spec})\n\n"
+                    f"In your response:\n"
+                    f"1. Acknowledge the patient's symptoms with warmth, clarity, and reassurance.\n"
+                    f"2. Explain simply why their symptoms relate to {dept} (e.g. bone, joint and mobility care).\n"
+                    f"3. Reassure them that you have matched them with {doc} ({spec}) and an appointment card is ready below for 1-click booking.\n"
+                    f"4. Keep your answer brief (2-3 concise paragraphs), empathetic, and easy to understand."
+                )
+
+        # Step 4: Generate response via configured Provider
+        conv_hist = [
+            {"role": t.role.value if hasattr(t.role, "value") else str(t.role), "content": t.content}
+            for t in request.conversation_history
+        ]
+
+        provider_res: ProviderResult = await self.provider.generate_async(
             prompt=user_msg,
-            system_prompt="",
+            system_prompt=system_prompt,
             citations=citations,
             intent=intent,
             patient_context=request.patient_context,
+            conversation_history=conv_hist,
         )
 
-        # Step 4: Assemble citations metadata
+        # Step 5: Assemble citations metadata
         citation_items = [
             CitationItem(
                 doc_id=c.doc_id,
@@ -561,19 +801,22 @@ class ChatRAGService:
             for c in citations
         ]
 
-        # Step 5: Assemble action proposal
-        action_proposal = self._extract_action_proposal(user_msg, intent)
-
         elapsed_ms = int((time.time() - start_time) * 1000)
 
         return ChatOrchestrationResponse(
             intent=intent,
             is_emergency=is_emergency,
-            response_text=response_text,
+            response_text=provider_res.content,
             citations=citation_items,
             action_proposal=action_proposal,
             latency_ms=elapsed_ms,
-            provider="deterministic-mock",
+            provider=provider_res.provider,
+            model=provider_res.model,
+            tokens_used={
+                "prompt_tokens": provider_res.prompt_tokens,
+                "completion_tokens": provider_res.completion_tokens,
+                "total_tokens": provider_res.prompt_tokens + provider_res.completion_tokens,
+            },
         )
 
 

@@ -15,7 +15,7 @@ import assert from 'assert';
  * 8. Session soft-deletion.
  */
 
-const BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api';
+const BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api';
 
 const patientA = {
   email: `patient_a_${Date.now()}@swasthya.test`,

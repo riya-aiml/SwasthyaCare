@@ -15,6 +15,7 @@ import ClinicianFollowUpView from './components/ClinicianFollowUpView';
 import RiskAssessmentView from './components/RiskAssessmentView';
 import MedicineOCRView from './components/MedicineOCRView';
 import UserProfile from './components/UserProfile';
+import AIHealthAssistant from './components/AIHealthAssistant';
 import {
   HeartPulse,
   LayoutDashboard,
@@ -33,6 +34,7 @@ import {
   ChevronRight,
   Shield,
   Zap,
+  Bot,
 } from 'lucide-react';
 
 function AppContent() {
@@ -40,6 +42,7 @@ function AppContent() {
   const [authView, setAuthView] = useState('login');
   const [currentView, setCurrentView] = useState('dashboard');
   const [switchLoading, setSwitchLoading] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
   const demoAccounts = [
     {
@@ -95,17 +98,29 @@ function AppContent() {
   if (!isAuthenticated) {
     if (authView === 'register') {
       return (
-        <Register
-          onSwitchToLogin={() => setAuthView('login')}
-          onRegisterSuccess={() => setCurrentView('dashboard')}
-        />
+        <div className="relative">
+          <Register
+            onSwitchToLogin={() => setAuthView('login')}
+            onRegisterSuccess={() => setCurrentView('dashboard')}
+          />
+          <AIHealthAssistant
+            isOpen={isAiAssistantOpen}
+            setIsOpen={setIsAiAssistantOpen}
+          />
+        </div>
       );
     }
     return (
-      <Login
-        onSwitchToRegister={() => setAuthView('register')}
-        onLoginSuccess={() => setCurrentView('dashboard')}
-      />
+      <div className="relative">
+        <Login
+          onSwitchToRegister={() => setAuthView('register')}
+          onLoginSuccess={() => setCurrentView('dashboard')}
+        />
+        <AIHealthAssistant
+          isOpen={isAiAssistantOpen}
+          setIsOpen={setIsAiAssistantOpen}
+        />
+      </div>
     );
   }
 
@@ -319,6 +334,16 @@ function AppContent() {
                   <span>Doctors Directory</span>
                 </button>
               )}
+
+              {/* AI Health Assistant Header Trigger */}
+              <button
+                onClick={() => setIsAiAssistantOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200/80 transition-all shadow-xs"
+                title="Open AI Health Assistant"
+              >
+                <Bot className="w-3.5 h-3.5 text-teal-600 animate-pulse" />
+                <span>AI Assistant</span>
+              </button>
             </nav>
 
             {/* User Profile Pill & Actions */}
@@ -437,6 +462,12 @@ function AppContent() {
           </div>
         </div>
       </footer>
+
+      {/* Floating AI Assistant Chat Widget */}
+      <AIHealthAssistant
+        isOpen={isAiAssistantOpen}
+        setIsOpen={setIsAiAssistantOpen}
+      />
     </div>
   );
 }
