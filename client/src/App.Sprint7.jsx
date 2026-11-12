@@ -15,7 +15,6 @@ import ClinicianFollowUpView from './components/ClinicianFollowUpView';
 import RiskAssessmentView from './components/RiskAssessmentView';
 import MedicineOCRView from './components/MedicineOCRView';
 import UserProfile from './components/UserProfile';
-import AIHealthAssistant from './components/AIHealthAssistant';
 import {
   HeartPulse,
   LayoutDashboard,
@@ -421,9 +420,6 @@ function AppContent() {
         {currentView === 'ocr' && <MedicineOCRView />}
         {currentView === 'profile' && <UserProfile />}
       </main>
-
-      {/* Floating Conversational AI Assistant (Sprint 11) */}
-      <AIHealthAssistant currentTab={currentView} onNavigate={(tab) => setCurrentView(tab)} />
 
       {/* 4. Enterprise Healthcare Footer */}
       <footer className="mt-auto bg-white border-t border-slate-200 py-6 text-xs text-slate-500">

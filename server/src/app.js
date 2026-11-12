@@ -11,7 +11,6 @@ import followUpRoutes from './modules/followups/followUp.routes.js';
 import aiRoutes from './modules/ai/ai.routes.js';
 import assessmentRoutes from './modules/assessments/assessment.routes.js';
 import dashboardRoutes from './modules/dashboards/dashboard.routes.js';
-import chatRoutes from './modules/chat/chat.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 // Load environment variables from .env file
@@ -44,7 +43,6 @@ app.use('/api/follow-ups', followUpRoutes);
 app.use('/api/ai', aiRoutes); // Sprint 6: AI Clinical Decision Support & ML Current-Status
 app.use('/api/assessments', assessmentRoutes); // Sprint 7: ML Risk Assessments & History
 app.use('/api/dashboards', dashboardRoutes);
-app.use('/api/chat', chatRoutes); // Sprint 11: Conversational Assistant & Grounded RAG
 
 // Root endpoint
 app.get('/', (req, res) => {
