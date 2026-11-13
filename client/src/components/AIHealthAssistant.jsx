@@ -236,60 +236,35 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
   const [isListening, setIsListening] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
-  const [autoSpeak, setAutoSpeak] = useState(true); // Voice Assistant Auto-Speech enabled by default
-  const [voices, setVoices] = useState([]);
-  const [elevenApiKey, setElevenApiKey] = useState(() => localStorage.getItem('elevenlabs_api_key') || '');
-  const [showVoiceKeyModal, setShowVoiceKeyModal] = useState(false);
-  const [isElevenVoicePlaying, setIsElevenVoicePlaying] = useState(false);
-
-  // OpenAI Realtime Low-Latency Speech-to-Speech State
-  const [isRealtimeCallActive, setIsRealtimeCallActive] = useState(false);
-  const [realtimeStatus, setRealtimeStatus] = useState('idle'); // 'idle' | 'connecting' | 'connected' | 'speaking' | 'listening'
-  const [realtimeApiKey, setRealtimeApiKey] = useState(() => localStorage.getItem('openai_realtime_api_key') || '');
-  const [showRealtimeKeyModal, setShowRealtimeKeyModal] = useState(false);
-  const [realtimeTranscript, setRealtimeTranscript] = useState([]);
-  const [isRealtimeMuted, setIsRealtimeMuted] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("chatgpt_voice") || "nova");
+  const [openAiApiKey, setOpenAiApiKey] = useState(() => localStorage.getItem("openai_tts_key") || "");
+  const [showVoiceSettingsModal, setShowVoiceSettingsModal] = useState(false);
 
   const audioPlayerRef = useRef(new Audio());
-  const peerConnectionRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const dataChannelRef = useRef(null);
-  const realtimeAudioElementRef = useRef(null);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
-
-  // Load available speech synthesis voices
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      const updateVoices = () => {
-        setVoices(window.speechSynthesis.getVoices());
-      };
-      updateVoices();
-      window.speechSynthesis.onvoiceschanged = updateVoices;
-    }
-  }, []);
+  const resumeIntervalRef = useRef(null);
 
   const quickPromptsEn = [
-    '🩺 Knee & Joint Pain Care',
-    '💓 High Blood Pressure Tips',
-    '🍬 Blood Sugar Guidance',
-    '📅 Book a Specialist Doctor',
-    '🧘 Stress & Sleep Support',
+    "🩺 Knee & Joint Pain Care",
+    "💓 High Blood Pressure Tips",
+    "🍬 Blood Sugar Guidance",
+    "📅 Book a Specialist Doctor",
+    "🧘 Stress & Sleep Support",
   ];
 
   const quickPromptsHi = [
-    '🩺 घुटनों और जोड़ों के दर्द का इलाज',
-    '💓 हाई ब्लड प्रेशर कम करने के उपाय',
-    '🍬 शुगर (डायबिटीज) डाइट और लक्षण',
-    '📅 किसी विशेषज्ञ डॉक्टर से मिलें',
-    '🧘 तनाव और बेहतर नींद के सुझाव',
+    "🩺 घुटनों और जोड़ों के दर्द का इलाज",
+    "💓 हाई ब्लड प्रेशर कम करने के उपाय",
+    "🍬 शुगर (डायबिटीज) डाइट और लक्षण",
+    "📅 किसी विशेषज्ञ डॉक्टर से मिलें",
+    "🧘 तनाव और बेहतर नींद के सुझाव",
   ];
 
-  const quickPrompts = language === 'hi' ? quickPromptsHi : quickPromptsEn;
+  const quickPrompts = language === "hi" ? quickPromptsHi : quickPromptsEn;
 
-  const resumeIntervalRef = useRef(null);
-
-  // Stop any active speech synthesis or ElevenLabs audio playback cleanly
+  // Stop any active speech cleanly
   const stopSpeaking = () => {
     if (audioPlayerRef.current) {
       try {
@@ -297,208 +272,39 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         audioPlayerRef.current.currentTime = 0;
       } catch (e) {}
     }
-    setIsElevenVoicePlaying(false);
     if (resumeIntervalRef.current) {
       clearInterval(resumeIntervalRef.current);
       resumeIntervalRef.current = null;
     }
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
     setSpeakingMessageId(null);
   };
 
-  // End OpenAI Realtime Speech-to-Speech Call cleanly
-  const endRealtimeCall = () => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
-      localStreamRef.current = null;
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    if (realtimeAudioElementRef.current) {
-      realtimeAudioElementRef.current.srcObject = null;
-      realtimeAudioElementRef.current = null;
-    }
-    setIsRealtimeCallActive(false);
-    setRealtimeStatus('idle');
-  };
-
-  const toggleRealtimeMute = () => {
-    if (localStreamRef.current) {
-      const audioTrack = localStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsRealtimeMuted(!audioTrack.enabled);
-      }
-    }
-  };
-
-  // Connects Low-Latency Speech-to-Speech Call via WebRTC
-  const startRealtimeCall = async () => {
-    stopSpeaking();
-    setIsRealtimeCallActive(true);
-    setRealtimeStatus('connecting');
-    setRealtimeTranscript([]);
-
-    try {
-      // 1. Request ephemeral token from Node backend
-      const sessionRes = await chatService.createRealtimeSession({
-        apiKey: realtimeApiKey || undefined,
-        voice: 'shimmer', // Warm, gentle clinical voice
-        language,
-      });
-
-      const clientSecret = sessionRes.data?.client_secret?.value;
-      if (!clientSecret) {
-        throw new Error('Failed to obtain OpenAI Realtime ephemeral session token.');
-      }
-
-      // 2. Initialize WebRTC Peer Connection
-      const pc = new RTCPeerConnection();
-      peerConnectionRef.current = pc;
-
-      // 3. Audio output
-      const remoteAudio = new Audio();
-      remoteAudio.autoplay = true;
-      realtimeAudioElementRef.current = remoteAudio;
-
-      pc.ontrack = (e) => {
-        remoteAudio.srcObject = e.streams[0];
-      };
-
-      // 4. Capture Local Microphone
-      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStreamRef.current = localStream;
-      pc.addTrack(localStream.getTracks()[0]);
-
-      // 5. Data Channel for Events & Transcripts
-      const dc = pc.createDataChannel('oai-events');
-      dataChannelRef.current = dc;
-
-      dc.onopen = () => {
-        setRealtimeStatus('connected');
-      };
-
-      dc.onmessage = (e) => {
-        try {
-          const event = JSON.parse(e.data);
-          if (event.type === 'response.audio_transcript.delta') {
-            setRealtimeTranscript((prev) => {
-              const last = prev[prev.length - 1];
-              if (last && last.role === 'assistant') {
-                return [...prev.slice(0, -1), { role: 'assistant', text: last.text + event.delta }];
-              }
-              return [...prev, { role: 'assistant', text: event.delta }];
-            });
-            setRealtimeStatus('speaking');
-          } else if (event.type === 'conversation.item.input_audio_transcription.completed') {
-            const userText = event.transcript;
-            if (userText) {
-              setRealtimeTranscript((prev) => [...prev, { role: 'user', text: userText }]);
-            }
-            setRealtimeStatus('listening');
-          } else if (event.type === 'input_audio_buffer.speech_started') {
-            setRealtimeStatus('listening');
-          } else if (event.type === 'response.done') {
-            setRealtimeStatus('connected');
-          }
-        } catch (err) {
-          console.warn('Realtime event parse warning:', err);
-        }
-      };
-
-      // 6. WebRTC SDP Negotiation with OpenAI
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      const baseUrl = 'https://api.openai.com/v1/realtime';
-      const model = 'gpt-4o-realtime-preview';
-      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
-        method: 'POST',
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${clientSecret}`,
-          'Content-Type': 'application/sdp',
-        },
-      });
-
-      if (!sdpResponse.ok) {
-        throw new Error(`OpenAI SDP handshake failed: ${sdpResponse.statusText}`);
-      }
-
-      const answerSdp = await sdpResponse.text();
-      const answer = { type: 'answer', sdp: answerSdp };
-      await pc.setRemoteDescription(answer);
-
-      setRealtimeStatus('connected');
-    } catch (err) {
-      console.error('Realtime Speech-to-Speech connection error:', err);
-      endRealtimeCall();
-      if (err?.isKeyMissing) {
-        setShowRealtimeKeyModal(true);
-      } else {
-        alert(
-          language === 'hi'
-            ? 'लाइव वॉइस कॉल शुरू नहीं हो सकी: ' + (err.message || 'कृपया अपनी OpenAI Key जांचें')
-            : 'Could not connect live voice call: ' + (err.message || 'Check your OpenAI API key')
-        );
-      }
-    }
-  };
-
-  // Stop speech and calls when widget is closed
+  // Stop speech when widget is closed
   useEffect(() => {
     if (!isOpen) {
       stopSpeaking();
-      endRealtimeCall();
       if (recognitionRef.current && isListening) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
         setIsListening(false);
       }
     }
   }, [isOpen]);
 
-  // Initialize Web Speech Recognition (Voice Input / STT)
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((r) => r[0].transcript)
-          .join('');
-        setInputMessage(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        console.warn('Speech recognition warning:', event.error);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-  }, [language]);
-
+  // Robust Speech Recognition (Voice Input / STT)
   const toggleListening = () => {
     stopSpeaking();
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert(
-        language === 'hi'
-          ? 'आपके ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
-          : 'Voice input is not supported in your browser. Please use Google Chrome or Edge.'
+        language === "hi"
+          ? "आपके ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।"
+          : "Voice input is not supported in your browser. Please use Google Chrome or Edge."
       );
       return;
     }
@@ -517,14 +323,14 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+      recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
 
       recognition.onstart = () => {
         setIsListening(true);
       };
 
       recognition.onresult = (event) => {
-        let transcript = '';
+        let transcript = "";
         for (let i = 0; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
@@ -534,13 +340,13 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       };
 
       recognition.onerror = (event) => {
-        console.warn('Speech recognition status:', event.error);
+        console.warn("Speech recognition status:", event.error);
         setIsListening(false);
-        if (event.error === 'not-allowed') {
+        if (event.error === "not-allowed") {
           alert(
-            language === 'hi'
-              ? 'कृपया ब्राउज़र में माइक्रोफ़ोन की अनुमति (Microphone Permission) दें।'
-              : 'Please enable microphone permission in your browser.'
+            language === "hi"
+              ? "कृपया ब्राउज़र में माइक्रोफ़ोन की अनुमति (Microphone Permission) दें।"
+              : "Please enable microphone permission in your browser."
           );
         }
       };
@@ -552,27 +358,28 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err) {
-      console.warn('Speech recognition start failed:', err);
+      console.warn("Speech recognition start failed:", err);
       setIsListening(false);
     }
   };
 
-  // Text-To-Speech (TTS) Voice Note Player
+  // Clean text for natural, human speech
   const cleanTextForSpeech = (raw) => {
-    if (!raw) return '';
+    if (!raw) return "";
     return raw
-      .replace(/\[DOC-[A-Z]+-\d+\]/g, '')
-      .replace(/https?:\/\/\S+/g, '')
-      .replace(/[*#_`~>]/g, '')
-      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-      .replace(/\\text\{([^}]+)\}/g, '$1')
-      .replace(/\$([^$]+)\$/g, '$1')
-      .replace(/•|\-|\+/g, ' ')
-      .replace(/\n+/g, '. ')
-      .replace(/\s+/g, ' ')
+      .replace(/\[DOC-[A-Z]+-\d+\]/g, "")
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/[*#_`~>]/g, "")
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "")
+      .replace(/\\text\{([^}]+)\}/g, "$1")
+      .replace(/\$([^$]+)\$/g, "$1")
+      .replace(/•|\-|\+/g, " ")
+      .replace(/\n+/g, ". ")
+      .replace(/\s+/g, " ")
       .trim();
   };
 
+  // Speaks using authentic ChatGPT Human Voice (OpenAI TTS-1 / Nova)
   const speakMessage = async (msgId, content) => {
     stopSpeaking();
 
@@ -581,16 +388,15 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
 
     setSpeakingMessageId(msgId);
 
-    // 1. Prioritize ElevenLabs Neural Human Voice Model
+    // 1. Prioritize ChatGPT Neural Human Voice (OpenAI TTS-1)
     try {
       const audioUrl = await chatService.generateTTS({
-        text: clean.slice(0, 1000),
-        language,
-        apiKey: elevenApiKey || undefined,
+        text: clean.slice(0, 2000),
+        voice: selectedVoice,
+        apiKey: openAiApiKey || undefined,
       });
 
       if (audioUrl) {
-        setIsElevenVoicePlaying(true);
         audioPlayerRef.current.src = audioUrl;
         audioPlayerRef.current.onended = () => {
           stopSpeaking();
@@ -604,50 +410,38 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         return;
       }
     } catch (err) {
-      setIsElevenVoicePlaying(false);
       if (err?.isKeyMissing) {
-        console.info('ElevenLabs API key not set, falling back to browser voice.');
+        setShowVoiceSettingsModal(true);
       }
     }
 
     // 2. High-Reliability Browser SpeechSynthesis Fallback
-    if (!('speechSynthesis' in window)) return;
+    if (!("speechSynthesis" in window)) return;
 
-    // Fix Chrome paused speech state
     if (window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
 
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    utterance.lang = language === "hi" ? "hi-IN" : "en-IN";
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
 
-    const availVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
-    let selectedVoice = null;
-
-    if (language === 'hi') {
-      selectedVoice =
-        availVoices.find((v) => v.lang.toLowerCase().includes('hi-in') || v.lang.toLowerCase() === 'hi') ||
-        availVoices.find((v) => v.name.toLowerCase().includes('hindi')) ||
-        availVoices.find((v) => v.lang.includes('IN'));
-    } else {
-      selectedVoice =
-        availVoices.find((v) => v.lang.toLowerCase().includes('en-in') || v.name.toLowerCase().includes('india')) ||
-        availVoices.find((v) => v.lang.toLowerCase().startsWith('en-us')) ||
-        availVoices.find((v) => v.lang.toLowerCase().startsWith('en'));
-    }
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
+    const availVoices = window.speechSynthesis.getVoices();
+    if (availVoices && availVoices.length > 0) {
+      const matched = language === "hi"
+        ? availVoices.find((v) => v.lang.toLowerCase().includes("hi-in") || v.lang.toLowerCase() === "hi") ||
+          availVoices.find((v) => v.name.toLowerCase().includes("hindi")) ||
+          availVoices.find((v) => v.lang.includes("IN"))
+        : availVoices.find((v) => v.lang.toLowerCase().includes("en-in") || v.name.toLowerCase().includes("india")) ||
+          availVoices.find((v) => v.lang.toLowerCase().startsWith("en"));
+      if (matched) utterance.voice = matched;
     }
 
     utterance.onstart = () => {
       setSpeakingMessageId(msgId);
-      // Workaround for Chrome 15s freeze bug: keep active resume pulse
       if (resumeIntervalRef.current) clearInterval(resumeIntervalRef.current);
       resumeIntervalRef.current = setInterval(() => {
-        if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
           window.speechSynthesis.pause();
           window.speechSynthesis.resume();
         } else {
@@ -657,16 +451,9 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       }, 5000);
     };
 
-    utterance.onend = () => {
-      stopSpeaking();
-    };
+    utterance.onend = () => stopSpeaking();
+    utterance.onerror = () => stopSpeaking();
 
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis error:', e);
-      stopSpeaking();
-    };
-
-    setSpeakingMessageId(msgId);
     window.speechSynthesis.speak(utterance);
   };
 
