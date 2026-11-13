@@ -105,13 +105,13 @@ export const chatService = {
   },
 
   /**
-   * ElevenLabs Text-to-Speech audio generator
+   * OpenAI Neural Speech Audio Generator (ChatGPT Voice Assistant)
    */
-  async generateTTS({ text, language = 'en', voiceId, apiKey }) {
+  async generateTTS({ text, voice = 'nova', speed = 1.0, apiKey }) {
     const res = await fetch(`${BASE_URL}/tts`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ text, language, voiceId, apiKey }),
+      body: JSON.stringify({ text, voice, speed, apiKey }),
     });
 
     if (!res.ok) {
@@ -121,24 +121,6 @@ export const chatService = {
 
     const blob = await res.blob();
     return URL.createObjectURL(blob);
-  },
-
-  /**
-   * OpenAI Realtime Speech-to-Speech WebRTC session generation
-   */
-  async createRealtimeSession({ apiKey, voice = 'shimmer', language = 'en' } = {}) {
-    const res = await fetch(`${BASE_URL}/realtime-session`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ apiKey, voice, language }),
-    });
-
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      throw errJson;
-    }
-
-    return res.json();
   },
 };
 

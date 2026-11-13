@@ -1025,27 +1025,14 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             {autoSpeak ? <Volume2 size={13} className="text-emerald-300" /> : <VolumeX size={13} />}
           </button>
 
-          {/* ElevenLabs Human Voice Config */}
+          {/* ChatGPT Voice Model & Key Config */}
           <button
-            onClick={() => setShowVoiceKeyModal(true)}
-            className={`p-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
-              elevenApiKey
-                ? 'bg-amber-400/25 text-amber-200 border border-amber-300/40 shadow-xs'
-                : 'bg-white/10 text-teal-200 hover:text-white'
-            }`}
-            title="Configure ElevenLabs Human Voice"
+            onClick={() => setShowVoiceSettingsModal(true)}
+            className="flex items-center gap-1 px-2 py-1 bg-white/10 hover:bg-white/20 text-teal-100 rounded-lg text-xs font-semibold transition-all border border-teal-500/30 shrink-0"
+            title="ChatGPT Voice Settings (Voice Model & API Key)"
           >
-            <Headphones size={13} className={elevenApiKey ? 'text-amber-300' : ''} />
-          </button>
-
-          {/* OpenAI Realtime Low-Latency Live Call Button */}
-          <button
-            onClick={startRealtimeCall}
-            className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs ring-2 ring-emerald-400/40 shrink-0"
-            title="Start Low-Latency Speech-to-Speech Call with Doctor AI (OpenAI Realtime)"
-          >
-            <Phone size={11} className="fill-white" />
-            <span className="text-[10px] font-black uppercase tracking-wider">{language === 'hi' ? 'लाइव कॉल' : 'Live Call'}</span>
+            <Headphones size={12} className={openAiApiKey ? 'text-emerald-300' : 'text-teal-200'} />
+            <span className="text-[10px] font-bold capitalize">{selectedVoice}</span>
           </button>
 
           {/* Sessions Dropdown Toggle */}
@@ -1132,9 +1119,9 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
               <span className="w-1 bg-emerald-200 rounded-full animate-bounce h-2"></span>
             </div>
             <span className="text-[11px] font-semibold text-teal-100 flex items-center gap-1.5">
-              <span>{isElevenVoicePlaying ? '🎙️ ElevenLabs Human Voice:' : '🔊 Assistant Voice:'}</span>
+              <span>🎙️ ChatGPT Voice ({selectedVoice.charAt(0).toUpperCase() + selectedVoice.slice(1)}):</span>
               <span className="text-emerald-300 font-normal">
-                {language === 'hi' ? 'सलाह बोलकर दी जा रही है...' : 'Speaking medical guidance...'}
+                {language === 'hi' ? 'सलाह बोलकर दी जा रही है...' : 'Speaking advice...'}
               </span>
             </span>
           </div>
@@ -1148,126 +1135,8 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         </div>
       )}
 
-      {/* 2.5 Realtime Speech-to-Speech Call Screen (OpenAI Realtime WebRTC) */}
-      {isRealtimeCallActive ? (
-        <div className="flex-1 flex flex-col justify-between bg-gradient-to-b from-slate-950 via-teal-950 to-slate-950 text-white p-6 relative overflow-hidden animate-in fade-in duration-300">
-          {/* Header */}
-          <div className="flex items-center justify-between z-10">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-extrabold text-emerald-400 tracking-wider uppercase">
-                {realtimeStatus === 'connecting'
-                  ? 'Connecting Call...'
-                  : realtimeStatus === 'speaking'
-                  ? 'Dr. Swasthya Speaking'
-                  : 'Listening (Interrupt anytime)'}
-              </span>
-            </div>
-            <span className="text-[10px] bg-white/10 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">
-              WebRTC ~280ms
-            </span>
-          </div>
-
-          {/* Animated 3D-like Sound Orb */}
-          <div className="flex flex-col items-center justify-center my-auto relative z-10 py-6">
-            <div className="relative flex items-center justify-center">
-              <div
-                className={`absolute w-44 h-44 rounded-full transition-all duration-700 ${
-                  realtimeStatus === 'speaking'
-                    ? 'bg-teal-500/25 animate-ping'
-                    : realtimeStatus === 'listening'
-                    ? 'bg-emerald-500/15 animate-pulse'
-                    : 'bg-slate-700/10'
-                }`}
-              />
-              <div
-                className={`absolute w-36 h-36 rounded-full transition-all duration-500 ${
-                  realtimeStatus === 'speaking'
-                    ? 'bg-teal-400/35 blur-md animate-pulse'
-                    : 'bg-emerald-400/20 blur-sm'
-                }`}
-              />
-
-              <div
-                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 ${
-                  realtimeStatus === 'speaking'
-                    ? 'bg-gradient-to-br from-teal-400 via-emerald-500 to-teal-600 scale-110 shadow-teal-500/50'
-                    : realtimeStatus === 'listening'
-                    ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 scale-100 shadow-emerald-500/40'
-                    : 'bg-gradient-to-br from-slate-700 to-slate-800 scale-95 shadow-slate-900'
-                }`}
-              >
-                {realtimeStatus === 'speaking' ? (
-                  <Volume2 className="w-10 h-10 text-white animate-bounce" />
-                ) : isRealtimeMuted ? (
-                  <MicOff className="w-10 h-10 text-rose-300" />
-                ) : (
-                  <Mic className="w-10 h-10 text-white animate-pulse" />
-                )}
-              </div>
-            </div>
-
-            <div className="text-center mt-6 space-y-1">
-              <h3 className="text-lg font-black tracking-tight text-white">
-                Dr. Swasthya (Live AI Doctor)
-              </h3>
-              <p className="text-xs text-teal-200/80 max-w-xs">
-                {language === 'hi'
-                  ? 'अपनी भाषा (हिन्दी या English) में बात करें। आप बीच में कभी भी टोक सकते हैं।'
-                  : 'Speak naturally. Low-latency bidirectional speech with zero typing required.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Real-time Streaming Transcript Drawer */}
-          <div className="bg-slate-900/85 backdrop-blur-md rounded-2xl p-3 border border-slate-800 max-h-32 overflow-y-auto text-xs space-y-2 z-10 shadow-inner">
-            {realtimeTranscript.length === 0 ? (
-              <p className="text-slate-400 italic text-center text-[11px]">
-                {language === 'hi' ? 'नमस्ते! बोलिए, मैं सुन रहा हूँ...' : 'Listening... Start speaking whenever you are ready.'}
-              </p>
-            ) : (
-              realtimeTranscript.slice(-3).map((t, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <span className="font-extrabold text-[10px] text-teal-400 uppercase shrink-0">
-                    {t.role === 'user' ? 'You:' : 'Doctor:'}
-                  </span>
-                  <span className="text-slate-200 text-[11px] leading-snug">{t.text}</span>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Action Call Bar */}
-          <div className="flex items-center justify-center gap-4 pt-4 z-10">
-            <button
-              onClick={toggleRealtimeMute}
-              className={`p-3.5 rounded-full transition-all flex items-center justify-center shadow-lg ${
-                isRealtimeMuted
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
-                  : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-              }`}
-              title={isRealtimeMuted ? 'Unmute' : 'Mute'}
-            >
-              {isRealtimeMuted ? <MicOff size={20} /> : <Mic size={20} />}
-            </button>
-
-            <button
-              onClick={endRealtimeCall}
-              className="px-6 py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
-              title="Hang up call"
-            >
-              <PhoneOff size={16} />
-              <span>End Call</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* 3. Messages Feed */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/80">
+      {/* 3. Messages Feed */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/80">
         {isInitializing && (
           <div className="flex items-center justify-center h-32 text-slate-400 text-xs gap-2">
             <Loader2 size={16} className="animate-spin text-teal-600" />
@@ -1670,27 +1539,25 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           <Send size={15} />
         </button>
       </form>
-      </>
-      )}
 
-      {/* ElevenLabs Human Voice Settings Modal */}
-      {showVoiceKeyModal && (
+      {/* ChatGPT Voice Assistant Settings Modal */}
+      {showVoiceSettingsModal && (
         <div className="absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
                   <Headphones className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    ElevenLabs Neural Voice
+                    ChatGPT Voice Assistant
                   </h4>
-                  <span className="text-[10px] text-teal-700 font-semibold">Eleven Multilingual v2</span>
+                  <span className="text-[10px] text-teal-700 font-semibold">OpenAI Neural Voice (TTS-1)</span>
                 </div>
               </div>
               <button
-                onClick={() => setShowVoiceKeyModal(false)}
+                onClick={() => setShowVoiceSettingsModal(false)}
                 className="text-slate-400 hover:text-slate-700 font-bold text-sm w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100"
               >
                 ✕
@@ -1698,110 +1565,64 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Activate ultra-realistic, natural physician human speech with <strong>ElevenLabs</strong>. Replaces robotic computer voices with real breathing, warm doctor intonations, and authentic Hindi and English pronunciation.
+              Experience authentic, human-like responses just like ChatGPT's Voice Assistant. Powered by OpenAI's official speech model with natural breathing, cadence, and clear pronunciation in Hindi and English.
             </p>
 
+            {/* Choose ChatGPT Voice */}
             <div className="space-y-1.5">
               <label className="block text-[11px] font-bold text-slate-700">
-                ElevenLabs API Key (xi-api-key)
+                Choose ChatGPT Voice
               </label>
-              <input
-                type="password"
-                placeholder="xi-api-key..."
-                value={elevenApiKey}
-                onChange={(e) => setElevenApiKey(e.target.value)}
-                className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
-              />
-              <span className="text-[10px] text-slate-400 block leading-tight">
-                Can also be set permanently in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">ELEVENLABS_API_KEY</code>.
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center pt-2">
-              <button
-                onClick={() => {
-                  localStorage.removeItem('elevenlabs_api_key');
-                  setElevenApiKey('');
-                  setShowVoiceKeyModal(false);
-                }}
-                className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-semibold transition"
-              >
-                Reset
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowVoiceKeyModal(false)}
-                  className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    if (elevenApiKey.trim()) {
-                      localStorage.setItem('elevenlabs_api_key', elevenApiKey.trim());
-                    }
-                    setShowVoiceKeyModal(false);
-                  }}
-                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
-                >
-                  Save & Activate
-                </button>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'nova', name: 'Nova', desc: 'Warm & Empathetic (Female)' },
+                  { id: 'shimmer', name: 'Shimmer', desc: 'Expressive & Gentle (Female)' },
+                  { id: 'alloy', name: 'Alloy', desc: 'Clear & Neutral (Unisex)' },
+                  { id: 'echo', name: 'Echo', desc: 'Warm Doctor (Male)' },
+                ].map((v) => (
+                  <button
+                    type="button"
+                    key={v.id}
+                    onClick={() => {
+                      setSelectedVoice(v.id);
+                      localStorage.setItem('chatgpt_voice', v.id);
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      selectedVoice === v.id
+                        ? 'border-teal-600 bg-teal-50/80 text-teal-950 font-bold shadow-xs'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{v.name}</div>
+                    <div className="text-[10px] text-slate-500 leading-tight">{v.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* OpenAI Realtime Speech-to-Speech Settings Modal */}
-      {showRealtimeKeyModal && (
-        <div className="absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Phone className="w-4 h-4 fill-emerald-600" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    OpenAI Realtime Voice Call
-                  </h4>
-                  <span className="text-[10px] text-teal-700 font-semibold">Speech-to-Speech (WebRTC)</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowRealtimeKeyModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Connect to <strong>Dr. Swasthya</strong> over a low-latency (~280ms) live voice consultation powered by <strong>OpenAI Realtime API (gpt-4o-realtime-preview)</strong>. Natural speech-to-speech with live voice interruption in Hindi and English.
-            </p>
-
-            <div className="space-y-1.5">
+            {/* API Key */}
+            <div className="space-y-1.5 pt-1">
               <label className="block text-[11px] font-bold text-slate-700">
                 OpenAI API Key (sk-...)
               </label>
               <input
                 type="password"
                 placeholder="sk-proj-..."
-                value={realtimeApiKey}
-                onChange={(e) => setRealtimeApiKey(e.target.value)}
+                value={openAiApiKey}
+                onChange={(e) => setOpenAiApiKey(e.target.value)}
                 className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
               />
               <span className="text-[10px] text-slate-400 block leading-tight">
-                Can also be set in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">OPENAI_API_KEY</code>.
+                Can also be configured in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">OPENAI_API_KEY</code>.
               </span>
             </div>
 
             <div className="flex justify-between items-center pt-2">
               <button
                 onClick={() => {
-                  localStorage.removeItem('openai_realtime_api_key');
-                  setRealtimeApiKey('');
-                  setShowRealtimeKeyModal(false);
+                  localStorage.removeItem('openai_tts_key');
+                  setOpenAiApiKey('');
+                  setShowVoiceSettingsModal(false);
                 }}
                 className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-semibold transition"
               >
@@ -1809,23 +1630,21 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
               </button>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowRealtimeKeyModal(false)}
+                  onClick={() => setShowVoiceSettingsModal(false)}
                   className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => {
-                    if (realtimeApiKey.trim()) {
-                      localStorage.setItem('openai_realtime_api_key', realtimeApiKey.trim());
-                      setShowRealtimeKeyModal(false);
-                      startRealtimeCall();
+                    if (openAiApiKey.trim()) {
+                      localStorage.setItem('openai_tts_key', openAiApiKey.trim());
                     }
+                    setShowVoiceSettingsModal(false);
                   }}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
                 >
-                  <Phone size={12} className="fill-white" />
-                  <span>Save & Call</span>
+                  Save & Apply
                 </button>
               </div>
             </div>

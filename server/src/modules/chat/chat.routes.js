@@ -24,10 +24,7 @@ router.post('/sessions/:id/messages', chatRateLimiter, chatController.sendMessag
 router.post('/messages/:id/feedback', chatController.submitFeedback);
 router.post('/messages/:id/confirm-action', chatRateLimiter, chatController.confirmAction);
 
-// ElevenLabs Neural Human Voice Generation
-router.post('/tts', chatRateLimiter, chatController.generateElevenLabsTTS);
-
-// OpenAI Realtime Low-Latency Speech-to-Speech Session Generation
-router.post('/realtime-session', chatRateLimiter, chatController.createRealtimeSession);
+// OpenAI Neural Speech (ChatGPT Voice Assistant)
+router.post('/tts', chatRateLimiter, chatController.generateChatGPTTTS);
 
 export default router;

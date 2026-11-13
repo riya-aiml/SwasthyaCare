@@ -182,52 +182,47 @@ class ChatController {
 
   /**
    * POST /api/chat/tts
-   * ElevenLabs Neural Human Voice Generation (Eleven Multilingual v2)
+   * OpenAI Neural Human Speech (ChatGPT Voice Assistant Engine)
+   * Uses OpenAI tts-1 / tts-1-hd with authentic human voices (nova, alloy, shimmer, echo)
    */
-  async generateElevenLabsTTS(req, res, next) {
+  async generateChatGPTTTS(req, res, next) {
     try {
-      const { text, language = 'en', voiceId, apiKey } = req.body;
+      const { text, voice = 'nova', speed = 1.0, apiKey } = req.body;
 
       if (!text || !text.trim()) {
         return res.status(400).json({
           success: false,
-          error: { message: 'Text content is required for voice generation.' },
+          error: { message: 'Text content is required for voice synthesis.' },
         });
       }
 
-      const effectiveApiKey = apiKey || process.env.ELEVENLABS_API_KEY;
+      const effectiveApiKey = apiKey || process.env.OPENAI_API_KEY;
 
       if (!effectiveApiKey) {
         return res.status(400).json({
           success: false,
           isKeyMissing: true,
           error: {
-            message: 'ElevenLabs API key is not configured. Set ELEVENLABS_API_KEY in server/.env or configure in voice settings.',
+            message: 'OpenAI API key is required for ChatGPT voice. Set OPENAI_API_KEY in server/.env or configure in voice settings.',
           },
         });
       }
 
-      // Default warm, compassionate doctor voices:
-      // Sarah: EXAVITQu4vr4xnSDxMaL (warm, gentle female physician voice)
-      // Rachel: 21m00Tcm4TlvDq8ikWAM (clear, empathetic physician voice)
-      const defaultVoiceId = voiceId || (language === 'hi' ? '21m00Tcm4TlvDq8ikWAM' : 'EXAVITQu4vr4xnSDxMaL');
+      // Valid OpenAI ChatGPT voices: 'nova' (warm physician female), 'alloy' (neutral), 'shimmer' (expressive), 'echo' (warm male), 'onyx' (deep)
+      const validVoices = ['nova', 'alloy', 'shimmer', 'echo', 'onyx', 'fable'];
+      const selectedVoice = validVoices.includes(voice.toLowerCase()) ? voice.toLowerCase() : 'nova';
 
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${defaultVoiceId}`, {
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
         headers: {
-          'xi-api-key': effectiveApiKey,
+          Authorization: `Bearer ${effectiveApiKey}`,
           'Content-Type': 'application/json',
-          'Accept': 'audio/mpeg',
         },
         body: JSON.stringify({
-          text: text.slice(0, 1000),
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.2,
-            use_speaker_boost: true,
-          },
+          model: 'tts-1', // Official ChatGPT speech model (supports English, Hindi, and 50+ languages)
+          voice: selectedVoice,
+          input: text.slice(0, 4000), // Clean conversational slice
+          speed: Math.max(0.75, Math.min(speed, 1.25)),
         }),
       });
 
@@ -235,7 +230,7 @@ class ChatController {
         const errorText = await response.text();
         return res.status(response.status).json({
           success: false,
-          error: { message: `ElevenLabs API error: ${errorText}` },
+          error: { message: `OpenAI Speech error: ${errorText}` },
         });
       }
 
@@ -249,88 +244,6 @@ class ChatController {
       });
 
       return res.send(buffer);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  /**
-   * POST /api/chat/realtime-session
-   * Generates ephemeral client token for OpenAI Realtime Speech-to-Speech WebRTC
-   * Model: gpt-4o-realtime-preview (sub-300ms bidirectional audio)
-   */
-  async createRealtimeSession(req, res, next) {
-    try {
-      const { apiKey, voice = 'shimmer', language = 'en' } = req.body;
-      const effectiveKey = apiKey || process.env.OPENAI_API_KEY;
-
-      if (!effectiveKey) {
-        return res.status(400).json({
-          success: false,
-          isKeyMissing: true,
-          error: {
-            message: 'OpenAI API key is required for Realtime Speech-to-Speech. Configure OPENAI_API_KEY in server/.env or settings.',
-          },
-        });
-      }
-
-      const instructions = `You are Dr. Swasthya, an experienced, warm, and attentive AI Physician for SwasthyaCare.
-You are in a live low-latency voice consultation with a patient.
-- Keep answers conversational, empathetic, and spoken naturally like on a phone call (2 to 4 sentences).
-- Ground advice in verified ICMR and WHO clinical protocols.
-- If the patient speaks Hindi or Hinglish, speak back in warm, natural Hindi.
-- If the patient speaks English, speak in clear, caring English.
-- If acute emergency signs occur (severe chest pain, stroke, breathlessness, suicide), tell them immediately to call 112 / 108.
-- Never output markdown syntax, code, asterisks, or brackets because your output is directly spoken to the patient.`;
-
-      let response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${effectiveKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-realtime-preview',
-          voice,
-        }),
-      });
-
-      if (!response.ok && response.status === 404) {
-        // Fallback to sessions endpoint only if 404
-        response = await fetch('https://api.openai.com/v1/realtime/sessions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${effectiveKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-realtime-preview',
-            voice,
-            instructions,
-          }),
-        });
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        return res.status(response.status).json({
-          success: false,
-          error: { message: `OpenAI Realtime API error: ${errorText}` },
-        });
-      }
-
-      const sessionData = await response.json();
-      const clientSecretValue = sessionData.value || sessionData.client_secret?.value || effectiveKey;
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          ...sessionData,
-          client_secret: {
-            value: clientSecretValue,
-          },
-        },
-      });
     } catch (error) {
       next(error);
     }
