@@ -142,7 +142,7 @@ class ChatService {
   /**
    * Post user message and generate assistant response via FastAPI Dual-RAG RPC
    */
-  async processUserMessage(sessionId, user, content) {
+  async processUserMessage(sessionId, user, content, language) {
     const session = await ChatSession.findOne({
       _id: sessionId,
       status: 'active',
@@ -159,6 +159,11 @@ class ChatService {
       const error = new Error('Forbidden: You cannot post messages to another user\'s session.');
       error.statusCode = 403;
       throw error;
+    }
+
+    if (language && session.language !== language) {
+      session.language = language;
+      await session.save();
     }
 
     // Persist User Message
@@ -210,6 +215,7 @@ class ChatService {
         message: content.trim(),
         conversation_history: conversationHistory,
         patient_context: patientContext,
+        language: language || session.language || 'en',
       };
 
       const timeoutMs = Number(process.env.AI_SERVICE_TIMEOUT_MS) || 30000;

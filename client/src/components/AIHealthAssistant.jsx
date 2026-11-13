@@ -51,6 +51,11 @@ import {
   Activity,
   Award,
   BookOpen,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Languages,
 } from 'lucide-react';
 import chatService from '../services/chatService.js';
 import { getAuthToken } from '../services/authService.js';
@@ -223,15 +228,128 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [showSessionsDropdown, setShowSessionsDropdown] = useState(false);
   const [expandedCitations, setExpandedCitations] = useState({});
   const [actionLoading, setActionLoading] = useState({});
+  const [language, setLanguage] = useState('en'); // 'en' | 'hi'
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  const quickPrompts = [
+  const quickPromptsEn = [
     '🩺 Knee & Joint Pain Care',
     '💓 High Blood Pressure Tips',
     '🍬 Blood Sugar Guidance',
     '📅 Book a Specialist Doctor',
     '🧘 Stress & Sleep Support',
   ];
+
+  const quickPromptsHi = [
+    '🩺 घुटनों और जोड़ों के दर्द का इलाज',
+    '💓 हाई ब्लड प्रेशर कम करने के उपाय',
+    '🍬 शुगर (डायबिटीज) डाइट और लक्षण',
+    '📅 किसी विशेषज्ञ डॉक्टर से मिलें',
+    '🧘 तनाव और बेहतर नींद के सुझाव',
+  ];
+
+  const quickPrompts = language === 'hi' ? quickPromptsHi : quickPromptsEn;
+
+  // Initialize Web Speech Recognition (Voice Input / STT)
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((r) => r[0].transcript)
+          .join('');
+        setInputMessage(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition warning:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, [language]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert(
+        language === 'hi'
+          ? 'आपके ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
+          : 'Voice input is not supported in your browser. Please use Google Chrome or Edge.'
+      );
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.warn('Recognition start error:', err);
+      }
+    }
+  };
+
+  // Text-To-Speech (TTS) Voice Note Player
+  const cleanTextForSpeech = (raw) => {
+    if (!raw) return '';
+    return raw
+      .replace(/\[DOC-[A-Z]+-\d+\]/g, '')
+      .replace(/[*#_`~]/g, '')
+      .replace(/\\text\{([^}]+)\}/g, '$1')
+      .replace(/\$([^$]+)\$/g, '$1')
+      .replace(/\n+/g, '. ')
+      .trim();
+  };
+
+  const toggleSpeak = (msgId, content) => {
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech audio is not supported in this browser.');
+      return;
+    }
+
+    if (speakingMessageId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMessageId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const clean = cleanTextForSpeech(content);
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    utterance.rate = 0.95;
+
+    // Pick appropriate voice if present
+    const voices = window.speechSynthesis.getVoices();
+    const targetVoice = voices.find((v) =>
+      language === 'hi' ? v.lang.includes('hi') : v.lang.includes('en-IN') || v.lang.includes('en-US')
+    );
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+    }
+
+    utterance.onend = () => setSpeakingMessageId(null);
+    utterance.onerror = () => setSpeakingMessageId(null);
+
+    setSpeakingMessageId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -384,7 +502,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         setActiveSessionId(currentSessionId);
       }
 
-      const res = await chatService.sendMessage(currentSessionId, text);
+      const res = await chatService.sendMessage(currentSessionId, text, language);
       const { assistantMessage } = res.data || {};
 
       if (assistantMessage) {
@@ -525,7 +643,33 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          {/* Language Toggle: English | Hindi */}
+          <div className="flex items-center bg-teal-950/70 p-0.5 rounded-lg border border-teal-600/40 text-[10px]">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-2 py-0.5 rounded-md font-bold transition-all ${
+                language === 'en'
+                  ? 'bg-white text-teal-950 shadow-xs'
+                  : 'text-teal-200 hover:text-white'
+              }`}
+              title="Switch to English"
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLanguage('hi')}
+              className={`px-2 py-0.5 rounded-md font-bold transition-all ${
+                language === 'hi'
+                  ? 'bg-white text-teal-950 shadow-xs'
+                  : 'text-teal-200 hover:text-white'
+              }`}
+              title="हिन्दी में बात करें"
+            >
+              हिन्दी
+            </button>
+          </div>
+
           {/* Sessions Dropdown Toggle */}
           <div className="relative">
             <button
@@ -859,7 +1003,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
                 )}
               </div>
 
-              {/* Assistant Message Footer: Feedback Buttons, Latency, and Provider */}
+              {/* Assistant Message Footer: Feedback Buttons, Voice Read-Aloud, Latency, and Provider */}
               {!isUser && !msg.isEmergency && (
                 <div className="flex items-center gap-2 mt-1 px-1.5 text-[11px] text-slate-400">
                   <div className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded-md border border-slate-200/60 shadow-2xs">
@@ -882,6 +1026,30 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
                       <ThumbsDown size={12} />
                     </button>
                   </div>
+
+                  {/* Text-to-Speech Voice Output Button */}
+                  <button
+                    onClick={() => toggleSpeak(msg._id, msg.content)}
+                    className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                      speakingMessageId === msg._id
+                        ? 'border-teal-400 bg-teal-50 text-teal-800 font-bold shadow-xs'
+                        : 'border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    }`}
+                    title={speakingMessageId === msg._id ? (language === 'hi' ? 'आवाज़ बंद करें' : 'Stop voice note') : (language === 'hi' ? 'बोलकर सुनाएं' : 'Listen aloud')}
+                  >
+                    {speakingMessageId === msg._id ? (
+                      <>
+                        <VolumeX size={11} className="text-teal-700 animate-pulse" />
+                        <span>{language === 'hi' ? 'आवाज़ रोकें' : 'Stop'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 size={11} />
+                        <span>{language === 'hi' ? 'सुनें' : 'Listen'}</span>
+                      </>
+                    )}
+                  </button>
+
                   {msg.latencyMs > 0 && <span>• {(msg.latencyMs / 1000).toFixed(1)}s</span>}
                   {msg.provider && <span>• {msg.provider === 'anthropic' ? 'OmniRoute' : msg.provider}</span>}
                 </div>
@@ -917,7 +1085,26 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         </div>
       )}
 
-      {/* 5. Input Area */}
+      {/* Voice Listening Live Indicator */}
+      {isListening && (
+        <div className="px-3.5 py-1.5 bg-rose-50 border-t border-rose-200 text-rose-800 text-xs font-semibold flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
+            <span className="text-[11px]">
+              {language === 'hi' ? '🎙️ आपकी आवाज़ सुन रहे हैं... बोलिए...' : '🎙️ Listening... Speak your health question...'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleListening}
+            className="text-[10px] px-2 py-0.5 bg-rose-200 hover:bg-rose-300 text-rose-900 rounded-md font-bold transition"
+          >
+            {language === 'hi' ? 'पूर्ण' : 'Done'}
+          </button>
+        </div>
+      )}
+
+      {/* 5. Input Area with Voice (Mic) & Text */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -925,11 +1112,28 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         }}
         className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shadow-xs"
       >
+        <button
+          type="button"
+          onClick={toggleListening}
+          className={`p-2.5 rounded-xl transition-all flex items-center justify-center shrink-0 ${
+            isListening
+              ? 'bg-rose-500 text-white shadow-md animate-pulse ring-2 ring-rose-300'
+              : 'bg-slate-100 text-slate-600 hover:bg-teal-50 hover:text-teal-800'
+          }`}
+          title={isListening ? (language === 'hi' ? 'माइक बंद करें' : 'Stop voice') : (language === 'hi' ? 'बोलकर पूछें (माइक)' : 'Speak your question (Mic)')}
+        >
+          {isListening ? <MicOff size={15} /> : <Mic size={15} />}
+        </button>
+
         <input
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder="Describe your symptoms or ask a health question..."
+          placeholder={
+            isListening
+              ? (language === 'hi' ? 'सुन रहे हैं... बोलिए...' : 'Listening... Speak now...')
+              : (language === 'hi' ? 'अपनी समस्या बोलें या टाइप करें...' : 'Ask a question or tap mic to speak...')
+          }
           disabled={isLoading}
           maxLength={1000}
           className="flex-1 text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600 focus:bg-white text-slate-900 placeholder:text-slate-400 transition-all font-normal"
@@ -937,7 +1141,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         <button
           type="submit"
           disabled={!inputMessage.trim() || isLoading}
-          className="p-2.5 bg-teal-700 text-white rounded-xl hover:bg-teal-800 disabled:opacity-40 disabled:hover:bg-teal-700 transition-colors shadow-xs"
+          className="p-2.5 bg-teal-700 text-white rounded-xl hover:bg-teal-800 disabled:opacity-40 disabled:hover:bg-teal-700 transition-colors shadow-xs shrink-0"
           title="Send message"
         >
           <Send size={15} />

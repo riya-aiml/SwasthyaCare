@@ -96,7 +96,7 @@ class ChatController {
   async sendMessage(req, res, next) {
     try {
       const { id } = req.params;
-      const { message } = req.body;
+      const { message, language } = req.body;
 
       if (!message || typeof message !== 'string' || message.trim().length === 0) {
         return res.status(400).json({
@@ -115,7 +115,8 @@ class ChatController {
       const result = await chatService.processUserMessage(
         id,
         req.user,
-        message
+        message,
+        language
       );
 
       res.status(200).json({

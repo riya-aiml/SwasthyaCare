@@ -714,6 +714,21 @@ class ChatRAGService:
         intent = IntentClassifier.classify_intent(user_msg)
         is_emergency = intent == ChatIntent.INTENT_EMERGENCY
 
+        # Step 1.5: Anti-Prescription & Dosage Refusal Guardrail
+        if not is_emergency and IntentClassifier.detect_prescription_request(user_msg):
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            return ChatOrchestrationResponse(
+                intent=intent,
+                is_emergency=False,
+                response_text=PRESCRIPTION_REFUSAL_TEXT,
+                citations=[],
+                action_proposal=None,
+                latency_ms=elapsed_ms,
+                provider="anti-prescription-guardrail",
+                model="clinical-safety-v1.0",
+                tokens_used={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            )
+
         # Step 2: Retrieve from appropriate domain
         citations: List[DocumentChunk] = []
         if not is_emergency:
@@ -810,6 +825,21 @@ class ChatRAGService:
                     f"3. Reassure them that you have matched them with {doc} ({spec}) and an appointment card is ready below for 1-click booking.\n"
                     f"4. Keep your answer brief (2-3 concise paragraphs), empathetic, and easy to understand."
                 )
+
+        # Step 3.5: Multi-Language & Hindi Communication Handling
+        lang = getattr(request, "language", "en") or "en"
+        has_devanagari = bool(re.search(r"[ऀ-ॿ]", user_msg))
+        is_hindi = (lang == "hi") or has_devanagari
+
+        if is_hindi:
+            system_prompt += (
+                "\n\n[MANDATORY BILINGUAL HINDI / हिन्दी GUIDANCE]:\n"
+                "The patient has selected Hindi or is communicating in Hindi/Hinglish.\n"
+                "You MUST generate your entire response in clear, polite, warm, and natural Hindi (using Devanagari script).\n"
+                "Explain medical points in everyday accessible language that patients in India understand comfortably.\n"
+                "Example phrases: 'नमस्ते! मैं आपकी मदद करने के लिए यहाँ हूँ', 'कृपया तुरंत डॉक्टर से संपर्क करें'.\n"
+                "Do NOT use heavy or outdated Sanskrit terms. Keep your tone kind, professional, and empathetic like an experienced Indian physician."
+            )
 
         # Step 4: Generate response via configured Provider
         conv_hist = [

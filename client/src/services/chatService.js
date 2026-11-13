@@ -71,11 +71,11 @@ export const chatService = {
   /**
    * Send user message to session and receive assistant response
    */
-  async sendMessage(sessionId, message) {
+  async sendMessage(sessionId, message, language = 'en') {
     const res = await fetch(`${BASE_URL}/sessions/${sessionId}/messages`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, language }),
     });
     return handleResponse(res);
   },

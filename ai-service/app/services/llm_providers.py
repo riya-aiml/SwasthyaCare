@@ -521,7 +521,7 @@ class AnthropicClaudeProvider(BaseLLMProvider):
                 [f"[{c.doc_id}] ({c.source_organization} - {c.title}):\n{c.text[:400]}" for c in citations]
             )
 
-            full_system = f"{CLINICAL_SYSTEM_PROMPT}\n\nVERIFIED GUIDELINES:\n{citations_text}"
+            full_system = f"{system_prompt}\n\nVERIFIED GUIDELINES:\n{citations_text}"
             if patient_context:
                 full_system += f"\n\nPATIENT PROFILE: Age {patient_context.get('patientAge', 'N/A')}, Gender {patient_context.get('patientGender', 'N/A')}"
 
@@ -609,7 +609,7 @@ class OpenAIProvider(BaseLLMProvider):
             citations_text = "\n\n".join(
                 [f"[{c.doc_id}] ({c.source_organization} - {c.title}):\n{c.text[:400]}" for c in citations]
             )
-            full_system = f"{CLINICAL_SYSTEM_PROMPT}\n\nVERIFIED GUIDELINES:\n{citations_text}"
+            full_system = f"{system_prompt}\n\nVERIFIED GUIDELINES:\n{citations_text}"
 
             messages = [{"role": "system", "content": full_system}]
             if conversation_history:

@@ -95,6 +95,7 @@ class ChatOrchestrationRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="Incoming user query")
     conversation_history: List[ChatTurn] = Field(default_factory=list, description="Bounded previous turns (max 10)")
     patient_context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Age, gender, recent risk assessments")
+    language: Optional[str] = Field("en", description="Target language ('en', 'hi', etc.)")
 
 
 class ChatOrchestrationResponse(BaseModel):
