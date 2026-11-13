@@ -253,6 +253,88 @@ class ChatController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/chat/realtime-session
+   * Generates ephemeral client token for OpenAI Realtime Speech-to-Speech WebRTC
+   * Model: gpt-4o-realtime-preview (sub-300ms bidirectional audio)
+   */
+  async createRealtimeSession(req, res, next) {
+    try {
+      const { apiKey, voice = 'shimmer', language = 'en' } = req.body;
+      const effectiveKey = apiKey || process.env.OPENAI_API_KEY;
+
+      if (!effectiveKey) {
+        return res.status(400).json({
+          success: false,
+          isKeyMissing: true,
+          error: {
+            message: 'OpenAI API key is required for Realtime Speech-to-Speech. Configure OPENAI_API_KEY in server/.env or settings.',
+          },
+        });
+      }
+
+      const instructions = `You are Dr. Swasthya, an experienced, warm, and attentive AI Physician for SwasthyaCare.
+You are in a live low-latency voice consultation with a patient.
+- Keep answers conversational, empathetic, and spoken naturally like on a phone call (2 to 4 sentences).
+- Ground advice in verified ICMR and WHO clinical protocols.
+- If the patient speaks Hindi or Hinglish, speak back in warm, natural Hindi.
+- If the patient speaks English, speak in clear, caring English.
+- If acute emergency signs occur (severe chest pain, stroke, breathlessness, suicide), tell them immediately to call 112 / 108.
+- Never output markdown syntax, code, asterisks, or brackets because your output is directly spoken to the patient.`;
+
+      let response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${effectiveKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-realtime-preview',
+          voice,
+        }),
+      });
+
+      if (!response.ok && response.status === 404) {
+        // Fallback to sessions endpoint only if 404
+        response = await fetch('https://api.openai.com/v1/realtime/sessions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${effectiveKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-realtime-preview',
+            voice,
+            instructions,
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return res.status(response.status).json({
+          success: false,
+          error: { message: `OpenAI Realtime API error: ${errorText}` },
+        });
+      }
+
+      const sessionData = await response.json();
+      const clientSecretValue = sessionData.value || sessionData.client_secret?.value || effectiveKey;
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          ...sessionData,
+          client_secret: {
+            value: clientSecretValue,
+          },
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new ChatController();

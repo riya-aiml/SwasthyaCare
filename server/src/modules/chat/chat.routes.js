@@ -27,4 +27,7 @@ router.post('/messages/:id/confirm-action', chatRateLimiter, chatController.conf
 // ElevenLabs Neural Human Voice Generation
 router.post('/tts', chatRateLimiter, chatController.generateElevenLabsTTS);
 
+// OpenAI Realtime Low-Latency Speech-to-Speech Session Generation
+router.post('/realtime-session', chatRateLimiter, chatController.createRealtimeSession);
+
 export default router;

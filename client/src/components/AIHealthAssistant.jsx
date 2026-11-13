@@ -58,6 +58,9 @@ import {
   Languages,
   Key,
   Headphones,
+  Phone,
+  PhoneOff,
+  Radio,
 } from 'lucide-react';
 import chatService from '../services/chatService.js';
 import { getAuthToken } from '../services/authService.js';
@@ -238,7 +241,20 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [elevenApiKey, setElevenApiKey] = useState(() => localStorage.getItem('elevenlabs_api_key') || '');
   const [showVoiceKeyModal, setShowVoiceKeyModal] = useState(false);
   const [isElevenVoicePlaying, setIsElevenVoicePlaying] = useState(false);
+
+  // OpenAI Realtime Low-Latency Speech-to-Speech State
+  const [isRealtimeCallActive, setIsRealtimeCallActive] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState('idle'); // 'idle' | 'connecting' | 'connected' | 'speaking' | 'listening'
+  const [realtimeApiKey, setRealtimeApiKey] = useState(() => localStorage.getItem('openai_realtime_api_key') || '');
+  const [showRealtimeKeyModal, setShowRealtimeKeyModal] = useState(false);
+  const [realtimeTranscript, setRealtimeTranscript] = useState([]);
+  const [isRealtimeMuted, setIsRealtimeMuted] = useState(false);
+
   const audioPlayerRef = useRef(new Audio());
+  const peerConnectionRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const dataChannelRef = useRef(null);
+  const realtimeAudioElementRef = useRef(null);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -292,10 +308,152 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
     setSpeakingMessageId(null);
   };
 
-  // Stop speech when widget is closed
+  // End OpenAI Realtime Speech-to-Speech Call cleanly
+  const endRealtimeCall = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+    if (realtimeAudioElementRef.current) {
+      realtimeAudioElementRef.current.srcObject = null;
+      realtimeAudioElementRef.current = null;
+    }
+    setIsRealtimeCallActive(false);
+    setRealtimeStatus('idle');
+  };
+
+  const toggleRealtimeMute = () => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsRealtimeMuted(!audioTrack.enabled);
+      }
+    }
+  };
+
+  // Connects Low-Latency Speech-to-Speech Call via WebRTC
+  const startRealtimeCall = async () => {
+    stopSpeaking();
+    setIsRealtimeCallActive(true);
+    setRealtimeStatus('connecting');
+    setRealtimeTranscript([]);
+
+    try {
+      // 1. Request ephemeral token from Node backend
+      const sessionRes = await chatService.createRealtimeSession({
+        apiKey: realtimeApiKey || undefined,
+        voice: 'shimmer', // Warm, gentle clinical voice
+        language,
+      });
+
+      const clientSecret = sessionRes.data?.client_secret?.value;
+      if (!clientSecret) {
+        throw new Error('Failed to obtain OpenAI Realtime ephemeral session token.');
+      }
+
+      // 2. Initialize WebRTC Peer Connection
+      const pc = new RTCPeerConnection();
+      peerConnectionRef.current = pc;
+
+      // 3. Audio output
+      const remoteAudio = new Audio();
+      remoteAudio.autoplay = true;
+      realtimeAudioElementRef.current = remoteAudio;
+
+      pc.ontrack = (e) => {
+        remoteAudio.srcObject = e.streams[0];
+      };
+
+      // 4. Capture Local Microphone
+      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = localStream;
+      pc.addTrack(localStream.getTracks()[0]);
+
+      // 5. Data Channel for Events & Transcripts
+      const dc = pc.createDataChannel('oai-events');
+      dataChannelRef.current = dc;
+
+      dc.onopen = () => {
+        setRealtimeStatus('connected');
+      };
+
+      dc.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          if (event.type === 'response.audio_transcript.delta') {
+            setRealtimeTranscript((prev) => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === 'assistant') {
+                return [...prev.slice(0, -1), { role: 'assistant', text: last.text + event.delta }];
+              }
+              return [...prev, { role: 'assistant', text: event.delta }];
+            });
+            setRealtimeStatus('speaking');
+          } else if (event.type === 'conversation.item.input_audio_transcription.completed') {
+            const userText = event.transcript;
+            if (userText) {
+              setRealtimeTranscript((prev) => [...prev, { role: 'user', text: userText }]);
+            }
+            setRealtimeStatus('listening');
+          } else if (event.type === 'input_audio_buffer.speech_started') {
+            setRealtimeStatus('listening');
+          } else if (event.type === 'response.done') {
+            setRealtimeStatus('connected');
+          }
+        } catch (err) {
+          console.warn('Realtime event parse warning:', err);
+        }
+      };
+
+      // 6. WebRTC SDP Negotiation with OpenAI
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const baseUrl = 'https://api.openai.com/v1/realtime';
+      const model = 'gpt-4o-realtime-preview';
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: 'POST',
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${clientSecret}`,
+          'Content-Type': 'application/sdp',
+        },
+      });
+
+      if (!sdpResponse.ok) {
+        throw new Error(`OpenAI SDP handshake failed: ${sdpResponse.statusText}`);
+      }
+
+      const answerSdp = await sdpResponse.text();
+      const answer = { type: 'answer', sdp: answerSdp };
+      await pc.setRemoteDescription(answer);
+
+      setRealtimeStatus('connected');
+    } catch (err) {
+      console.error('Realtime Speech-to-Speech connection error:', err);
+      endRealtimeCall();
+      if (err?.isKeyMissing) {
+        setShowRealtimeKeyModal(true);
+      } else {
+        alert(
+          language === 'hi'
+            ? 'लाइव वॉइस कॉल शुरू नहीं हो सकी: ' + (err.message || 'कृपया अपनी OpenAI Key जांचें')
+            : 'Could not connect live voice call: ' + (err.message || 'Check your OpenAI API key')
+        );
+      }
+    }
+  };
+
+  // Stop speech and calls when widget is closed
   useEffect(() => {
     if (!isOpen) {
       stopSpeaking();
+      endRealtimeCall();
       if (recognitionRef.current && isListening) {
         recognitionRef.current.stop();
         setIsListening(false);
@@ -880,6 +1038,16 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             <Headphones size={13} className={elevenApiKey ? 'text-amber-300' : ''} />
           </button>
 
+          {/* OpenAI Realtime Low-Latency Live Call Button */}
+          <button
+            onClick={startRealtimeCall}
+            className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs ring-2 ring-emerald-400/40 shrink-0"
+            title="Start Low-Latency Speech-to-Speech Call with Doctor AI (OpenAI Realtime)"
+          >
+            <Phone size={11} className="fill-white" />
+            <span className="text-[10px] font-black uppercase tracking-wider">{language === 'hi' ? 'लाइव कॉल' : 'Live Call'}</span>
+          </button>
+
           {/* Sessions Dropdown Toggle */}
           <div className="relative">
             <button
@@ -980,8 +1148,126 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         </div>
       )}
 
-      {/* 3. Messages Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/80">
+      {/* 2.5 Realtime Speech-to-Speech Call Screen (OpenAI Realtime WebRTC) */}
+      {isRealtimeCallActive ? (
+        <div className="flex-1 flex flex-col justify-between bg-gradient-to-b from-slate-950 via-teal-950 to-slate-950 text-white p-6 relative overflow-hidden animate-in fade-in duration-300">
+          {/* Header */}
+          <div className="flex items-center justify-between z-10">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-extrabold text-emerald-400 tracking-wider uppercase">
+                {realtimeStatus === 'connecting'
+                  ? 'Connecting Call...'
+                  : realtimeStatus === 'speaking'
+                  ? 'Dr. Swasthya Speaking'
+                  : 'Listening (Interrupt anytime)'}
+              </span>
+            </div>
+            <span className="text-[10px] bg-white/10 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">
+              WebRTC ~280ms
+            </span>
+          </div>
+
+          {/* Animated 3D-like Sound Orb */}
+          <div className="flex flex-col items-center justify-center my-auto relative z-10 py-6">
+            <div className="relative flex items-center justify-center">
+              <div
+                className={`absolute w-44 h-44 rounded-full transition-all duration-700 ${
+                  realtimeStatus === 'speaking'
+                    ? 'bg-teal-500/25 animate-ping'
+                    : realtimeStatus === 'listening'
+                    ? 'bg-emerald-500/15 animate-pulse'
+                    : 'bg-slate-700/10'
+                }`}
+              />
+              <div
+                className={`absolute w-36 h-36 rounded-full transition-all duration-500 ${
+                  realtimeStatus === 'speaking'
+                    ? 'bg-teal-400/35 blur-md animate-pulse'
+                    : 'bg-emerald-400/20 blur-sm'
+                }`}
+              />
+
+              <div
+                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 ${
+                  realtimeStatus === 'speaking'
+                    ? 'bg-gradient-to-br from-teal-400 via-emerald-500 to-teal-600 scale-110 shadow-teal-500/50'
+                    : realtimeStatus === 'listening'
+                    ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 scale-100 shadow-emerald-500/40'
+                    : 'bg-gradient-to-br from-slate-700 to-slate-800 scale-95 shadow-slate-900'
+                }`}
+              >
+                {realtimeStatus === 'speaking' ? (
+                  <Volume2 className="w-10 h-10 text-white animate-bounce" />
+                ) : isRealtimeMuted ? (
+                  <MicOff className="w-10 h-10 text-rose-300" />
+                ) : (
+                  <Mic className="w-10 h-10 text-white animate-pulse" />
+                )}
+              </div>
+            </div>
+
+            <div className="text-center mt-6 space-y-1">
+              <h3 className="text-lg font-black tracking-tight text-white">
+                Dr. Swasthya (Live AI Doctor)
+              </h3>
+              <p className="text-xs text-teal-200/80 max-w-xs">
+                {language === 'hi'
+                  ? 'अपनी भाषा (हिन्दी या English) में बात करें। आप बीच में कभी भी टोक सकते हैं।'
+                  : 'Speak naturally. Low-latency bidirectional speech with zero typing required.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Real-time Streaming Transcript Drawer */}
+          <div className="bg-slate-900/85 backdrop-blur-md rounded-2xl p-3 border border-slate-800 max-h-32 overflow-y-auto text-xs space-y-2 z-10 shadow-inner">
+            {realtimeTranscript.length === 0 ? (
+              <p className="text-slate-400 italic text-center text-[11px]">
+                {language === 'hi' ? 'नमस्ते! बोलिए, मैं सुन रहा हूँ...' : 'Listening... Start speaking whenever you are ready.'}
+              </p>
+            ) : (
+              realtimeTranscript.slice(-3).map((t, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <span className="font-extrabold text-[10px] text-teal-400 uppercase shrink-0">
+                    {t.role === 'user' ? 'You:' : 'Doctor:'}
+                  </span>
+                  <span className="text-slate-200 text-[11px] leading-snug">{t.text}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Action Call Bar */}
+          <div className="flex items-center justify-center gap-4 pt-4 z-10">
+            <button
+              onClick={toggleRealtimeMute}
+              className={`p-3.5 rounded-full transition-all flex items-center justify-center shadow-lg ${
+                isRealtimeMuted
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                  : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+              }`}
+              title={isRealtimeMuted ? 'Unmute' : 'Mute'}
+            >
+              {isRealtimeMuted ? <MicOff size={20} /> : <Mic size={20} />}
+            </button>
+
+            <button
+              onClick={endRealtimeCall}
+              className="px-6 py-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+              title="Hang up call"
+            >
+              <PhoneOff size={16} />
+              <span>End Call</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 3. Messages Feed */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/80">
         {isInitializing && (
           <div className="flex items-center justify-center h-32 text-slate-400 text-xs gap-2">
             <Loader2 size={16} className="animate-spin text-teal-600" />
@@ -1384,6 +1670,8 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           <Send size={15} />
         </button>
       </form>
+      </>
+      )}
 
       {/* ElevenLabs Human Voice Settings Modal */}
       {showVoiceKeyModal && (
@@ -1457,6 +1745,87 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
                   className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
                 >
                   Save & Activate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OpenAI Realtime Speech-to-Speech Settings Modal */}
+      {showRealtimeKeyModal && (
+        <div className="absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <Phone className="w-4 h-4 fill-emerald-600" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                    OpenAI Realtime Voice Call
+                  </h4>
+                  <span className="text-[10px] text-teal-700 font-semibold">Speech-to-Speech (WebRTC)</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRealtimeKeyModal(false)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-sm w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Connect to <strong>Dr. Swasthya</strong> over a low-latency (~280ms) live voice consultation powered by <strong>OpenAI Realtime API (gpt-4o-realtime-preview)</strong>. Natural speech-to-speech with live voice interruption in Hindi and English.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-700">
+                OpenAI API Key (sk-...)
+              </label>
+              <input
+                type="password"
+                placeholder="sk-proj-..."
+                value={realtimeApiKey}
+                onChange={(e) => setRealtimeApiKey(e.target.value)}
+                className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
+              />
+              <span className="text-[10px] text-slate-400 block leading-tight">
+                Can also be set in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">OPENAI_API_KEY</code>.
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <button
+                onClick={() => {
+                  localStorage.removeItem('openai_realtime_api_key');
+                  setRealtimeApiKey('');
+                  setShowRealtimeKeyModal(false);
+                }}
+                className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-semibold transition"
+              >
+                Reset
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowRealtimeKeyModal(false)}
+                  className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (realtimeApiKey.trim()) {
+                      localStorage.setItem('openai_realtime_api_key', realtimeApiKey.trim());
+                      setShowRealtimeKeyModal(false);
+                      startRealtimeCall();
+                    }
+                  }}
+                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                >
+                  <Phone size={12} className="fill-white" />
+                  <span>Save & Call</span>
                 </button>
               </div>
             </div>
