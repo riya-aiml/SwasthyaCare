@@ -105,13 +105,13 @@ export const chatService = {
   },
 
   /**
-   * OpenAI Neural Speech Audio Generator (ChatGPT Voice Assistant)
+   * Neural Human Speech Audio Generator (ChatGPT Voice Assistant)
    */
-  async generateTTS({ text, voice = 'nova', speed = 1.0, apiKey }) {
+  async generateTTS({ text, language = 'en', voice = 'nova', speed = 1.0, apiKey }) {
     const res = await fetch(`${BASE_URL}/tts`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ text, voice, speed, apiKey }),
+      body: JSON.stringify({ text, language, voice, speed, apiKey }),
     });
 
     if (!res.ok) {

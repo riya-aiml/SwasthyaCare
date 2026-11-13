@@ -379,7 +379,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       .trim();
   };
 
-  // Speaks using authentic ChatGPT Human Voice (OpenAI TTS-1 / Nova)
+  // Speaks using authentic Human Neural Voice (OpenAI TTS-1 / Nova or Neural Stream)
   const speakMessage = async (msgId, content) => {
     stopSpeaking();
 
@@ -388,10 +388,11 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
 
     setSpeakingMessageId(msgId);
 
-    // 1. Prioritize ChatGPT Neural Human Voice (OpenAI TTS-1)
+    // 1. Generate Human Neural Voice Stream
     try {
       const audioUrl = await chatService.generateTTS({
         text: clean.slice(0, 2000),
+        language,
         voice: selectedVoice,
         apiKey: openAiApiKey || undefined,
       });
@@ -410,9 +411,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         return;
       }
     } catch (err) {
-      if (err?.isKeyMissing) {
-        setShowVoiceSettingsModal(true);
-      }
+      console.warn('TTS streaming error, using fallback:', err);
     }
 
     // 2. High-Reliability Browser SpeechSynthesis Fallback
