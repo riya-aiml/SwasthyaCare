@@ -103,6 +103,25 @@ export const chatService = {
     });
     return handleResponse(res);
   },
+
+  /**
+   * ElevenLabs Text-to-Speech audio generator
+   */
+  async generateTTS({ text, language = 'en', voiceId, apiKey }) {
+    const res = await fetch(`${BASE_URL}/tts`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ text, language, voiceId, apiKey }),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw errJson;
+    }
+
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  },
 };
 
 export default chatService;

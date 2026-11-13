@@ -56,6 +56,8 @@ import {
   Volume2,
   VolumeX,
   Languages,
+  Key,
+  Headphones,
 } from 'lucide-react';
 import chatService from '../services/chatService.js';
 import { getAuthToken } from '../services/authService.js';
@@ -233,6 +235,10 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [autoSpeak, setAutoSpeak] = useState(true); // Voice Assistant Auto-Speech enabled by default
   const [voices, setVoices] = useState([]);
+  const [elevenApiKey, setElevenApiKey] = useState(() => localStorage.getItem('elevenlabs_api_key') || '');
+  const [showVoiceKeyModal, setShowVoiceKeyModal] = useState(false);
+  const [isElevenVoicePlaying, setIsElevenVoicePlaying] = useState(false);
+  const audioPlayerRef = useRef(new Audio());
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -267,8 +273,15 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
 
   const resumeIntervalRef = useRef(null);
 
-  // Stop any active speech synthesis cleanly
+  // Stop any active speech synthesis or ElevenLabs audio playback cleanly
   const stopSpeaking = () => {
+    if (audioPlayerRef.current) {
+      try {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+      } catch (e) {}
+    }
+    setIsElevenVoicePlaying(false);
     if (resumeIntervalRef.current) {
       clearInterval(resumeIntervalRef.current);
       resumeIntervalRef.current = null;
@@ -402,13 +415,45 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
       .trim();
   };
 
-  const speakMessage = (msgId, content) => {
-    if (!('speechSynthesis' in window)) return;
-
+  const speakMessage = async (msgId, content) => {
     stopSpeaking();
 
     const clean = cleanTextForSpeech(content);
     if (!clean) return;
+
+    setSpeakingMessageId(msgId);
+
+    // 1. Prioritize ElevenLabs Neural Human Voice Model
+    try {
+      const audioUrl = await chatService.generateTTS({
+        text: clean.slice(0, 1000),
+        language,
+        apiKey: elevenApiKey || undefined,
+      });
+
+      if (audioUrl) {
+        setIsElevenVoicePlaying(true);
+        audioPlayerRef.current.src = audioUrl;
+        audioPlayerRef.current.onended = () => {
+          stopSpeaking();
+          URL.revokeObjectURL(audioUrl);
+        };
+        audioPlayerRef.current.onerror = () => {
+          stopSpeaking();
+          URL.revokeObjectURL(audioUrl);
+        };
+        await audioPlayerRef.current.play();
+        return;
+      }
+    } catch (err) {
+      setIsElevenVoicePlaying(false);
+      if (err?.isKeyMissing) {
+        console.info('ElevenLabs API key not set, falling back to browser voice.');
+      }
+    }
+
+    // 2. High-Reliability Browser SpeechSynthesis Fallback
+    if (!('speechSynthesis' in window)) return;
 
     // Fix Chrome paused speech state
     if (window.speechSynthesis.paused) {
@@ -822,6 +867,19 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             {autoSpeak ? <Volume2 size={13} className="text-emerald-300" /> : <VolumeX size={13} />}
           </button>
 
+          {/* ElevenLabs Human Voice Config */}
+          <button
+            onClick={() => setShowVoiceKeyModal(true)}
+            className={`p-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${
+              elevenApiKey
+                ? 'bg-amber-400/25 text-amber-200 border border-amber-300/40 shadow-xs'
+                : 'bg-white/10 text-teal-200 hover:text-white'
+            }`}
+            title="Configure ElevenLabs Human Voice"
+          >
+            <Headphones size={13} className={elevenApiKey ? 'text-amber-300' : ''} />
+          </button>
+
           {/* Sessions Dropdown Toggle */}
           <div className="relative">
             <button
@@ -905,8 +963,11 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
               <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3.5"></span>
               <span className="w-1 bg-emerald-200 rounded-full animate-bounce h-2"></span>
             </div>
-            <span className="text-[11px] font-semibold text-teal-100">
-              {language === 'hi' ? '🔊 सहायक बोलकर सलाह दे रहा है...' : '🔊 Assistant is speaking advice...'}
+            <span className="text-[11px] font-semibold text-teal-100 flex items-center gap-1.5">
+              <span>{isElevenVoicePlaying ? '🎙️ ElevenLabs Human Voice:' : '🔊 Assistant Voice:'}</span>
+              <span className="text-emerald-300 font-normal">
+                {language === 'hi' ? 'सलाह बोलकर दी जा रही है...' : 'Speaking medical guidance...'}
+              </span>
             </span>
           </div>
           <button
@@ -1323,6 +1384,85 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           <Send size={15} />
         </button>
       </form>
+
+      {/* ElevenLabs Human Voice Settings Modal */}
+      {showVoiceKeyModal && (
+        <div className="absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Headphones className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                    ElevenLabs Neural Voice
+                  </h4>
+                  <span className="text-[10px] text-teal-700 font-semibold">Eleven Multilingual v2</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVoiceKeyModal(false)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-sm w-7 h-7 rounded-full flex items-center justify-center hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Activate ultra-realistic, natural physician human speech with <strong>ElevenLabs</strong>. Replaces robotic computer voices with real breathing, warm doctor intonations, and authentic Hindi and English pronunciation.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-700">
+                ElevenLabs API Key (xi-api-key)
+              </label>
+              <input
+                type="password"
+                placeholder="xi-api-key..."
+                value={elevenApiKey}
+                onChange={(e) => setElevenApiKey(e.target.value)}
+                className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
+              />
+              <span className="text-[10px] text-slate-400 block leading-tight">
+                Can also be set permanently in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">ELEVENLABS_API_KEY</code>.
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <button
+                onClick={() => {
+                  localStorage.removeItem('elevenlabs_api_key');
+                  setElevenApiKey('');
+                  setShowVoiceKeyModal(false);
+                }}
+                className="px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-semibold transition"
+              >
+                Reset
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowVoiceKeyModal(false)}
+                  className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (elevenApiKey.trim()) {
+                      localStorage.setItem('elevenlabs_api_key', elevenApiKey.trim());
+                    }
+                    setShowVoiceKeyModal(false);
+                  }}
+                  className="px-4 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                >
+                  Save & Activate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
