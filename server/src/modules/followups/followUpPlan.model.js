@@ -76,6 +76,24 @@ const followUpPlanSchema = new mongoose.Schema(
       default: 'ACTIVE',
       index: true,
     },
+    // Latest ML-REC-01 Risk Assessment for quick clinician dashboard triage
+    latestRiskTier: {
+      type: String,
+      enum: ['STABLE', 'MODERATE_RISK', 'CRITICAL_ATTENTION'],
+      default: 'STABLE',
+      index: true,
+    },
+    latestRiskScore: {
+      type: Number,
+      default: 10,
+    },
+    latestHealthIndex: {
+      type: Number,
+      default: 90,
+    },
+    lastReportedDate: {
+      type: Date,
+    },
     closedAt: {
       type: Date,
     },

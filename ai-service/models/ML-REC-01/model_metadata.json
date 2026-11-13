@@ -1,0 +1,55 @@
+{
+  "task_id": "ML-REC-01",
+  "model_id": "patient-deterioration-readmission-rf",
+  "model_version": "1.0.0",
+  "algorithm": "RandomForestClassifier(n_estimators=120, max_depth=6) + CalibratedClassifierCV(sigmoid)",
+  "features": [
+    "recovery_rating",
+    "pain_level",
+    "pain_delta",
+    "mobility_score",
+    "systolic_bp",
+    "diastolic_bp",
+    "heart_rate",
+    "temperature_celsius",
+    "oxygen_saturation",
+    "blood_glucose",
+    "medication_adherence",
+    "has_warning_symptoms",
+    "days_post_discharge",
+    "nlp_adverse_score"
+  ],
+  "optimal_threshold": 0.45,
+  "metrics_on_test": {
+    "accuracy": 0.73,
+    "roc_auc": 0.8237,
+    "pr_auc": 0.7579,
+    "sensitivity_recall": 0.6549,
+    "specificity": 0.7754,
+    "precision": 0.6379,
+    "f1_score": 0.6463,
+    "brier_score": 0.165,
+    "confusion_matrix": {
+      "tn": 290,
+      "fp": 84,
+      "fn": 78,
+      "tp": 148
+    }
+  },
+  "feature_importances": {
+    "pain_level": 0.1815,
+    "recovery_rating": 0.1721,
+    "nlp_adverse_score": 0.1446,
+    "has_warning_symptoms": 0.1006,
+    "pain_delta": 0.0612,
+    "medication_adherence": 0.0609,
+    "mobility_score": 0.0455,
+    "oxygen_saturation": 0.0391,
+    "temperature_celsius": 0.0384,
+    "systolic_bp": 0.0374,
+    "heart_rate": 0.0374,
+    "diastolic_bp": 0.0325,
+    "blood_glucose": 0.0259,
+    "days_post_discharge": 0.0229
+  }
+}

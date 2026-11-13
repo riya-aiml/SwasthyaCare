@@ -1,11 +1,27 @@
 from fastapi import APIRouter, HTTPException, status
 from ..schemas.risk import HeartRiskRequest, HeartRiskResponse, DiabetesRiskRequest, DiabetesRiskResponse
 from ..schemas.specialty_assessment import DepartmentPredictionRequest, DepartmentPredictionResponse
+from ..schemas.recovery_assessment import RecoveryRiskRequest, RecoveryRiskResponse
 from ..models.heart_risk import calculate_heart_risk
 from ..models.diabetes_risk import calculate_diabetes_risk
 from ..services.specialty_classifier import specialty_classifier_service
+from ..services.recovery_risk_service import recovery_risk_service
 
 router = APIRouter(prefix="/api/v1/predict", tags=["Clinical Risk Inference"])
+
+@router.post("/recovery-risk", response_model=RecoveryRiskResponse, status_code=status.HTTP_200_OK)
+async def predict_recovery_risk(payload: RecoveryRiskRequest):
+    """
+    Post-Discharge Recovery Deterioration & Readmission Risk Engine (Task: ML-REC-01)
+    Evaluates patient recovery telemetry, NEWS2 vitals, pain trajectory, and clinical NLP.
+    """
+    try:
+        return recovery_risk_service.assess_risk(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Recovery risk inference error: {str(e)}"
+        )
 
 @router.post("/department", response_model=DepartmentPredictionResponse, status_code=status.HTTP_200_OK)
 async def predict_medical_specialty(payload: DepartmentPredictionRequest):

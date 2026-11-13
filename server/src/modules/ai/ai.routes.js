@@ -2,6 +2,7 @@ import express from 'express';
 import {
   predictHeartRisk,
   predictDiabetesRisk,
+  predictRecoveryRisk,
   processMedicineOCR,
   getAIServiceHealth,
   assessDiabetesCurrentStatus,
@@ -21,6 +22,7 @@ const router = express.Router();
 router.get('/health', getAIServiceHealth);
 router.post('/predict/heart-risk', authenticate, predictHeartRisk);
 router.post('/predict/diabetes-risk', authenticate, predictDiabetesRisk);
+router.post('/predict/recovery-risk', authenticate, predictRecoveryRisk);
 router.post('/ocr/medicine', authenticate, processMedicineOCR);
 
 // Sprint 6 ML Internal RPC Routes (Current-Status Prototypes)

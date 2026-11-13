@@ -63,7 +63,10 @@ from app.services.hybrid_retrieval import (
     HybridCorpusIndex,
     VernacularNormalizer,
 )
-from app.services.clinical_guardrails import ClinicalNegationDetector
+from app.services.clinical_guardrails import (
+    ClinicalNegationDetector,
+    EducationalPharmacologyEngine,
+)
 
 
 class DocumentChunk:
@@ -752,6 +755,39 @@ class ChatRAGService:
                         "No clinical evidence retrieved. "
                         "Check clinical knowledge-base files and retrieval index."
                     )
+
+        # Step 2.5: Verified Educational Pharmacology Intercept
+        if intent == ChatIntent.INTENT_MEDICINE_INFORMATION:
+            for drug in ["metformin", "telmisartan", "atorvastatin", "paracetamol"]:
+                if drug in user_msg.lower():
+                    summary = EducationalPharmacologyEngine.get_educational_summary(drug)
+                    if summary:
+                        elapsed_ms = int((time.time() - start_time) * 1000)
+                        doc_map = {
+                            "telmisartan": ("DOC-CLIN-02", "ICMR & Indian Guidelines on Hypertension (IGH-IV)"),
+                            "metformin": ("DOC-CLIN-01", "ICMR Guidelines for Type 2 Diabetes"),
+                            "atorvastatin": ("DOC-CLIN-03", "WHO HEARTS & ICMR Dyslipidemia Protocols"),
+                            "paracetamol": ("DOC-CLIN-06", "Indian Pharmacopoeia & National Essential Medicines List"),
+                        }
+                        doc_id, org = doc_map.get(drug, ("DOC-CLIN-06", "Indian Pharmacopoeia"))
+                        return ChatOrchestrationResponse(
+                            intent=intent,
+                            is_emergency=False,
+                            response_text=summary,
+                            citations=[
+                                CitationItem(
+                                    doc_id=doc_id,
+                                    title=f"Pharmacology Standard: {drug.title()}",
+                                    source_organization=org,
+                                    snippet=summary[:200] + "...",
+                                )
+                            ],
+                            action_proposal=None,
+                            latency_ms=elapsed_ms,
+                            provider="educational_pharmacology_engine",
+                            model="deterministic_formulary_v1.0",
+                            tokens_used={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                        )
 
         # Step 3: Assemble action proposal via Classical ML Routing (if applicable)
         action_proposal = self._extract_action_proposal(user_msg, intent)
