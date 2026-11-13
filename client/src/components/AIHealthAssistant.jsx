@@ -238,6 +238,8 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("chatgpt_voice") || "nova");
+  const [selectedSpeaker, setSelectedSpeaker] = useState(() => localStorage.getItem("sarvam_speaker") || "meera");
+  const [sarvamApiKey, setSarvamApiKey] = useState(() => localStorage.getItem("sarvam_api_key") || "");
   const [openAiApiKey, setOpenAiApiKey] = useState(() => localStorage.getItem("openai_tts_key") || "");
   const [showVoiceSettingsModal, setShowVoiceSettingsModal] = useState(false);
 
@@ -388,13 +390,15 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
 
     setSpeakingMessageId(msgId);
 
-    // 1. Generate Human Neural Voice Stream
+    // 1. Generate Human Neural Voice Stream (Sarvam AI Bulbul V3 / OpenAI Speech / Neural Stream)
     try {
       const audioUrl = await chatService.generateTTS({
         text: clean.slice(0, 2000),
         language,
         voice: selectedVoice,
+        speaker: selectedSpeaker,
         apiKey: openAiApiKey || undefined,
+        sarvamApiKey: sarvamApiKey || undefined,
       });
 
       if (audioUrl) {
@@ -811,14 +815,16 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             {autoSpeak ? <Volume2 size={13} className="text-emerald-300" /> : <VolumeX size={13} />}
           </button>
 
-          {/* ChatGPT Voice Model & Key Config */}
+          {/* Sarvam AI Bulbul / Neural Voice Config */}
           <button
             onClick={() => setShowVoiceSettingsModal(true)}
             className="flex items-center gap-1 px-2 py-1 bg-white/10 hover:bg-white/20 text-teal-100 rounded-lg text-xs font-semibold transition-all border border-teal-500/30 shrink-0"
-            title="ChatGPT Voice Settings (Voice Model & API Key)"
+            title="Voice Assistant Settings (Sarvam AI Bulbul V3 / OpenAI Voice)"
           >
-            <Headphones size={12} className={openAiApiKey ? 'text-emerald-300' : 'text-teal-200'} />
-            <span className="text-[10px] font-bold capitalize">{selectedVoice}</span>
+            <Headphones size={12} className={sarvamApiKey || openAiApiKey ? 'text-amber-300' : 'text-teal-200'} />
+            <span className="text-[10px] font-bold capitalize">
+              {sarvamApiKey ? `Bulbul (${selectedSpeaker})` : 'Sarvam / Neural'}
+            </span>
           </button>
 
           {/* Sessions Dropdown Toggle */}
@@ -905,7 +911,7 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
               <span className="w-1 bg-emerald-200 rounded-full animate-bounce h-2"></span>
             </div>
             <span className="text-[11px] font-semibold text-teal-100 flex items-center gap-1.5">
-              <span>🎙️ ChatGPT Voice ({selectedVoice.charAt(0).toUpperCase() + selectedVoice.slice(1)}):</span>
+              <span>{sarvamApiKey ? `🎙️ Sarvam Bulbul (${selectedSpeaker}):` : '🎙️ Neural Voice:'}</span>
               <span className="text-emerald-300 font-normal">
                 {language === 'hi' ? 'सलाह बोलकर दी जा रही है...' : 'Speaking advice...'}
               </span>
@@ -1326,20 +1332,20 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
         </button>
       </form>
 
-      {/* ChatGPT Voice Assistant Settings Modal */}
+      {/* Sarvam AI Bulbul & Neural Voice Settings Modal */}
       {showVoiceSettingsModal && (
         <div className="absolute inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                   <Headphones className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                    ChatGPT Voice Assistant
+                    Voice Assistant Settings
                   </h4>
-                  <span className="text-[10px] text-teal-700 font-semibold">OpenAI Neural Voice (TTS-1)</span>
+                  <span className="text-[10px] text-teal-700 font-semibold">Sarvam AI Bulbul & Neural Voice</span>
                 </div>
               </div>
               <button
@@ -1351,62 +1357,78 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Experience authentic, human-like responses just like ChatGPT's Voice Assistant. Powered by OpenAI's official speech model with natural breathing, cadence, and clear pronunciation in Hindi and English.
+              <strong>Sarvam AI (Bulbul V3):</strong> Purpose-built for Indian healthcare, Hindi, and code-switching (Hinglish). Features authentic human physician cadence and clear pronunciation.
             </p>
 
-            {/* Choose ChatGPT Voice */}
+            {/* Choose Indian Clinician Speaker */}
             <div className="space-y-1.5">
               <label className="block text-[11px] font-bold text-slate-700">
-                Choose ChatGPT Voice
+                Choose Clinician Speaker (Sarvam AI)
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: 'nova', name: 'Nova', desc: 'Warm & Empathetic (Female)' },
-                  { id: 'shimmer', name: 'Shimmer', desc: 'Expressive & Gentle (Female)' },
-                  { id: 'alloy', name: 'Alloy', desc: 'Clear & Neutral (Unisex)' },
-                  { id: 'echo', name: 'Echo', desc: 'Warm Doctor (Male)' },
-                ].map((v) => (
+                  { id: 'meera', name: 'Meera', desc: 'Warm Female Clinician' },
+                  { id: 'arvind', name: 'Arvind', desc: 'Warm Male Clinician' },
+                  { id: 'kavya', name: 'Kavya', desc: 'Gentle & Empathetic' },
+                  { id: 'ratan', name: 'Ratan', desc: 'Senior Physician' },
+                ].map((s) => (
                   <button
                     type="button"
-                    key={v.id}
+                    key={s.id}
                     onClick={() => {
-                      setSelectedVoice(v.id);
-                      localStorage.setItem('chatgpt_voice', v.id);
+                      setSelectedSpeaker(s.id);
+                      localStorage.setItem('sarvam_speaker', s.id);
                     }}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
-                      selectedVoice === v.id
-                        ? 'border-teal-600 bg-teal-50/80 text-teal-950 font-bold shadow-xs'
+                      selectedSpeaker === s.id
+                        ? 'border-amber-500 bg-amber-50/80 text-amber-950 font-bold shadow-xs'
                         : 'border-slate-200 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="text-xs font-bold">{v.name}</div>
-                    <div className="text-[10px] text-slate-500 leading-tight">{v.desc}</div>
+                    <div className="text-xs font-bold">{s.name}</div>
+                    <div className="text-[10px] text-slate-500 leading-tight">{s.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* API Key */}
+            {/* Sarvam AI Key Input */}
             <div className="space-y-1.5 pt-1">
               <label className="block text-[11px] font-bold text-slate-700">
-                OpenAI API Key (sk-...)
+                Sarvam AI API Key (api-subscription-key)
               </label>
               <input
                 type="password"
-                placeholder="sk-proj-..."
+                placeholder="sarvam-api-key..."
+                value={sarvamApiKey}
+                onChange={(e) => setSarvamApiKey(e.target.value)}
+                className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
+              />
+              <span className="text-[10px] text-slate-400 block leading-tight">
+                Free to use with no credit card required at <a href="https://dashboard.sarvam.ai" target="_blank" rel="noreferrer" className="text-teal-700 underline font-semibold">dashboard.sarvam.ai</a> or set in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code>.
+              </span>
+            </div>
+
+            {/* Optional OpenAI Key */}
+            <div className="space-y-1.5 pt-1 border-t border-slate-100">
+              <label className="block text-[11px] font-bold text-slate-700">
+                Alternative: OpenAI API Key (sk-...)
+              </label>
+              <input
+                type="password"
+                placeholder="sk-..."
                 value={openAiApiKey}
                 onChange={(e) => setOpenAiApiKey(e.target.value)}
                 className="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:border-teal-600 font-mono"
               />
-              <span className="text-[10px] text-slate-400 block leading-tight">
-                Can also be configured in <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">server/.env</code> as <code className="text-teal-700 bg-teal-50 px-1 py-0.5 rounded">OPENAI_API_KEY</code>.
-              </span>
             </div>
 
             <div className="flex justify-between items-center pt-2">
               <button
                 onClick={() => {
+                  localStorage.removeItem('sarvam_api_key');
                   localStorage.removeItem('openai_tts_key');
+                  setSarvamApiKey('');
                   setOpenAiApiKey('');
                   setShowVoiceSettingsModal(false);
                 }}
@@ -1423,6 +1445,9 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
                 </button>
                 <button
                   onClick={() => {
+                    if (sarvamApiKey.trim()) {
+                      localStorage.setItem('sarvam_api_key', sarvamApiKey.trim());
+                    }
                     if (openAiApiKey.trim()) {
                       localStorage.setItem('openai_tts_key', openAiApiKey.trim());
                     }

@@ -182,13 +182,12 @@ class ChatController {
 
   /**
    * POST /api/chat/tts
-   * Neural Human Speech (ChatGPT Voice Assistant Engine)
-   * Uses OpenAI tts-1 with authentic human voices (nova, alloy, shimmer, echo)
-   * with seamless fallback to Google Neural Human Voice stream (zero API key needed)
+   * Neural Human Speech (Sarvam AI Bulbul V3 / OpenAI ChatGPT / Neural Stream)
+   * Best for Indian languages (Hindi, Hinglish, English) with natural human physician cadence
    */
   async generateChatGPTTTS(req, res, next) {
     try {
-      const { text, voice = 'nova', speed = 1.0, language = 'en', apiKey } = req.body;
+      const { text, voice = 'nova', speaker = 'meera', speed = 1.0, language = 'en', apiKey, sarvamApiKey } = req.body;
 
       if (!text || !text.trim()) {
         return res.status(400).json({
@@ -197,10 +196,55 @@ class ChatController {
         });
       }
 
-      const effectiveApiKey = apiKey || process.env.OPENAI_API_KEY;
+      // 1. Prioritize Sarvam AI (Bulbul Model - Best for Indian Languages & Code-Switching Hinglish)
+      const effectiveSarvamKey = sarvamApiKey || (apiKey && !apiKey.startsWith('sk-') ? apiKey : null) || process.env.SARVAM_API_KEY;
+      if (effectiveSarvamKey && effectiveSarvamKey.trim()) {
+        try {
+          const targetLang = language === 'hi' ? 'hi-IN' : 'en-IN';
+          const validSpeakers = ['meera', 'arvind', 'kavya', 'ratan', 'amartya', 'shruthi'];
+          const selectedSpeaker = validSpeakers.includes((speaker || voice || '').toLowerCase())
+            ? (speaker || voice).toLowerCase()
+            : 'meera';
 
-      // 1. If OpenAI API Key is provided, use OpenAI's official tts-1 model
-      if (effectiveApiKey) {
+          const sarvamRes = await fetch('https://api.sarvam.ai/text-to-speech', {
+            method: 'POST',
+            headers: {
+              'api-subscription-key': effectiveSarvamKey.trim(),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inputs: [text.slice(0, 500)],
+              target_language_code: targetLang,
+              speaker: selectedSpeaker,
+              pitch: 0,
+              pace: Math.max(0.75, Math.min(speed, 1.25)),
+              loudness: 1.5,
+              speech_sample_rate: 22050,
+              enable_preprocessing: true,
+              model: 'bulbul:v1', // Sarvam AI Bulbul neural model
+            }),
+          });
+
+          if (sarvamRes.ok) {
+            const data = await sarvamRes.json();
+            if (data.audios && data.audios.length > 0) {
+              const buffer = Buffer.from(data.audios[0], 'base64');
+              res.set({
+                'Content-Type': 'audio/wav',
+                'Content-Length': buffer.length,
+                'Cache-Control': 'no-cache',
+              });
+              return res.send(buffer);
+            }
+          }
+        } catch (sarvamErr) {
+          console.warn('Sarvam AI Bulbul speech notice:', sarvamErr.message);
+        }
+      }
+
+      // 2. OpenAI Official Speech API (tts-1 with Nova / Alloy)
+      const effectiveOpenAiKey = (apiKey && apiKey.startsWith('sk-') ? apiKey : null) || process.env.OPENAI_API_KEY;
+      if (effectiveOpenAiKey && effectiveOpenAiKey.trim()) {
         try {
           const validVoices = ['nova', 'alloy', 'shimmer', 'echo', 'onyx', 'fable'];
           const selectedVoice = validVoices.includes(voice.toLowerCase()) ? voice.toLowerCase() : 'nova';
@@ -208,7 +252,7 @@ class ChatController {
           const openAiRes = await fetch('https://api.openai.com/v1/audio/speech', {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${effectiveApiKey}`,
+              Authorization: `Bearer ${effectiveOpenAiKey.trim()}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({

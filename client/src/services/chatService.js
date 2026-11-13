@@ -105,13 +105,13 @@ export const chatService = {
   },
 
   /**
-   * Neural Human Speech Audio Generator (ChatGPT Voice Assistant)
+   * Neural Human Speech Audio Generator (Sarvam AI Bulbul V3 / OpenAI Speech)
    */
-  async generateTTS({ text, language = 'en', voice = 'nova', speed = 1.0, apiKey }) {
+  async generateTTS({ text, language = 'en', voice = 'meera', speaker = 'meera', speed = 1.0, apiKey, sarvamApiKey }) {
     const res = await fetch(`${BASE_URL}/tts`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ text, language, voice, speed, apiKey }),
+      body: JSON.stringify({ text, language, voice, speaker, speed, apiKey, sarvamApiKey }),
     });
 
     if (!res.ok) {
