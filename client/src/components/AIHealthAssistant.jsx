@@ -231,8 +231,21 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
   const [isListening, setIsListening] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [autoSpeak, setAutoSpeak] = useState(true); // Voice Assistant Auto-Speech enabled by default
+  const [voices, setVoices] = useState([]);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  // Load available speech synthesis voices
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      const updateVoices = () => {
+        setVoices(window.speechSynthesis.getVoices());
+      };
+      updateVoices();
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }, []);
 
   const quickPromptsEn = [
     '🩺 Knee & Joint Pain Care',
@@ -251,6 +264,31 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   ];
 
   const quickPrompts = language === 'hi' ? quickPromptsHi : quickPromptsEn;
+
+  const resumeIntervalRef = useRef(null);
+
+  // Stop any active speech synthesis cleanly
+  const stopSpeaking = () => {
+    if (resumeIntervalRef.current) {
+      clearInterval(resumeIntervalRef.current);
+      resumeIntervalRef.current = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingMessageId(null);
+  };
+
+  // Stop speech when widget is closed
+  useEffect(() => {
+    if (!isOpen) {
+      stopSpeaking();
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+    }
+  }, [isOpen]);
 
   // Initialize Web Speech Recognition (Voice Input / STT)
   useEffect(() => {
@@ -282,7 +320,10 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   }, [language]);
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
+    stopSpeaking();
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       alert(
         language === 'hi'
           ? 'आपके ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
@@ -292,16 +333,56 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        console.warn('Recognition start error:', err);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
       }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript.trim()) {
+          setInputMessage(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition status:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          alert(
+            language === 'hi'
+              ? 'कृपया ब्राउज़र में माइक्रोफ़ोन की अनुमति (Microphone Permission) दें।'
+              : 'Please enable microphone permission in your browser.'
+          );
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.warn('Speech recognition start failed:', err);
+      setIsListening(false);
     }
   };
 
@@ -310,45 +391,88 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
     if (!raw) return '';
     return raw
       .replace(/\[DOC-[A-Z]+-\d+\]/g, '')
-      .replace(/[*#_`~]/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[*#_`~>]/g, '')
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
       .replace(/\\text\{([^}]+)\}/g, '$1')
       .replace(/\$([^$]+)\$/g, '$1')
+      .replace(/•|\-|\+/g, ' ')
       .replace(/\n+/g, '. ')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
-  const toggleSpeak = (msgId, content) => {
-    if (!('speechSynthesis' in window)) {
-      alert('Text-to-speech audio is not supported in this browser.');
-      return;
-    }
+  const speakMessage = (msgId, content) => {
+    if (!('speechSynthesis' in window)) return;
 
-    if (speakingMessageId === msgId) {
-      window.speechSynthesis.cancel();
-      setSpeakingMessageId(null);
-      return;
-    }
+    stopSpeaking();
 
-    window.speechSynthesis.cancel();
     const clean = cleanTextForSpeech(content);
+    if (!clean) return;
+
+    // Fix Chrome paused speech state
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-    utterance.rate = 0.95;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
 
-    // Pick appropriate voice if present
-    const voices = window.speechSynthesis.getVoices();
-    const targetVoice = voices.find((v) =>
-      language === 'hi' ? v.lang.includes('hi') : v.lang.includes('en-IN') || v.lang.includes('en-US')
-    );
-    if (targetVoice) {
-      utterance.voice = targetVoice;
+    const availVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+    let selectedVoice = null;
+
+    if (language === 'hi') {
+      selectedVoice =
+        availVoices.find((v) => v.lang.toLowerCase().includes('hi-in') || v.lang.toLowerCase() === 'hi') ||
+        availVoices.find((v) => v.name.toLowerCase().includes('hindi')) ||
+        availVoices.find((v) => v.lang.includes('IN'));
+    } else {
+      selectedVoice =
+        availVoices.find((v) => v.lang.toLowerCase().includes('en-in') || v.name.toLowerCase().includes('india')) ||
+        availVoices.find((v) => v.lang.toLowerCase().startsWith('en-us')) ||
+        availVoices.find((v) => v.lang.toLowerCase().startsWith('en'));
     }
 
-    utterance.onend = () => setSpeakingMessageId(null);
-    utterance.onerror = () => setSpeakingMessageId(null);
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      setSpeakingMessageId(msgId);
+      // Workaround for Chrome 15s freeze bug: keep active resume pulse
+      if (resumeIntervalRef.current) clearInterval(resumeIntervalRef.current);
+      resumeIntervalRef.current = setInterval(() => {
+        if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        } else {
+          clearInterval(resumeIntervalRef.current);
+          resumeIntervalRef.current = null;
+        }
+      }, 5000);
+    };
+
+    utterance.onend = () => {
+      stopSpeaking();
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis error:', e);
+      stopSpeaking();
+    };
 
     setSpeakingMessageId(msgId);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleSpeak = (msgId, content) => {
+    if (speakingMessageId === msgId) {
+      stopSpeaking();
+    } else {
+      speakMessage(msgId, content);
+    }
   };
 
   // Auto-scroll to bottom
@@ -468,6 +592,11 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
   };
 
   const handleSendMessage = async (textToSend, retryMsgId = null) => {
+    stopSpeaking();
+    // Prime speech synthesis on user interaction
+    if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
     const text = (textToSend || inputMessage).trim();
     if (!text || isLoading) return;
 
@@ -510,6 +639,13 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           prev.map((m) => (m._id === tempId ? { ...m, status: 'sent', isFailed: false } : m))
         );
         setMessages((prev) => [...prev, assistantMessage]);
+
+        // Auto-Speak: Chatbot speaks its response out loud automatically!
+        if (autoSpeak && assistantMessage.content) {
+          setTimeout(() => {
+            speakMessage(assistantMessage._id, assistantMessage.content);
+          }, 250);
+        }
       }
     } catch (err) {
       console.error('Failed to send message:', err);
@@ -670,6 +806,22 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
             </button>
           </div>
 
+          {/* Voice Mode Toggle (Auto-Speak) */}
+          <button
+            onClick={() => {
+              if (speakingMessageId) stopSpeaking();
+              setAutoSpeak((prev) => !prev);
+            }}
+            className={`p-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center ${
+              autoSpeak
+                ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50 shadow-xs'
+                : 'bg-white/10 text-teal-200 hover:text-white'
+            }`}
+            title={autoSpeak ? (language === 'hi' ? 'आवाज़ मोड: चालू (बॉट बोलकर बताएगा)' : 'Voice Mode: ON (Bot speaks aloud)') : (language === 'hi' ? 'आवाज़ मोड: बंद' : 'Voice Mode: OFF')}
+          >
+            {autoSpeak ? <Volume2 size={13} className="text-emerald-300" /> : <VolumeX size={13} />}
+          </button>
+
           {/* Sessions Dropdown Toggle */}
           <div className="relative">
             <button
@@ -742,6 +894,30 @@ export default function AIHealthAssistant({ isOpen, setIsOpen }) {
           </button>
         </div>
       </div>
+
+      {/* 2. Speaking Audio Banner (Visualizer when Bot is speaking) */}
+      {speakingMessageId && (
+        <div className="px-3.5 py-2 bg-gradient-to-r from-teal-950 via-teal-900 to-teal-950 text-white text-xs flex items-center justify-between border-b border-teal-700/60 shadow-xs animate-in slide-in-from-top-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5 h-3">
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3"></span>
+              <span className="w-1 bg-emerald-300 rounded-full animate-bounce h-2"></span>
+              <span className="w-1 bg-emerald-400 rounded-full animate-pulse h-3.5"></span>
+              <span className="w-1 bg-emerald-200 rounded-full animate-bounce h-2"></span>
+            </div>
+            <span className="text-[11px] font-semibold text-teal-100">
+              {language === 'hi' ? '🔊 सहायक बोलकर सलाह दे रहा है...' : '🔊 Assistant is speaking advice...'}
+            </span>
+          </div>
+          <button
+            onClick={stopSpeaking}
+            className="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-bold transition flex items-center gap-1"
+          >
+            <VolumeX size={11} />
+            <span>{language === 'hi' ? 'रोकें' : 'Stop'}</span>
+          </button>
+        </div>
+      )}
 
       {/* 3. Messages Feed */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/80">
