@@ -4,7 +4,9 @@
  * Every request to our Express backend goes through here.
  */
 
-const API_BASE_URL = '/api';
+import { getApiBaseUrl } from './config.js';
+
+const API_BASE_URL = `${getApiBaseUrl()}/api`;
 
 /**
  * Generic fetch wrapper with error handling

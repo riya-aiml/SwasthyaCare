@@ -4,8 +4,9 @@
  */
 
 import { getAuthHeaders } from './authService.js';
+import { getApiBaseUrl } from './config.js';
 
-const BASE_URL = '/api/chat';
+const BASE_URL = `${getApiBaseUrl()}/api/chat`;
 
 /**
  * Handle API responses and throw formatted errors

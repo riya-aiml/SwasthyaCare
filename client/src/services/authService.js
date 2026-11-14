@@ -3,7 +3,9 @@
  * Handles all authentication-related API calls and token management
  */
 
-const API_BASE_URL = '/api/auth';
+import { getApiBaseUrl } from './config.js';
+
+const API_BASE_URL = `${getApiBaseUrl()}/api/auth`;
 
 /**
  * Store token in localStorage (sets both 'authToken' and 'token' for cross-service consistency)
