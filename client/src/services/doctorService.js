@@ -4,8 +4,9 @@
  */
 
 import { getAuthToken } from './authService';
+import { getApiBaseUrl } from './config.js';
 
-const API_BASE_URL = '/api/doctors';
+const API_BASE_URL = `${getApiBaseUrl()}/api/doctors`;
 
 const apiRequest = async (endpoint, options = {}) => {
   try {

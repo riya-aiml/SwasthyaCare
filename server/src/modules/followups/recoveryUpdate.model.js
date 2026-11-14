@@ -77,6 +77,24 @@ const recoveryUpdateSchema = new mongoose.Schema(
       trim: true,
       maxlength: 1000,
     },
+    // ML-REC-01: Post-Discharge Deterioration & Readmission Risk Assessment
+    aiRiskAssessment: {
+      riskScore: { type: Number, default: 10 },
+      healthIndex: { type: Number, default: 90 },
+      riskTier: {
+        type: String,
+        enum: ['STABLE', 'MODERATE_RISK', 'CRITICAL_ATTENTION'],
+        default: 'STABLE',
+      },
+      contributingFactors: [{ type: String }],
+      nlpAlerts: [{ type: String }],
+      clinicianRecommendation: { type: String },
+      patientGuidance: { type: String },
+      requiresEscalation: { type: Boolean, default: false },
+      calculatedAt: { type: Date, default: Date.now },
+      modelId: { type: String, default: 'ML-REC-01' },
+      modelVersion: { type: String, default: '1.0.0' },
+    },
     // Clinician Triage & Review
     clinicianReview: {
       isReviewed: {

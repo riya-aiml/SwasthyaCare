@@ -1,0 +1,205 @@
+{
+  "report_id": "ML-DEP-01-EVAL-REPORT",
+  "generated_at": "2026-11-12 20:56:13 UTC",
+  "champion_algorithm": "Calibrated_Linear_SVC",
+  "training_samples": 2492,
+  "test_samples": 623,
+  "overall_performance": {
+    "accuracy": 0.9856,
+    "macro_f1": 0.9847,
+    "weighted_f1": 0.9856
+  },
+  "confusion_matrix_labels": [
+    "Cardiology",
+    "Dermatology",
+    "Endocrinology",
+    "Gastroenterology",
+    "General_Medicine",
+    "Neurology",
+    "Orthopedics",
+    "Pulmonology"
+  ],
+  "confusion_matrix": [
+    [
+      50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      70,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      49,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      145,
+      2,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      146,
+      0,
+      0,
+      3
+    ],
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      36,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      50,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      68
+    ]
+  ],
+  "per_specialty_features": {
+    "Cardiology": [
+      "legs",
+      "veins",
+      "chest pain",
+      "chest",
+      "calves",
+      "vomiting breathlessness"
+    ],
+    "Dermatology": [
+      "skin",
+      "sores",
+      "rash",
+      "rash face",
+      "nails",
+      "nose"
+    ],
+    "Endocrinology": [
+      "thirsty",
+      "infections",
+      "hungry",
+      "palpitations",
+      "dizzy confused",
+      "heal"
+    ],
+    "Gastroenterology": [
+      "heartburn",
+      "stomach",
+      "eat",
+      "dehydration",
+      "yellow",
+      "dark"
+    ],
+    "General_Medicine": [
+      "lost appetite",
+      "body",
+      "red spots",
+      "chills",
+      "fever",
+      "night"
+    ],
+    "Neurology": [
+      "headaches",
+      "vomiting headache",
+      "vision",
+      "unsteadiness",
+      "sensorium",
+      "altered"
+    ],
+    "Orthopedics": [
+      "neck",
+      "joints",
+      "neck hurts",
+      "weakness",
+      "walking",
+      "pain neck"
+    ],
+    "Pulmonology": [
+      "coughing",
+      "cough",
+      "breathing",
+      "coughing lot",
+      "phlegm",
+      "sputum"
+    ]
+  },
+  "cv_benchmark_summary": {
+    "Multinomial_Naive_Bayes": {
+      "mean_cv_f1_macro": 0.9748,
+      "std_cv_f1_macro": 0.0068,
+      "cv_scores": [
+        0.9618,
+        0.9744,
+        0.9785,
+        0.9786,
+        0.9808
+      ]
+    },
+    "Calibrated_Logistic_Regression": {
+      "mean_cv_f1_macro": 0.9795,
+      "std_cv_f1_macro": 0.0028,
+      "cv_scores": [
+        0.9742,
+        0.9827,
+        0.9799,
+        0.9809,
+        0.9798
+      ]
+    },
+    "Calibrated_Linear_SVC": {
+      "mean_cv_f1_macro": 0.9818,
+      "std_cv_f1_macro": 0.0067,
+      "cv_scores": [
+        0.9748,
+        0.9942,
+        0.9778,
+        0.9792,
+        0.983
+      ]
+    }
+  }
+}

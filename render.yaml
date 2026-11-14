@@ -1,0 +1,43 @@
+services:
+  # 1. Python FastAPI AI & Machine Learning Microservice
+  - type: web
+    name: swasthyacare-ai-service
+    runtime: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: INTERNAL_AI_SERVICE_SECRET
+        value: swasthya-internal-prod-key-2026
+
+  # 2. Node.js Express API Gateway & Business Core
+  - type: web
+    name: swasthyacare-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: MONGODB_URI
+        sync: false # Set in Render Dashboard: your MongoDB Atlas cluster URL
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: swasthyacare-ai-service
+          property: host
+      - key: INTERNAL_AI_SERVICE_SECRET
+        value: swasthya-internal-prod-key-2026
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false

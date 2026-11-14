@@ -4,6 +4,7 @@ import NotificationJob from './notificationJob.model.js';
 import User from '../users/user.model.js';
 import DoctorProfile from '../doctors/doctorProfile.model.js';
 import { schedulePlanReminders, processDueNotifications } from './notificationService.js';
+import { assessRecoveryDeterioration } from './recoveryRisk.service.js';
 
 /**
  * Follow-up & Post-Discharge Controller (Sprint 5)
@@ -243,17 +244,15 @@ export const submitRecoveryUpdate = async (req, res) => {
       });
     }
 
-    const {
-      recoveryRating,
-      painLevel = 0,
-      mobilityScore = 'Normal',
-      vitals = {},
-      medicationAdherence = 'Full',
-      adherenceNotes,
-      currentSymptoms = [],
-      hasWarningSymptoms = false,
-      patientNotes,
-    } = req.body;
+    const recoveryRating = req.body.recoveryRating ?? req.body.recovery_rating;
+    const painLevel = req.body.painLevel ?? req.body.pain_level ?? 0;
+    const mobilityScore = req.body.mobilityScore ?? req.body.mobility_score ?? 'Normal';
+    const vitals = req.body.vitals || {};
+    const medicationAdherence = req.body.medicationAdherence ?? req.body.medication_adherence ?? 'Full';
+    const adherenceNotes = req.body.adherenceNotes ?? req.body.adherence_notes;
+    const currentSymptoms = req.body.currentSymptoms ?? req.body.current_symptoms ?? [];
+    const hasWarningSymptoms = req.body.hasWarningSymptoms ?? req.body.has_warning_symptoms ?? false;
+    const patientNotes = req.body.patientNotes ?? req.body.patient_notes ?? '';
 
     if (!recoveryRating) {
       return res.status(400).json({
@@ -261,6 +260,41 @@ export const submitRecoveryUpdate = async (req, res) => {
         error: { message: 'Overall recovery rating (1-5) is required' },
       });
     }
+
+    // 1. Fetch previous recovery update for this plan to compute longitudinal trajectory
+    const previousUpdate = await RecoveryUpdate.findOne({ plan: planId }).sort({ reportedDate: -1 });
+
+    const daysPostDischarge = Math.max(
+      1,
+      Math.round((Date.now() - new Date(plan.dischargeDate || plan.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+    );
+
+    // 2. Execute ML-REC-01 inference (Python FastAPI microservice with automatic resilient fallback)
+    const mlAssessment = await assessRecoveryDeterioration({
+      recovery_rating: Number(recoveryRating),
+      pain_level: Number(painLevel),
+      mobility_score: mobilityScore || 'Normal',
+      systolic_bp: vitals?.bloodPressureSystolic ? Number(vitals.bloodPressureSystolic) : null,
+      diastolic_bp: vitals?.bloodPressureDiastolic ? Number(vitals.bloodPressureDiastolic) : null,
+      heart_rate: vitals?.heartRate ? Number(vitals.heartRate) : null,
+      temperature_celsius: vitals?.temperatureCelsius ? Number(vitals.temperatureCelsius) : null,
+      oxygen_saturation: vitals?.oxygenSaturation ? Number(vitals.oxygenSaturation) : null,
+      blood_glucose: vitals?.bloodGlucose ? Number(vitals.bloodGlucose) : null,
+      medication_adherence: medicationAdherence || 'Full',
+      current_symptoms: currentSymptoms,
+      has_warning_symptoms: Boolean(hasWarningSymptoms),
+      patient_notes: patientNotes || '',
+      days_post_discharge: daysPostDischarge,
+      previous_pain_level: previousUpdate ? previousUpdate.painLevel : null,
+      previous_recovery_rating: previousUpdate ? previousUpdate.recoveryRating : null,
+    });
+
+    const isCriticalAttention = Boolean(
+      hasWarningSymptoms ||
+      (vitals?.bloodPressureSystolic && vitals.bloodPressureSystolic > 160) ||
+      mlAssessment.riskTier === 'CRITICAL_ATTENTION' ||
+      mlAssessment.requiresEscalation
+    );
 
     // Create recovery update
     const update = new RecoveryUpdate({
@@ -275,18 +309,24 @@ export const submitRecoveryUpdate = async (req, res) => {
       currentSymptoms,
       hasWarningSymptoms,
       patientNotes,
+      aiRiskAssessment: mlAssessment,
       clinicianReview: {
         isReviewed: false,
-        status: hasWarningSymptoms || (vitals.bloodPressureSystolic && vitals.bloodPressureSystolic > 160)
-          ? 'NEEDS_ATTENTION'
-          : 'STABLE',
+        status: isCriticalAttention ? 'NEEDS_ATTENTION' : 'STABLE',
       },
     });
 
     await update.save();
 
+    // Update FollowUpPlan latest risk metrics for fast clinician triage
+    plan.latestRiskTier = mlAssessment.riskTier;
+    plan.latestRiskScore = mlAssessment.riskScore;
+    plan.latestHealthIndex = mlAssessment.healthIndex;
+    plan.lastReportedDate = new Date();
+    await plan.save();
+
     // If warning symptoms or critical vitals reported, trigger an escalation notification to clinician
-    if (hasWarningSymptoms || update.clinicianReview.status === 'NEEDS_ATTENTION') {
+    if (isCriticalAttention) {
       const doctor = await User.findById(plan.doctor);
       if (doctor) {
         const deduplicationKey = `alert_${update._id}_clinician`;
@@ -297,8 +337,8 @@ export const submitRecoveryUpdate = async (req, res) => {
           recipientAddress: doctor.email,
           type: 'CRITICAL_ALERT_ESCALATION',
           subject: '⚠️ SwasthyaCare: Patient Recovery Alert',
-          message: `Dr. ${doctor.lastName}, patient has submitted a recovery update with warning symptoms or elevated vitals. Please review the patient's care plan.`,
-          metadata: { planId: plan._id },
+          message: `Dr. ${doctor.lastName}, ML-REC-01 detected elevated patient deterioration risk (${mlAssessment.riskScore}%, ${mlAssessment.riskTier}). Contributing factors: ${mlAssessment.contributingFactors.slice(0, 2).join(', ')}. Please review the patient's care plan.`,
+          metadata: { planId: plan._id, updateId: update._id },
           scheduledFor: new Date(),
           status: 'PENDING',
         });

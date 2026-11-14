@@ -1,0 +1,802 @@
+[
+  {
+    "symptom_text": "Crushing chest pain radiating to left arm and jaw",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Substernal pressure and tightness when climbing stairs",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Irregular heart rhythm and rapid palpitations while resting",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Severe shortness of breath when lying flat on back at night",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Sudden chest discomfort with cold sweats and dizziness",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Swelling in both feet and ankles with extreme exertional fatigue",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Dull aching pain in middle of chest that worsens with activity",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "High blood pressure reading 160/100 with pounding in ears",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Heart flutter and skipped beats feeling in throat",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Squeezing sensation around ribs with lightheadedness",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Chhati me jalan aur baaye haath me dard ho raha hai",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Dil ki dhadkan achanak bahut tez ho jati hai",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Chhati me dabav aur saans lene me ghabrahat",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Left chest heavy pressure after walking briskly",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Shooting chest pain with nausea and cold perspiration",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Past history of stent placement now feeling mild angina",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Leg edema with swelling and breathlessness on slight exertion",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Syncope episodes with sudden heart racing and near blackouts",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Rapid pulse rate over 120 bpm while sitting calmly",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Tightness in chest with pain traveling up to left neck and shoulder",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Aortic valve replacement follow up and chest tightness review",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Pounding chest palpitations after morning coffee",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Peripheral cyanosis and cold clammy hands with chest ache",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Exertional dyspnea and retrosternal heaviness during morning walk",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Dil me dard aur ghabrahat me paseena aana",
+    "department": "Cardiology"
+  },
+  {
+    "symptom_text": "Excessive unquenchable thirst and drinking liters of water daily",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Waking up four times every night to urinate with high hunger",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Unexplained rapid weight loss despite eating large meals",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Fasting blood sugar test came back at 180 mg/dL",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "HbA1c level measured at 8.4 percent needing glycemic control",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Shaky trembling hands and cold sweats when meal is delayed",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Extreme fatigue and sluggishness with sudden weight gain",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Swelling in front of neck and difficulty swallowing comfortably",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Frequent sugar spikes after eating carbohydrates and rice",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Persistent dry mouth with sweet smelling fruity breath",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Madhumeh ki vajah se pair me jalan aur sunn padna",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Shakkar bahut badh gayi hai test me 240 aayi hai",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Bahut pyas lagti hai aur baar baar peshab aana",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Thyroid gland enlargement with intolerance to cold weather",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "High morning fasting plasma glucose and blurry vision",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Tingling pins and needles sensation in soles of feet from diabetes",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Sudden hypoglycemia episode with confusion and rapid pulse",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Excessive hair loss and extreme lethargy with elevated TSH",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Dark velvety patches of skin around neck and armpits",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Slow healing wound on great toe that has not closed for three weeks",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Gestational diabetes screening report showing high oral glucose test",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Chronic polyuria and polydipsia with muscle weakness",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Hormonal imbalance and irregular menstrual cycles with facial hair",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Hypothyroidism follow up for levothyroxine dosage evaluation",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Pair ke talwo me jalan aur diabetes ka checkup karwana hai",
+    "department": "Endocrinology"
+  },
+  {
+    "symptom_text": "Chronic persistent cough that has lasted for more than six weeks",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Wheezing whistling sound in chest while breathing out",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Sudden attack of asthma triggered by cold weather and dust",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Coughing up thick yellow and green phlegm every morning",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Breathlessness and tightness in airways during physical activity",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Chest congestion with rattling sound while taking deep breaths",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Coughing up small streaks of blood in sputum",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Severe nocturnal coughing fits that disrupt continuous sleep",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Chronic bronchitis flare up with low oxygen saturation of 91%",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Difficulty inhaling full breath due to lung congestion",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Khansi bahut dino se hai aur saans phoolti hai",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Seene me se seeti jaisi aawaz aati hai saans lete waqt",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Dhool mitti se dama ka daura pad jata hai",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Heavy smoker with morning productive cough and emphysema",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Post viral bronchial hyperreactivity and dry barking cough",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Stridor and inspiratory wheeze following seasonal weather change",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Pleuritic sharp chest pain when taking a deep breath or sneezing",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Shortness of breath on walking even twenty meters",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Inhaler is not giving full relief from chest tightness",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Productive purulent sputum with low grade evening fever",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Occupational dust exposure leading to chronic respiratory distress",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Saans lene me dikkat aur balgam ke sath khansi",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Severe dust allergy leading to bronchospasm and choking sensation",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Recurrent chest infections and wheezy bronchitis episodes",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Oxygen level drop and chronic obstructive pulmonary disease flare",
+    "department": "Pulmonology"
+  },
+  {
+    "symptom_text": "Severe burning pain in upper abdomen right below breastbone",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Chronic acid reflux and sour fluid coming up into mouth at night",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Sharp stabbing pain in upper right abdomen after eating fatty meals",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Frequent nausea with multiple episodes of vomiting after eating",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Severe abdominal bloating and inability to pass gas comfortably",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Dark tarry black stools and acute stomach cramps",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Yellowish discoloration of eyes and skin with dark colored urine",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Alternating constipation and loose watery diarrhea for months",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Persistent dull ache around belly button with loss of appetite",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Difficulty swallowing solid food with sensation of food sticking in esophagus",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Pet me tezz dard aur ulti jaisa lag raha hai",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Khatti dakar aur seene me jalan khane ke baad",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Peeliya ke lakshan aankhein peeli ho gayi hain",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Suspected gastric ulcer with burning relief only after drinking milk",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Abdominal swelling and fluid accumulation in belly with liver cirrhosis",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Severe right lower quadrant abdominal pain with tenderness",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Chronic indigestion and feeling full after eating only few bites",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Rectal bleeding with bright red blood on toilet paper",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Gallbladder stones detected on ultrasound causing colicky pain",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Irritable bowel syndrome symptoms with chronic cramping and gas",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Pet me marod aur bar bar dast lagna",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Chronic hepatitis B or C viral infection liver health consultation",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Food regurgitation and painful swallowing with hiatal hernia",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Hemorrhoids with painful defecation and rectal bleeding",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Severe epigastric pain radiating directly to back after heavy alcohol",
+    "department": "Gastroenterology"
+  },
+  {
+    "symptom_text": "Severe aching pain in both knee joints when walking or climbing stairs",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Morning stiffness in fingers and wrists lasting more than one hour",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Lower back spasm radiating sharp pain down the back of right leg",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Twisted ankle during sports with sudden swelling and inability to bear weight",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Clicking popping noise and locking in knee joint during movement",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Chronic shoulder pain and inability to raise arm above head",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Hip joint stiffness and limping gait while walking on flat ground",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Swollen red painful big toe joint with suspected acute gout flare",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Carpal tunnel tingling numbness in thumb index and middle fingers",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Cervical neck stiffness with pain radiating down into forearm",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Ghutno me bahut dard hai seedhiya chadhne me dikkat hoti hai",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Kamar me lachak aur peeth ke nichle hisse me tezz dard",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Jodo me soojan aur subah hatho me jakdan rehna",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Suspected ligament tear in right knee after twisting injury",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Osteoarthritis progression in bilateral knees with crepitus",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Frozen shoulder with severely restricted range of motion",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Sciatica nerve compression shooting pain from buttock to calf",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Plantar fasciitis sharp heel pain with first morning steps",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Lumbar disc herniation on MRI with leg numbness",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Tennis elbow pain on outer side of elbow joint when gripping",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Ghutna mudta nahi hai aur aawaz aati hai",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Post fracture plaster removal rehabilitation and joint stiffness",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Wrist fracture follow up after falling on outstretched hand",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Ankylosing spondylitis morning spine stiffness and sacroiliac pain",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Knee effusion with palpable fluid collection and redness",
+    "department": "Orthopedics"
+  },
+  {
+    "symptom_text": "Throbbing pulsating headache on one side of head with nausea",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Visual aura with flashing zig zag lights before intense migraine attack",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Sudden numbness and weakness on one entire side of face and arm",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Severe dizziness with spinning sensation when turning head in bed",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Involuntary rhythmic tremors in hands while resting or drinking tea",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Brief loss of consciousness and seizure episode witnessed by family",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Slurred garbled speech and sudden confusion finding words",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Chronic daily headaches that do not respond to common analgesics",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Burning electric shock like shooting facial pain along cheekbone",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Loss of balance and unsteady staggering gait while walking straight",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Aadha sar dard aur aakho ke aage roshni chamakna",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Chakkar aana aur sar ghoomna jaisa lagna",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Haath kaanpna aur chalne me santulan bigadna",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Multiple sclerosis numbness and tingling in lower extremities",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Parkinsonian stiffness and slow shuffling steps with resting tremor",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Benign paroxysmal positional vertigo (BPPV) with room spinning",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Transient ischemic attack warning symptoms lasting fifteen minutes",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Trigeminal neuralgia sharp lancinating pain on brushing teeth",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Epilepsy follow up for anti seizure medication and EEG review",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Memory loss confusion and inability to recognize familiar places",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Sar me bahut tez dard aur ulti aane ka man hona",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Peripheral neuropathy with burning feet and loss of vibratory sense",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Cluster headache with excruciating sharp pain behind one eye",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Facial drooping on right side with inability to close eye fully (Bell palsy)",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Post concussion syndrome with persistent brain fog and light sensitivity",
+    "department": "Neurology"
+  },
+  {
+    "symptom_text": "Itchy raised red hives and wheals erupting all over arms and torso",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Dry flaking skin patches with silvery scales on elbows and scalp",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Circular red ring shaped itchy rash on inner thighs (ringworm)",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Severe cystic acne breakout with painful inflamed nodules on face",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Fungal infection between toes with macerated white peeling skin (athlete foot)",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Suspicious new mole with asymmetrical irregular borders and color variation",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Intense itching on hands and wrists that gets significantly worse at night (scabies)",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Red burning rash after applying new cosmetic cream or hair dye",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Hair thinning and patchy bald spots appearing on scalp (alopecia areata)",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Painful blister clusters following a band across one side of chest (shingles)",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Twacha par laal daane aur tez khujli hona",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Chamdi par safed daag ya daad khujli ka infection",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Chehre par bohot zyada keel muhase aur sujan",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Eczema flare with cracked bleeding skin behind knees and elbows",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Psoriasis plaque thickening and nail pitting with discoloration",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Contact dermatitis from latex gloves with skin peeling and erythema",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Chronic urticaria with dermatographia when scratching skin lightly",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Seborrheic dermatitis with stubborn greasy dandruff and red eyebrows",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Hyperpigmentation and dark melasma patches across bridge of nose and cheeks",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Boils and carbuncles with pus formation on neck and back",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Khujli itni zyada hai ki raat me neend nahi aati",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Skin allergy with red inflamed welts after eating seafood",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Skin tag removal and wart evaluation on fingers and neck",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Vitiligo depigmentation spots spreading on hands and lips",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "Folliculitis with tiny red bumps around hair follicles on legs",
+    "department": "Dermatology"
+  },
+  {
+    "symptom_text": "High grade fever of 103 F with severe shivering and body chills",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Generalized muscle aches joint pain and severe overwhelming fatigue",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Seasonal flu with runny nose sore throat and mild dry cough",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Feeling faint weak and completely exhausted for past three days",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Dengue fever with severe retro orbital headache and high fever",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Sudden onset fever with rigors occurring every alternate day (malaria)",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Acute viral illness with loss of taste loss of smell and fatigue",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Unexplained weight loss and persistent low grade evening fever",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Dehydration with extreme thirst dry tongue and reduced urine output",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Routine whole body preventive health checkup and blood review",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Tez bukhar aur sharir me dard thakan ke sath",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Mausam badalne se gale me kharash aur sardi zukham",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Bina kisi wajah ke bahut kamzori aur chakkar aana",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Typhoid fever suspicion with step ladder fever pattern and constipation",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Chikungunya joint aches with persistent post viral arthralgia",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Mild heat exhaustion with dizziness and cramps after working outdoors",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Chronic fatigue syndrome evaluation after prolonged viral recovery",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Generalized lymph node swelling in neck and underarms with fever",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Vitamin B12 and Vitamin D deficiency leading to fatigue and aches",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Pre employment medical fitness certificate and health evaluation",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Gale me dard aur khana nigalne me dikkat bukhar ke sath",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Loss of appetite with bitter taste in mouth and digestive malaise",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Night sweats and fatigue requiring systemic inflammatory workup",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Post vaccination fever and body pain requiring symptomatic relief",
+    "department": "General_Medicine"
+  },
+  {
+    "symptom_text": "Preventive adult vaccination and travel immunization consultation",
+    "department": "General_Medicine"
+  }
+]

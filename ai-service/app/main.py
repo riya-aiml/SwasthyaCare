@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from .routers.predict import router as predict_router
 from .routers.ocr import router as ocr_router
 from .routers.internal_assessments import router as internal_assessments_router
+from .routers.internal_chat import router as internal_chat_router
 from .services.model_registry import registry
 
 app = FastAPI(
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(predict_router)
 app.include_router(ocr_router)
 app.include_router(internal_assessments_router)
+app.include_router(internal_chat_router)
 
 @app.on_event("startup")
 async def startup_event():
@@ -51,5 +53,6 @@ async def root():
             "diabetes_risk": "/api/v1/predict/diabetes-risk",
             "ocr_medicine": "/api/v1/ocr/medicine",
             "ocr_upload": "/api/v1/ocr/upload-packaging",
+            "chat_assistant": "/api/v1/chat/internal-orchestrate",
         },
     }

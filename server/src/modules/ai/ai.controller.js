@@ -96,6 +96,41 @@ export const predictDiabetesRisk = async (req, res) => {
 };
 
 /**
+ * 2b. POST /api/ai/predict/recovery-risk (Task: ML-REC-01)
+ */
+export const predictRecoveryRisk = async (req, res) => {
+  try {
+    const response = await fetchWithTimeout(`${getAIServiceBaseUrl()}/api/v1/predict/recovery-risk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json({
+        success: false,
+        error: data.detail || 'Recovery risk calculation failed',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error('predictRecoveryRisk proxy error:', error);
+    res.status(503).json({
+      success: false,
+      error: {
+        message: 'The AI clinical decision service is currently temporarily unavailable.',
+        isServiceDown: true,
+      },
+    });
+  }
+};
+
+/**
  * 3. POST /api/ai/ocr/medicine
  */
 export const processMedicineOCR = async (req, res) => {
