@@ -98,29 +98,17 @@ function AppContent() {
   if (!isAuthenticated) {
     if (authView === 'register') {
       return (
-        <div className="relative">
-          <Register
-            onSwitchToLogin={() => setAuthView('login')}
-            onRegisterSuccess={() => setCurrentView('dashboard')}
-          />
-          <AIHealthAssistant
-            isOpen={isAiAssistantOpen}
-            setIsOpen={setIsAiAssistantOpen}
-          />
-        </div>
+        <Register
+          onSwitchToLogin={() => setAuthView('login')}
+          onRegisterSuccess={() => setCurrentView('dashboard')}
+        />
       );
     }
     return (
-      <div className="relative">
-        <Login
-          onSwitchToRegister={() => setAuthView('register')}
-          onLoginSuccess={() => setCurrentView('dashboard')}
-        />
-        <AIHealthAssistant
-          isOpen={isAiAssistantOpen}
-          setIsOpen={setIsAiAssistantOpen}
-        />
-      </div>
+      <Login
+        onSwitchToRegister={() => setAuthView('register')}
+        onLoginSuccess={() => setCurrentView('dashboard')}
+      />
     );
   }
 
