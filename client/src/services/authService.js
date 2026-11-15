@@ -78,6 +78,10 @@ const authRequest = async (endpoint, options = {}) => {
     };
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Backend server is not connected. Please deploy the backend API and set VITE_API_URL in Vercel.');
+    }
     const data = await response.json();
 
     if (!response.ok) {

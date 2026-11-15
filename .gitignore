@@ -50,3 +50,4 @@ ai-service/data/**/*.data
 !ai-service/data/**/.gitkeep
 
 
+.env*

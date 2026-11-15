@@ -31,6 +31,10 @@ const apiRequest = async (endpoint, options = {}) => {
     };
 
     const response = await fetch(url, config);
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Backend server is not connected. Please deploy the backend API and set VITE_API_URL in Vercel.');
+    }
 
     // Parse the JSON response
     const data = await response.json();
