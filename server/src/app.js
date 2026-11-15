@@ -92,7 +92,9 @@ const startServer = async () => {
   }
 };
 
-// Start the server
-startServer();
+// Start the server (for standalone Node environments; Vercel serverless imports app directly)
+if (process.env.VERCEL !== '1') {
+  startServer();
+}
 
 export default app;
