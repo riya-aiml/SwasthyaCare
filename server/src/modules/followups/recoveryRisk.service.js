@@ -4,7 +4,7 @@
  * medication adherence, longitudinal trajectory, and NLP adverse symptom markers.
  */
 
-const getAIServiceBaseUrl = () => (process.env.AI_SERVICE_URL || 'http://localhost:8005').replace(/\/$/, '');
+const getAIServiceBaseUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
 const TIMEOUT_MS = 3000;
 
 // Clinical NLP patterns for local fallback execution

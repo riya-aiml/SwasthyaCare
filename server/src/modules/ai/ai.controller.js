@@ -3,7 +3,7 @@
  * Proxies authorized requests to the Python FastAPI microservice with timeout & fallback safety
  */
 
-const getAIServiceBaseUrl = () => (process.env.AI_SERVICE_URL || 'http://localhost:8005').replace(/\/$/, '');
+const getAIServiceBaseUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
 const getInternalSecret = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
 const TIMEOUT_MS = 8000;
 

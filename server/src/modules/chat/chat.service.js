@@ -32,7 +32,7 @@ import AvailabilitySlot from '../doctors/availabilitySlot.model.js';
 
 dotenv.config();
 
-const getAiServiceUrl = () => (process.env.AI_SERVICE_URL || 'http://localhost:8005').replace(/\/$/, '');
+const getAiServiceUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
 const getInternalKey = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
 
 /**
