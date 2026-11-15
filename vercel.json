@@ -1,0 +1,41 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "swasthyacare-ai-service": {
+      "root": "ai-service",
+      "framework": "fastapi",
+      "buildCommand": "pip install -r requirements.txt"
+    },
+    "client": {
+      "root": "client",
+      "framework": "vite"
+    },
+    "swasthyacare-server": {
+      "root": "server",
+      "framework": "express",
+      "buildCommand": "npm install",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "swasthyacare-ai-service",
+          "format": "url",
+          "env": "AI_SERVICE_URL"
+        }
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "swasthyacare-server"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "client"
+      }
+    }
+  ]
+}
