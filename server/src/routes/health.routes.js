@@ -18,6 +18,9 @@ router.get('/health', (req, res) => {
     database: {
       status: 'connected',
       name: process.env.MONGODB_URI ? 'configured' : 'using default'
+    },
+    aiService: {
+      url: process.env.AI_SERVICE_URL ? 'custom' : 'default-render'
     }
   };
 

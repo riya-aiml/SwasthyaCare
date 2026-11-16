@@ -32,8 +32,11 @@ import AvailabilitySlot from '../doctors/availabilitySlot.model.js';
 
 dotenv.config();
 
-const getAiServiceUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
-const getInternalKey = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
+const getAiServiceUrl = () => {
+  const url = process.env.AI_SERVICE_URL || (process.env.NODE_ENV === 'production' ? 'https://swasthyacare-4daw.onrender.com' : 'http://localhost:8005');
+  return url.trim().replace(/\/+$/, '');
+};
+const getInternalKey = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-prod-key-2026';
 
 /**
  * Chat Service (Sprint 11: S11-02, S11-03, S11-04, S11-05, S11-06)

@@ -4,8 +4,11 @@
  * medication adherence, longitudinal trajectory, and NLP adverse symptom markers.
  */
 
-const getAIServiceBaseUrl = () => process.env.AI_SERVICE_URL || 'http://localhost:8005';
-const TIMEOUT_MS = 3000;
+const getAIServiceBaseUrl = () => {
+  const url = process.env.AI_SERVICE_URL || (process.env.NODE_ENV === 'production' ? 'https://swasthyacare-4daw.onrender.com' : 'http://localhost:8005');
+  return url.trim().replace(/\/+$/, '');
+};
+const TIMEOUT_MS = 10000;
 
 // Clinical NLP patterns for local fallback execution
 const NLP_WOUND_INFECTION_PATTERNS = [
