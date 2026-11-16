@@ -4,7 +4,12 @@
  */
 
 export const getApiBaseUrl = () => {
-  const envUrl = import.meta.env?.VITE_API_URL;
+  const envUrl =
+    import.meta.env?.VITE_API_URL ||
+    import.meta.env?.VITE_BACKEND_URL ||
+    import.meta.env?.VITE_SERVER_URL ||
+    import.meta.env?.VITE_API_ENDPOINT;
+
   if (envUrl && envUrl.trim()) {
     // Strip trailing slashes and any trailing /api to avoid duplicate /api/api
     return envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
