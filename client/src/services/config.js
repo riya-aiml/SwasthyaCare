@@ -8,5 +8,6 @@ export const getApiBaseUrl = () => {
   if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/$/, '');
   }
-  return '';
+  // Fallback to active live Cloudflare tunnel
+  return 'https://creature-sheet-itunes-silver.trycloudflare.com';
 };
