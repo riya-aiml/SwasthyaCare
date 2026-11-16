@@ -91,6 +91,10 @@ const authRequest = async (endpoint, options = {}) => {
     return data;
   } catch (error) {
     console.error('Auth API Error:', error);
+    // Provide a human-readable explanation when fetch fails (e.g. Safari "Load failed" or Chrome "Failed to fetch")
+    if (error.name === 'TypeError' || error.message === 'Load failed' || error.message?.includes('fetch')) {
+      throw new Error('Backend server is unreachable. Please verify the backend is running on port 3001.');
+    }
     throw error;
   }
 };

@@ -48,6 +48,9 @@ const apiRequest = async (endpoint, options = {}) => {
   } catch (error) {
     // Network error or JSON parse error
     console.error(`API call failed: ${endpoint}`, error);
+    if (error.name === 'TypeError' || error.message === 'Load failed' || error.message?.includes('fetch')) {
+      throw new Error('Backend server is unreachable. Please verify the backend is running on port 3001.');
+    }
     throw error;
   }
 };

@@ -13,15 +13,21 @@ import assessmentRoutes from './modules/assessments/assessment.routes.js';
 import dashboardRoutes from './modules/dashboards/dashboard.routes.js';
 import chatRoutes from './modules/chat/chat.routes.js';
 import errorHandler from './middleware/errorHandler.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables from .env file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from server/.env then fallback to cwd .env
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config();
 
 // Initialize Express app
 const app = express();
 
-// Port configuration
-const PORT = process.env.PORT || 5000;
+// Port configuration (default 3001 to avoid conflict with macOS AirPlay on port 5000)
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors()); // Enable Cross-Origin Resource Sharing (allows frontend to call backend)

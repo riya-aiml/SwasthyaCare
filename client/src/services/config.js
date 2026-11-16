@@ -6,8 +6,9 @@
 export const getApiBaseUrl = () => {
   const envUrl = import.meta.env?.VITE_API_URL;
   if (envUrl && envUrl.trim()) {
-    return envUrl.trim().replace(/\/$/, '');
+    // Strip trailing slashes and any trailing /api to avoid duplicate /api/api
+    return envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
   }
-  // Fallback to active live Cloudflare tunnel
-  return 'https://creature-sheet-itunes-silver.trycloudflare.com';
+  // In local development, use relative path so Vite proxy forwards /api to backend
+  return '';
 };
