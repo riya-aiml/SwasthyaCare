@@ -17,6 +17,11 @@ const fetchWithTimeout = async (url, options = {}) => {
   try {
     const response = await fetch(url, {
       ...options,
+      headers: {
+        'User-Agent': 'SwasthyaCare-Backend/1.0',
+        Accept: 'application/json',
+        ...(options.headers || {}),
+      },
       signal: controller.signal,
     });
     return response;
@@ -185,19 +190,23 @@ export const processMedicineOCR = async (req, res) => {
  * 4. GET /api/ai/health
  */
 export const getAIServiceHealth = async (req, res) => {
+  const targetUrl = `${getAIServiceBaseUrl()}/health`;
   try {
-    const response = await fetchWithTimeout(`${getAIServiceBaseUrl()}/health`);
+    const response = await fetchWithTimeout(targetUrl);
     const data = await response.json();
     res.status(200).json({
       success: true,
       data,
     });
   } catch (error) {
+    console.error('getAIServiceHealth proxy error:', error);
     res.status(503).json({
       success: false,
       error: {
         message: 'AI microservice unreachable',
         isServiceDown: true,
+        debug: error?.message,
+        targetUrl,
       },
     });
   }
