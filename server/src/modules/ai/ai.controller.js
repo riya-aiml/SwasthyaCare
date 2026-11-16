@@ -7,7 +7,7 @@ const getAIServiceBaseUrl = () => {
   const url = process.env.AI_SERVICE_URL || (process.env.NODE_ENV === 'production' ? 'https://swasthyacare-4daw.onrender.com' : 'http://localhost:8005');
   return url.trim().replace(/\/+$/, '');
 };
-const getInternalSecret = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-prod-key-2026';
+const getInternalSecret = () => process.env.INTERNAL_AI_SERVICE_SECRET || 'swasthya-internal-dev-key-2026';
 const TIMEOUT_MS = 15000;
 
 const fetchWithTimeout = async (url, options = {}) => {
