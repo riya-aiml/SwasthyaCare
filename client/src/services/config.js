@@ -14,6 +14,17 @@ export const getApiBaseUrl = () => {
     // Strip trailing slashes and any trailing /api to avoid duplicate /api/api
     return envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
   }
+
+  // When deployed globally (e.g. on Vercel), route directly to live backend if env var is missing
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname &&
+    !window.location.hostname.includes('localhost') &&
+    !window.location.hostname.includes('127.0.0.1')
+  ) {
+    return 'https://swasthya-care-tfxa.vercel.app';
+  }
+
   // In local development, use relative path so Vite proxy forwards /api to backend
   return '';
 };
