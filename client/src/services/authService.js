@@ -85,7 +85,10 @@ const authRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Request failed');
+      const detailedMsg = data.error?.details?.length
+        ? data.error.details.map((d) => d.msg).join('. ')
+        : (data.error?.message || 'Request failed');
+      throw new Error(detailedMsg);
     }
 
     return data;

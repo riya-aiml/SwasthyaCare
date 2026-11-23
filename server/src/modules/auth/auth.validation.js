@@ -10,6 +10,7 @@ import { body } from 'express-validator';
  */
 export const registerValidation = [
   body('email')
+    .trim()
     .isEmail()
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
@@ -40,9 +41,10 @@ export const registerValidation = [
     .withMessage('Invalid role'),
 
   body('phoneNumber')
-    .optional()
-    .matches(/^[0-9]{10,15}$/)
-    .withMessage('Phone number must be 10-15 digits'),
+    .optional({ values: 'falsy' })
+    .customSanitizer((val) => (val ? String(val).replace(/[\s\-()]/g, '') : ''))
+    .matches(/^(\+)?[0-9]{10,15}$/)
+    .withMessage('Phone number must be 10-15 digits (optional country code +)'),
 ];
 
 /**
@@ -50,6 +52,7 @@ export const registerValidation = [
  */
 export const loginValidation = [
   body('email')
+    .trim()
     .isEmail()
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),

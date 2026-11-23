@@ -56,13 +56,16 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
 
     try {
       const userData = {
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         role: formData.role,
       };
+
+      if (formData.phoneNumber && formData.phoneNumber.trim()) {
+        userData.phoneNumber = formData.phoneNumber.trim();
+      }
 
       await register(userData);
       if (onRegisterSuccess) onRegisterSuccess();
@@ -126,26 +129,30 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Institutional Email *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Email Address (Gmail, Outlook, or Institutional) *
+            </label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="patient@swasthya.com"
+              placeholder="yourname@gmail.com"
               className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Phone Number <span className="text-slate-400 font-normal">(Optional)</span>
+            </label>
             <input
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
-              placeholder="+91 98765 43210"
+              placeholder="+91 98765 43210 (or 10 digits)"
               className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             />
           </div>

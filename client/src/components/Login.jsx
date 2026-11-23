@@ -90,10 +90,15 @@ export default function Login({ onSwitchToRegister, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      await login(formData.email.trim(), formData.password);
       if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
-      setError(err.message || 'Login failed. Please check credentials.');
+      const msg = err.message || '';
+      if (msg.includes('Invalid email or password')) {
+        setError('Invalid email or password. If you are using your personal Gmail, please click "Register New Patient Profile" below to create an account first.');
+      } else {
+        setError(msg || 'Login failed. Please check credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -216,8 +221,20 @@ export default function Login({ onSwitchToRegister, onLoginSuccess }) {
               <div className="w-full border-t border-slate-200" />
             </div>
             <span className="relative bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Or sign in manually
+              Or sign in with registered credentials
             </span>
+          </div>
+
+          <div className="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+            <strong className="text-slate-800">Note:</strong> The 4 roles above provide 1-click access to pre-seeded demo accounts. If you want to use your personal <strong className="text-teal-700">Gmail</strong> or work email, please{' '}
+            <button
+              type="button"
+              onClick={onSwitchToRegister}
+              className="text-teal-700 font-bold underline hover:text-teal-900"
+            >
+              register first
+            </button>
+            .
           </div>
 
           {error && (
@@ -229,7 +246,7 @@ export default function Login({ onSwitchToRegister, onLoginSuccess }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Institutional Email Address
+                Email Address (Gmail, Outlook, or Institutional)
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -239,7 +256,7 @@ export default function Login({ onSwitchToRegister, onLoginSuccess }) {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  placeholder="name@swasthya.com"
+                  placeholder="yourname@gmail.com or name@swasthya.com"
                   className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium text-slate-900"
                 />
               </div>
